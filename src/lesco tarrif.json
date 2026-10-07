@@ -1,0 +1,115 @@
+{
+  "nepra_uniform_tariff_2026": {
+    "metadata": {
+      "year": 2026,
+      "governing_body": "NEPRA",
+      "notification": "SRO 279(I)/2026",
+      "currency": "PKR",
+      "national_average_tariff_per_unit": 33.38
+    },
+    "domestic_residential": {
+      "minimum_monthly_charges": {
+        "single_phase": 75,
+        "three_phase": 150
+      },
+      "lifeline_consumers": {
+        "fixed_charge_per_kw_month": 0,
+        "slabs": [
+          {
+            "min_units": 1,
+            "max_units": 50,
+            "rate_per_unit": 3.95
+          },
+          {
+            "min_units": 51,
+            "max_units": 100,
+            "rate_per_unit": 7.74
+          }
+        ]
+      },
+      "protected_consumers": {
+        "telescopic_billing": true,
+        "slabs": [
+          {
+            "min_units": 1,
+            "max_units": 100,
+            "rate_per_unit": 10.54,
+            "fixed_charge_per_kw_month": 200
+          },
+          {
+            "min_units": 101,
+            "max_units": 200,
+            "rate_per_unit": 13.01,
+            "fixed_charge_per_kw_month": 300
+          }
+        ]
+      },
+      "unprotected_consumers": {
+        "telescopic_billing": false,
+        "slabs": [
+          {
+            "min_units": 1,
+            "max_units": 100,
+            "rate_per_unit": 22.44,
+            "fixed_charge_per_kw_month": 275
+          },
+          {
+            "min_units": 101,
+            "max_units": 200,
+            "rate_per_unit": 28.91,
+            "fixed_charge_per_kw_month": 300
+          },
+          {
+            "min_units": 201,
+            "max_units": 300,
+            "rate_per_unit": 33.10,
+            "fixed_charge_per_kw_month": 350
+          },
+          {
+            "min_units": 301,
+            "max_units": 400,
+            "rate_per_unit": 36.46,
+            "fixed_charge_per_kw_month": 400
+          },
+          {
+            "min_units": 401,
+            "max_units": 500,
+            "rate_per_unit": 38.95,
+            "fixed_charge_per_kw_month": 500
+          },
+          {
+            "min_units": 501,
+            "max_units": 600,
+            "rate_per_unit": 40.22,
+            "fixed_charge_per_kw_month": 675
+          },
+          {
+            "min_units": 601,
+            "max_units": 700,
+            "rate_per_unit": 41.85,
+            "fixed_charge_per_kw_month": 675
+          },
+          {
+            "min_units": 701,
+            "max_units": null,
+            "rate_per_unit": 47.20,
+            "fixed_charge_per_kw_month": 675
+          }
+        ]
+      },
+      "time_of_use_5kw_and_above": {
+        "peak_rate_per_unit": 46.85,
+        "off_peak_rate_per_unit": 34.53,
+        "fixed_charge_per_kw_month": 675
+      },
+      "pre_paid_residential": {
+        "flat_rate_per_unit": 42.12,
+        "fixed_charge_per_kw_month": 675
+      }
+    },
+    "surcharges_and_adjustments": {
+      "financing_cost_surcharge_per_unit": 3.23,
+      "exempt_from_financing_cost_surcharge": ["lifeline_consumers"]
+    }
+  }
+}

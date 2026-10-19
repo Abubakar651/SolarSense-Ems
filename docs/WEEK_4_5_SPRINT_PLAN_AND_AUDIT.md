@@ -25,7 +25,7 @@
 ├─────────────────┼───────────────────────────────┼──────────────────────────────────────┤
 │ Oct 19 – Oct 25 │ Week 3: System Design & Specs │ WEEK 4/5: Close Backend & Train AI   │
 │ Oct 26 – Nov 01 │ Week 4: Data & Backend        │ WEEK 5/6: Agents & Battery Optimizer │
-│ Nov 02 – Nov 08 │ Week 5: AI & Agent Testing    │ WEEK 6/7: Full Streamlit Web UI App  │
+│ Nov 02 – Nov 08 │ Week 5: AI & Agent Testing    │ WEEK 6/7: Next.js Production Web App │
 │ Nov 09 – Nov 15 │ Week 6–8: Integration & Final │ WEEK 7/8: System Evaluation & Defense│
 └─────────────────┴───────────────────────────────┴──────────────────────────────────────┘
 ```
@@ -180,7 +180,7 @@
 * **Joint Abubakar & Zaeem** — *Deadline: 20:00*
   * Audit all acceptance criteria listed below.
   * Tag Git release: `v0.5.0-milestone5`.
-  * Hold a 30-minute sync to preview **Week 6 (Streamlit Dashboard & Web Application Integration)**.
+  * Hold a 30-minute sync to preview **Week 6 (Next.js Dashboard & Web Application Integration)**.
 
 ---
 

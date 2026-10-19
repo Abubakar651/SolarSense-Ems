@@ -18,7 +18,7 @@ To maintain our strict policy of **staying 1 week ahead** and finishing the 8-we
 ├─────────────────┼───────────────────────────────┼─────────────────────────────┤
 │ This Week       │ Week 3: System Design & Specs │ WEEK 4: Data & Backend Done │
 │ Next Week (+1)  │ Week 4: Data & Backend        │ WEEK 5: AI & Optimization   │
-│ Following (+2)  │ Week 5: AI / Agents           │ WEEK 6: Streamlit UI App    │
+│ Following (+2)  │ Week 5: AI / Agents           │ WEEK 6: Next.js Web App     │
 │ Final Week (+3) │ Week 6-8: Integration & Demos │ WEEK 7-8: Testing & Defense │
 └─────────────────┴───────────────────────────────┴─────────────────────────────┘
 ```

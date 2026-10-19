@@ -45,3 +45,11 @@ env/
 .vscode/
 *.swp
 .DS_Store
+
+# Pytest & Coverage
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Office temporary lock files
+.~lock.*#

@@ -41,6 +41,10 @@ PKT_TZ = zoneinfo.ZoneInfo("Asia/Karachi")
 DEFAULT_CSV_PATH = Path("data/processed/master_ems_timeseries.csv")
 DEFAULT_PARQUET_PATH = Path("data/processed/master_ems_timeseries.parquet")
 
+# Battery physical envelope used to normalise/clamp the initial state of charge (kWh)
+BESS_CAPACITY_KWH = 600.0
+BESS_MIN_SOC_KWH = 60.0  # 10% hard physical floor
+
 
 # =====================================================================
 # 1. Dynamic Tariff Strategy Pattern (NEPRA / LESCO B3 Industrial)
@@ -212,6 +216,8 @@ class EMSDataRepository:
         self.csv_path = Path(csv_path)
         self.parquet_path = Path(parquet_path)
         self.policy = policy or TariffPolicy()
+        # Lazily populated once by _ensure_forecast_cache() (models + resident feature matrices)
+        self._forecast_cache: Optional[Dict[str, Any]] = None
 
         self._df: pl.DataFrame = self._load_or_compile_canonical(force_reload_csv)
         self._validate_invariants()
@@ -387,13 +393,21 @@ class EMSDataRepository:
                 historical_peak = 0.0
             effective_mdi_high_water = max(historical_peak, active_policy.sanctioned_load_kw)
 
-        # 3. Initial Battery SoC (kWh)
+        # 3. Initial Battery SoC (kWh): normalise units, then clamp to the physical envelope
         if override_initial_soc_kwh is not None:
             effective_initial_soc = float(override_initial_soc_kwh)
         else:
-            soc_val = self._battery_soc_arr[idx]
-            soc_pct = float(soc_val if not np.isnan(soc_val) else 90.0)
-            effective_initial_soc = (soc_pct / 100.0) * 600.0
+            soc_val = float(self._battery_soc_arr[idx])
+            if np.isnan(soc_val):
+                soc_frac = 0.90  # telemetry gap default
+            elif soc_val <= 1.0:
+                soc_frac = soc_val  # already a [0, 1] fraction
+            else:
+                soc_frac = soc_val / 100.0  # percentage (dataset stores 50-100)
+            effective_initial_soc = soc_frac * BESS_CAPACITY_KWH
+        effective_initial_soc = float(
+            min(max(effective_initial_soc, BESS_MIN_SOC_KWH), BESS_CAPACITY_KWH)
+        )
 
         # 4. Dynamic Tariff Vector via Policy Strategy
         h_slice = self._hours_arr[idx : idx + horizon_hours]
@@ -410,14 +424,23 @@ class EMSDataRepository:
 
         # 5. Zero-copy / Contiguous NumPy Vectors with read-only protection
         timestamps_iso = self._timestamps_iso[idx : idx + horizon_hours]
-        solar_vec = self._solar_arr[idx : idx + horizon_hours].copy()
-        load_vec = self._load_arr[idx : idx + horizon_hours].copy()
         outage_mask = self._outage_arr[idx : idx + horizon_hours].copy()
-        outage_prob = outage_mask.astype(np.float64)
 
-        # Net grid surge envelope: accounting for solar offset and zeroed out during blackouts
-        net_grid_slice = self._grid_import_arr[idx : idx + horizon_hours]
-        surge_vec = np.where(outage_mask == 1, 0.0, net_grid_slice * 1.05).astype(np.float64)
+        if use_forecasts:
+            # O(1) slices of resident feature matrices + in-memory inference (no disk I/O)
+            cache = self._ensure_forecast_cache()
+            window = slice(idx, idx + horizon_hours)
+            solar_vec = cache["solar_model"].predict_24h(cache["X_solar"][window])
+            load_vec, load_p90 = cache["load_model"].predict_24h(cache["X_load"][window])
+            outage_prob = cache["outage_model"].predict_proba_24h(cache["X_outage"][window])
+            # p90 already encodes the upper-bound demand envelope: no extra inflation factor
+            surge_vec = np.where(outage_mask == 1, 0.0, load_p90).astype(np.float64)
+        else:
+            solar_vec = self._solar_arr[idx : idx + horizon_hours].copy()
+            load_vec = self._load_arr[idx : idx + horizon_hours].copy()
+            outage_prob = outage_mask.astype(np.float64)
+            # Ground truth: surge envelope == load (surge delta 0), zeroed during blackouts
+            surge_vec = np.where(outage_mask == 1, 0.0, load_vec).astype(np.float64)
 
         return OptimizationHorizonSlice(
             window_start=ts_start,
@@ -585,72 +608,8 @@ class EMSDataRepository:
             val_end: Chronological validation cutoff.
             purge_hours: Buffer gap to isolate 24-hour forecast horizon lags.
         """
-        valid_tasks = {"solar", "load", "outage"}
-        if task not in valid_tasks:
-            raise ValueError(f"Invalid ML task '{task}'. Expected one of {valid_tasks}")
-
-        # Augment dataframe with tree-friendly Fourier and calendar features
-        augmented = self._df.with_columns([
-            pl.col("timestamp").dt.hour().alias("hour"),
-            pl.col("timestamp").dt.weekday().alias("weekday"),
-            pl.col("timestamp").dt.month().alias("month"),
-            pl.col("timestamp").dt.day().alias("day_of_month"),
-            # Fourier cyclical pairs for hours and months
-            (2.0 * np.pi * pl.col("timestamp").dt.hour() / 24.0).sin().alias("hour_sin"),
-            (2.0 * np.pi * pl.col("timestamp").dt.hour() / 24.0).cos().alias("hour_cos"),
-            (2.0 * np.pi * pl.col("timestamp").dt.month() / 12.0).sin().alias("month_sin"),
-            (2.0 * np.pi * pl.col("timestamp").dt.month() / 12.0).cos().alias("month_cos"),
-            # Shift phases
-            pl.when(pl.col("timestamp").dt.hour().is_between(8, 16))
-            .then(pl.lit(1))
-            .when(pl.col("timestamp").dt.hour().is_between(16, 23))
-            .then(pl.lit(2))
-            .otherwise(pl.lit(0))
-            .alias("factory_shift_id"),
-        ])
-
-        # Task-specific feature and target selection
-        if task == "solar":
-            target_col = "effective_solar_kw"
-            base_features = [
-                "ghi_wm2", "dni_wm2", "dhi_wm2", "temp_c", "humidity_pct",
-                "wind_ms", "rain_mm", "hour", "month", "weekday",
-                "hour_sin", "hour_cos", "month_sin", "month_cos",
-            ]
-        elif task == "load":
-            target_col = "factory_load_kw"
-            base_features = [
-                "hour", "weekday", "month", "hour_sin", "hour_cos",
-                "temp_c", "factory_shift_id", "humidity_pct",
-            ]
-        else:  # "outage"
-            target_col = "outage_flag"
-            base_features = [
-                "hour", "weekday", "month", "hour_sin", "hour_cos",
-                "temp_c", "rain_mm", "wind_ms", "humidity_pct",
-            ]
-
-        # Causal historical lag features for the target variable (strictly >= 24h lag for 24h lookahead)
-        lag_24 = f"{target_col}_lag_24h"
-        lag_48 = f"{target_col}_lag_48h"
-        lag_168 = f"{target_col}_lag_168h"
-        roll_7d = f"{target_col}_rolling_mean_7d_lag24"
-
-        augmented = augmented.with_columns([
-            pl.col(target_col).shift(24).fill_null(strategy="backward").fill_null(0.0).alias(lag_24),
-            pl.col(target_col).shift(48).fill_null(strategy="backward").fill_null(0.0).alias(lag_48),
-            pl.col(target_col).shift(168).fill_null(strategy="backward").fill_null(0.0).alias(lag_168),
-            pl.col(target_col).shift(24).rolling_mean(window_size=168, min_samples=1).fill_null(strategy="backward").fill_null(0.0).alias(roll_7d),
-            pl.col(target_col).shift(24).fill_null(strategy="backward").fill_null(0.0).alias("lag_24h"),
-            pl.col(target_col).shift(48).fill_null(strategy="backward").fill_null(0.0).alias("lag_48h"),
-            pl.col(target_col).shift(168).fill_null(strategy="backward").fill_null(0.0).alias("lag_168h"),
-            pl.col(target_col).shift(24).rolling_mean(window_size=168, min_samples=1).fill_null(strategy="backward").fill_null(0.0).alias("rolling_mean_7d_lag24"),
-        ])
-
-        feature_cols = base_features + [
-            lag_24, lag_48, lag_168, roll_7d,
-            "lag_24h", "lag_48h", "lag_168h", "rolling_mean_7d_lag24",
-        ]
+        # Shared builder guarantees train-time and inference-time features are identical
+        augmented, feature_cols, target_col = self._build_task_frame(task)
 
         t_train_end = self._normalize_datetime(train_end)
         t_val_start = t_train_end + pl.duration(hours=purge_hours)
@@ -720,6 +679,123 @@ class EMSDataRepository:
             "total_historical_mdi_violations": self.get_mdi_spikes().height,
             "total_outage_hours": int(self._df["outage_flag"].sum()),
         }
+
+    # -----------------------------------------------------------------
+    # Shared ML Feature Frame & Lazy Forecaster Cache
+    # -----------------------------------------------------------------
+
+    def _build_task_frame(self, task: str) -> Tuple[pl.DataFrame, List[str], str]:
+        """
+        Builds the full-dataset (11,136 rows) augmented feature frame for an ML task.
+        Shared by get_ml_feature_matrix() (splits) and the forecast cache (resident arrays)
+        so training-time and inference-time features are identical by construction.
+        """
+        valid_tasks = {"solar", "load", "outage"}
+        if task not in valid_tasks:
+            raise ValueError(f"Invalid ML task '{task}'. Expected one of {valid_tasks}")
+
+        # Augment dataframe with tree-friendly Fourier and calendar features
+        augmented = self._df.with_columns([
+            pl.col("timestamp").dt.hour().alias("hour"),
+            pl.col("timestamp").dt.weekday().alias("weekday"),
+            pl.col("timestamp").dt.month().alias("month"),
+            pl.col("timestamp").dt.day().alias("day_of_month"),
+            # Fourier cyclical pairs for hours and months
+            (2.0 * np.pi * pl.col("timestamp").dt.hour() / 24.0).sin().alias("hour_sin"),
+            (2.0 * np.pi * pl.col("timestamp").dt.hour() / 24.0).cos().alias("hour_cos"),
+            (2.0 * np.pi * pl.col("timestamp").dt.month() / 12.0).sin().alias("month_sin"),
+            (2.0 * np.pi * pl.col("timestamp").dt.month() / 12.0).cos().alias("month_cos"),
+            # Shift phases
+            pl.when(pl.col("timestamp").dt.hour().is_between(8, 16))
+            .then(pl.lit(1))
+            .when(pl.col("timestamp").dt.hour().is_between(16, 23))
+            .then(pl.lit(2))
+            .otherwise(pl.lit(0))
+            .alias("factory_shift_id"),
+        ])
+
+        # Task-specific feature and target selection
+        if task == "solar":
+            target_col = "effective_solar_kw"
+            base_features = [
+                "ghi_wm2", "dni_wm2", "dhi_wm2", "temp_c", "humidity_pct",
+                "wind_ms", "rain_mm", "hour", "month", "weekday",
+                "hour_sin", "hour_cos", "month_sin", "month_cos",
+            ]
+        elif task == "load":
+            target_col = "factory_load_kw"
+            base_features = [
+                "hour", "weekday", "month", "hour_sin", "hour_cos",
+                "temp_c", "factory_shift_id", "humidity_pct",
+            ]
+        else:  # "outage"
+            target_col = "outage_flag"
+            base_features = [
+                "hour", "weekday", "month", "hour_sin", "hour_cos",
+                "temp_c", "rain_mm", "wind_ms", "humidity_pct",
+            ]
+
+        # Causal historical lag features for the target variable (strictly >= 24h lag for 24h lookahead)
+        lag_24 = f"{target_col}_lag_24h"
+        lag_48 = f"{target_col}_lag_48h"
+        lag_168 = f"{target_col}_lag_168h"
+        roll_7d = f"{target_col}_rolling_mean_7d_lag24"
+
+        augmented = augmented.with_columns([
+            pl.col(target_col).shift(24).fill_null(strategy="backward").fill_null(0.0).alias(lag_24),
+            pl.col(target_col).shift(48).fill_null(strategy="backward").fill_null(0.0).alias(lag_48),
+            pl.col(target_col).shift(168).fill_null(strategy="backward").fill_null(0.0).alias(lag_168),
+            pl.col(target_col).shift(24).rolling_mean(window_size=168, min_samples=1).fill_null(strategy="backward").fill_null(0.0).alias(roll_7d),
+            pl.col(target_col).shift(24).fill_null(strategy="backward").fill_null(0.0).alias("lag_24h"),
+            pl.col(target_col).shift(48).fill_null(strategy="backward").fill_null(0.0).alias("lag_48h"),
+            pl.col(target_col).shift(168).fill_null(strategy="backward").fill_null(0.0).alias("lag_168h"),
+            pl.col(target_col).shift(24).rolling_mean(window_size=168, min_samples=1).fill_null(strategy="backward").fill_null(0.0).alias("rolling_mean_7d_lag24"),
+        ])
+
+        feature_cols = base_features + [
+            lag_24, lag_48, lag_168, roll_7d,
+            "lag_24h", "lag_48h", "lag_168h", "rolling_mean_7d_lag24",
+        ]
+        return augmented, feature_cols, target_col
+
+    def _ensure_forecast_cache(self) -> Dict[str, Any]:
+        """
+        Lazily loads the 3 trained forecasters from disk and materialises the full-dataset
+        feature matrices as resident, read-only, C-contiguous float64 NumPy arrays - exactly once.
+        Subsequent use_forecasts=True slices are O(1) array slices + in-memory inference
+        (no joblib I/O, no rolling-feature recomputation).
+        """
+        if self._forecast_cache is not None:
+            return self._forecast_cache
+
+        # Local imports: forecaster modules import this module at top level (avoid circular import)
+        from src.forecast.train_solar_pv import SolarPVForecaster
+        from src.forecast.train_factory_load import FactoryLoadForecaster
+        from src.grid_outage.predict_outage import OutageRiskPredictor
+
+        solar_model = SolarPVForecaster.load()
+        load_model = FactoryLoadForecaster.load()
+        outage_model = OutageRiskPredictor.load()
+
+        def _resident_matrix(task: str, feature_names: List[str]) -> np.ndarray:
+            frame, _, _ = self._build_task_frame(task)
+            mat = np.ascontiguousarray(frame.select(feature_names).to_numpy(), dtype=np.float64)
+            mat.setflags(write=False)
+            return mat
+
+        self._forecast_cache = {
+            "solar_model": solar_model,
+            "load_model": load_model,
+            "outage_model": outage_model,
+            "X_solar": _resident_matrix("solar", list(solar_model.feature_names)),
+            "X_load": _resident_matrix("load", list(load_model.feature_names)),
+            "X_outage": _resident_matrix("outage", list(outage_model.feature_names)),
+        }
+        return self._forecast_cache
+
+    def warm_forecasters(self) -> None:
+        """Eagerly builds the forecast cache (call once from the FastAPI lifespan startup hook)."""
+        self._ensure_forecast_cache()
 
     # -----------------------------------------------------------------
     # Internal Helpers

@@ -47,3 +47,6 @@ typing_extensions==4.16.0
 tzdata==2026.5
 urllib3==2.8.0
 webencodings==0.6.1
+polars>=2.0.0
+pyarrow>=26.0.0
+pytest>=9.0.0

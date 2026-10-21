@@ -1,0 +1,60 @@
+name: Automated Daily Engineering Log
+
+on:
+  schedule:
+    # 01:00 AM PKT (Pakistan Standard Time, UTC+5) -> 20:00 UTC
+    - cron: '0 20 * * *'
+  workflow_dispatch:
+    inputs:
+      lookback_hours:
+        description: 'Hours to look back for commits'
+        required: false
+        default: '24'
+      force:
+        description: 'Force generate log even if no commits occurred (true/false)'
+        required: false
+        default: 'false'
+
+permissions:
+  contents: write
+
+jobs:
+  generate-daily-log:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository (full history)
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Generate Daily Report
+        run: |
+          HOURS="${{ github.event.inputs.lookback_hours || '24' }}"
+          FORCE="${{ github.event.inputs.force }}"
+          
+          CMD="python scripts/generate_daily_report.py --hours $HOURS"
+          if [ "$FORCE" = "true" ]; then
+            CMD="$CMD --force"
+          fi
+          
+          echo "Executing: $CMD"
+          eval $CMD
+
+      - name: Commit and Push Report
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git add docs/daily_logs/
+          
+          if git diff --staged --quiet; then
+            echo "No changes to commit. Daily log was skipped or unchanged."
+          else
+            TODAY=$(date -u +'%Y-%m-%d')
+            git commit -m "docs(audit): automated daily engineering log for $TODAY [skip ci]"
+            git push origin main
+          fi

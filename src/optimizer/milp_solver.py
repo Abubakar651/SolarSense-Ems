@@ -57,7 +57,10 @@ def _pkr(value: float) -> Decimal:
 
 @dataclass(frozen=True, slots=True)
 class BESSConfig:
-    """Immutable battery hardware parameters."""
+    """Immutable battery hardware parameters.
+    Default: LESCO B3 Industrial microgrid benchmark (600 kWh / 250 kW).
+    Use BESSConfig.station_904a_residential() for Station 904-A JT Residential Envelope.
+    """
     capacity_kwh: float = 600.0
     max_charge_kw: float = 250.0
     max_discharge_kw: float = 250.0
@@ -66,6 +69,25 @@ class BESSConfig:
     min_soc_pct: float = 0.10   # 60 kWh hard physical floor
     max_soc_pct: float = 1.00   # 600 kWh ceiling
     degradation_cost_pkr_per_kwh: float = 2.0
+
+    @classmethod
+    def industrial_600kwh(cls) -> BESSConfig:
+        """Factory for 600 kWh / 250 kW LESCO B3 Industrial microgrid battery."""
+        return cls()
+
+    @classmethod
+    def station_904a_residential(cls) -> BESSConfig:
+        """Factory for Station 904-A JT 5.12 kWh LiFePO4 residential battery."""
+        return cls(
+            capacity_kwh=5.12,
+            max_charge_kw=5.0,
+            max_discharge_kw=5.0,
+            charge_efficiency=0.95,
+            discharge_efficiency=0.95,
+            min_soc_pct=0.15,
+            max_soc_pct=1.00,
+            degradation_cost_pkr_per_kwh=2.0,
+        )
 
     @property
     def min_soc_kwh(self) -> float:
@@ -170,6 +192,7 @@ class MILPBatteryOptimizer:
         reserve_pen = cp.Parameter(T, nonneg=True, name="reserve_pen")
         hw = cp.Parameter(nonneg=True, name="mdi_high_water")
         soc0 = cp.Parameter(nonneg=True, name="soc0")
+        peak_grid_cap = cp.Parameter(T, nonneg=True, name="peak_grid_cap")
 
         # Decision variables
         p_grid = cp.Variable(T, nonneg=True, name="p_grid")
@@ -188,6 +211,10 @@ class MILPBatteryOptimizer:
             # Blackout islanding vs grid mode
             cp.multiply(outage, p_grid) == 0,
             cp.multiply(live, p_diesel) == 0,
+            # Post-blackout peak-window recharge suppression:
+            # Prevents grid import from charging battery during expensive Peak ToU hours (46.85 PKR/kWh).
+            # Battery charging during peak can ONLY be powered by surplus solar.
+            p_grid <= peak_grid_cap,
             # Battery dynamics and limits
             soc[0] == soc0,
             soc[1:] == soc[:-1] + b.charge_efficiency * p_ch - p_dis / b.discharge_efficiency,
@@ -225,6 +252,7 @@ class MILPBatteryOptimizer:
             "solar": solar, "load": load, "tariff": tariff, "outage": outage, "live": live,
             "live_surge": live_surge, "reserve_target": reserve_target,
             "reserve_pen": reserve_pen, "hw": hw, "soc0": soc0,
+            "peak_grid_cap": peak_grid_cap,
         }
         return _ProblemBundle(cp.Problem(objective, constraints), variables, params)
 
@@ -245,6 +273,7 @@ class MILPBatteryOptimizer:
             "outage": np.zeros(T), "live": np.ones(T), "live_surge": np.zeros(T),
             "reserve_target": np.full(T, b.min_soc_kwh), "reserve_pen": np.zeros(T),
             "hw": float(self.policy.sanctioned_load_kw), "soc0": 0.5 * b.capacity_kwh,
+            "peak_grid_cap": np.full(T, 1e6, dtype=np.float64),
         }
         self._solve_with_highs(T, values)
 
@@ -274,10 +303,21 @@ class MILPBatteryOptimizer:
         )
         reserve_pen = np.where(risky, float(self.policy.diesel_cost_pkr) * prob, 0.0)
 
+        # Post-blackout peak recharge suppression (Argon Recommendation 1):
+        # Prevents grid import from charging battery during expensive Peak ToU hours.
+        # Capping grid import at load (p_grid <= load) ensures any battery charging during peak is powered purely by solar.
+        peak_rate = float(self.policy.peak_rate_pkr)
+        is_peak_window = tariff >= (peak_rate - 1e-3)
+        peak_grid_cap = np.full(T, 1e6, dtype=np.float64)
+        for t in range(T):
+            if is_peak_window[t] and soc0 >= b.min_soc_kwh:
+                peak_grid_cap[t] = load[t]
+
         values = {
             "solar": solar, "load": load, "tariff": tariff, "outage": outage, "live": live,
             "live_surge": live_surge, "reserve_target": reserve_target,
             "reserve_pen": reserve_pen, "hw": hw, "soc0": soc0,
+            "peak_grid_cap": peak_grid_cap,
         }
 
         solved = self._solve_with_highs(T, values)

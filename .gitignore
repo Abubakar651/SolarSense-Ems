@@ -9,6 +9,7 @@ kaggle.json
 data/raw/
 data/processed/
 data/backups/
+data/argon_audit_pack/
 *.zip
 *.tar.gz
 *.7z

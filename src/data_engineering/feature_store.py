@@ -42,26 +42,78 @@ DEFAULT_CSV_PATH = Path("data/processed/master_ems_timeseries.csv")
 DEFAULT_PARQUET_PATH = Path("data/processed/master_ems_timeseries.parquet")
 
 # Battery physical envelope used to normalise/clamp the initial state of charge (kWh)
+# Residential Scale (Station 904-A JT: 51.2V 100Ah LiFePO4 pack)
+RESIDENTIAL_BESS_CAPACITY_KWH = 5.12
+RESIDENTIAL_BESS_MIN_SOC_KWH = 0.768  # 15% emergency reserve floor (0.768 kWh)
+RESIDENTIAL_BESS_STANDARD_MIN_SOC_KWH = 2.816  # 55% nocturnal blackout reserve floor (2.816 kWh)
+
+# Industrial Scale Constants (for LESCO B3 Factory Microgrid Benchmarking)
+INDUSTRIAL_BESS_CAPACITY_KWH = 600.0
+INDUSTRIAL_BESS_MIN_SOC_KWH = 60.0
+
+# Active defaults (matching engineering-standards.md Section 3 LESCO B3 benchmark)
 BESS_CAPACITY_KWH = 600.0
-BESS_MIN_SOC_KWH = 60.0  # 10% hard physical floor
+BESS_MIN_SOC_KWH = 60.0
 
 
 # =====================================================================
-# 1. Dynamic Tariff Strategy Pattern (NEPRA / LESCO B3 Industrial)
+# 1. Dynamic Tariff Strategy Pattern (LESCO A-1 Residential & B3 Industrial)
 # =====================================================================
 
 @dataclass(frozen=True, slots=True)
 class TariffPolicy:
     """
-    Immutable NEPRA / LESCO B3 Industrial Time-of-Use (ToU) Billing Configuration.
+    Immutable LESCO Time-of-Use (ToU) Billing Configuration.
     Supports counterfactual simulations (e.g. rate hikes, diesel price inflation).
+    Default values reflect official LESCO B3 Industrial tariff (500 kW sanctioned load, 1200 PKR/kW MDI).
+    Use TariffPolicy.from_json() or TariffPolicy.lesco_a1_residential() for Station 904-A JT Residential ToU.
     """
     off_peak_rate_pkr: Decimal = Decimal("38.00")
     peak_rate_pkr: Decimal = Decimal("60.00")
+    export_rate_pkr: Decimal = Decimal("27.00")
     diesel_cost_pkr: Decimal = Decimal("95.00")
     mdi_penalty_per_kw_pkr: Decimal = Decimal("1200.00")
     sanctioned_load_kw: float = 500.0
     step_duration_hours: float = 1.0
+
+    @classmethod
+    def lesco_b3_industrial(cls) -> TariffPolicy:
+        """Factory method for LESCO B3 Industrial tariff (500 kW sanctioned load, 1200 PKR/kW MDI)."""
+        return cls()
+
+    @classmethod
+    def lesco_a1_residential(cls) -> TariffPolicy:
+        """Factory method for official LESCO A-1 Residential ToU & Net-Metering (Station 904-A JT)."""
+        return cls(
+            off_peak_rate_pkr=Decimal("34.53"),
+            peak_rate_pkr=Decimal("46.85"),
+            export_rate_pkr=Decimal("27.00"),
+            diesel_cost_pkr=Decimal("95.00"),
+            mdi_penalty_per_kw_pkr=Decimal("0.00"),
+            sanctioned_load_kw=10.0,
+        )
+
+    @classmethod
+    def from_json(cls, path: Union[str, Path] = "src/lesco-tarrif.json") -> TariffPolicy:
+        """Loads tariff parameters directly from lesco-tarrif.json."""
+        import json
+        p = Path(path)
+        if not p.is_absolute():
+            root = Path(__file__).resolve().parent.parent.parent
+            p = root / path
+        with open(p, "r", encoding="utf-8") as f:
+            data = json.load(f)["energy_cost_config"]
+        rates = data.get("tariff_rates_pkr_per_kwh", {})
+        limits = data.get("demand_limit_and_penalties", {})
+        backup = data.get("backup_and_outage_costs", {})
+        return cls(
+            off_peak_rate_pkr=Decimal(str(rates.get("off_peak_rate", 34.53))),
+            peak_rate_pkr=Decimal(str(rates.get("peak_rate", 46.85))),
+            export_rate_pkr=Decimal(str(rates.get("solar_export_rate", 27.00))),
+            diesel_cost_pkr=Decimal(str(backup.get("diesel_generator_cost_pkr_per_kwh", 95.00))),
+            mdi_penalty_per_kw_pkr=Decimal(str(limits.get("demand_penalty_pkr_per_kw", 0.00))),
+            sanctioned_load_kw=float(limits.get("sanctioned_demand_limit_kw", 10.0)),
+        )
 
     def get_peak_hours_for_month(self, month: int) -> tuple[int, ...]:
         """
@@ -394,6 +446,10 @@ class EMSDataRepository:
             effective_mdi_high_water = max(historical_peak, active_policy.sanctioned_load_kw)
 
         # 3. Initial Battery SoC (kWh): normalise units, then clamp to the physical envelope
+        is_residential = active_policy.sanctioned_load_kw <= 10.0
+        cap_kwh = RESIDENTIAL_BESS_CAPACITY_KWH if is_residential else BESS_CAPACITY_KWH
+        min_kwh = RESIDENTIAL_BESS_MIN_SOC_KWH if is_residential else BESS_MIN_SOC_KWH
+
         if override_initial_soc_kwh is not None:
             effective_initial_soc = float(override_initial_soc_kwh)
         else:
@@ -404,9 +460,9 @@ class EMSDataRepository:
                 soc_frac = soc_val  # already a [0, 1] fraction
             else:
                 soc_frac = soc_val / 100.0  # percentage (dataset stores 50-100)
-            effective_initial_soc = soc_frac * BESS_CAPACITY_KWH
+            effective_initial_soc = soc_frac * cap_kwh
         effective_initial_soc = float(
-            min(max(effective_initial_soc, BESS_MIN_SOC_KWH), BESS_CAPACITY_KWH)
+            min(max(effective_initial_soc, min_kwh), cap_kwh)
         )
 
         # 4. Dynamic Tariff Vector via Policy Strategy

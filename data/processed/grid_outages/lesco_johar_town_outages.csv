@@ -88,11 +88,9 @@ date,start_time,end_time,duration_minutes,energy_kwh,avg_load_kw,soc_start_pct,s
 2026-09-23,00:18,01:30,72,3.73,3.11,,,grid_outage_or_peak_discharge
 2026-09-23,01:30,02:00,35,1.583,2.714,100.0,73.0,grid_outage_or_peak_discharge
 2026-09-23,21:20,22:15,60,1.458,1.458,98.0,72.0,grid_outage_or_peak_discharge
-2026-09-24,00:16,01:50,94,5.635,3.6,,,grid_outage_or_peak_discharge
 2026-09-24,01:20,02:30,75,2.635,2.108,98.0,47.0,grid_outage_or_peak_discharge
 2026-09-24,21:20,22:15,60,2.129,2.129,98.0,59.0,grid_outage_or_peak_discharge
 2026-09-26,22:20,23:15,60,1.889,1.889,98.0,64.0,grid_outage_or_peak_discharge
-2026-09-26,23:00,23:10,10,0.516,3.1,,,grid_outage_or_peak_discharge
 2026-09-27,22:20,23:15,60,2.077,2.077,98.0,59.0,grid_outage_or_peak_discharge
 2026-10-01,20:35,21:30,60,1.88,1.88,98.0,62.0,grid_outage_or_peak_discharge
 2026-10-02,00:20,01:15,60,2.285,2.285,97.0,56.0,grid_outage_or_peak_discharge
@@ -111,8 +109,6 @@ date,start_time,end_time,duration_minutes,energy_kwh,avg_load_kw,soc_start_pct,s
 2026-10-06,20:20,21:15,60,1.123,1.123,98.0,78.0,grid_outage_or_peak_discharge
 2026-10-07,08:10,08:10,5,0.059,0.71,100.0,100.0,grid_outage_or_peak_discharge
 2026-10-07,22:25,23:05,45,1.281,1.708,100.0,79.0,grid_outage_or_peak_discharge
-2026-10-25,21:48,01:14,206,5.15,1.5,100.0,15.0,grid_outage_or_peak_discharge
-2026-10-26,00:00,00:20,25,0.344,0.826,67.0,62.0,grid_outage_or_peak_discharge
-2026-10-26,18:04,18:20,15,0.5,2.0,100.0,90.0,grid_outage_or_peak_discharge
-2026-10-26,18:05,18:15,15,0.259,1.037,99.0,96.0,grid_outage_or_peak_discharge
+2026-10-25,21:48,01:14,206,2.406,0.701,100.0,53.0,grid_outage_or_peak_discharge
+2026-10-26,18:04,18:20,16,0.26,1.04,99.0,95.0,grid_outage_or_peak_discharge
 2026-10-26,21:45,21:45,5,0.062,0.75,99.0,99.0,grid_outage_or_peak_discharge

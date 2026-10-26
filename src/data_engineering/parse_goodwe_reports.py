@@ -689,6 +689,10 @@ def parse_station_reports(reports_dir):
             seen_dates.add(date_str)
 
             time_labels = [ws.cell(3, c).value for c in range(3, ws.max_column + 1)]
+            col_has_data = [
+                any(ws.cell(r, c).value is not None for r in range(4, ws.max_row + 1))
+                for c in range(3, ws.max_column + 1)
+            ]
             indicators = {}
             for r in range(4, ws.max_row + 1):
                 ind = ws.cell(r, 2).value
@@ -711,7 +715,7 @@ def parse_station_reports(reports_dir):
 
             for i in range(n):
                 t_label = time_labels[i]
-                if not t_label:
+                if not t_label or not col_has_data[i]:
                     continue
                 all_rows.append({
                     "timestamp": f"{date_str} {t_label}:00",

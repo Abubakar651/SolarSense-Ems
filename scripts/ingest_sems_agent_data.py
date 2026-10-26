@@ -232,49 +232,58 @@ def main():
     existing_outages = pd.read_csv(outage_file) if outage_file.exists() else pd.DataFrame()
 
     new_outage_events = []
-    # Add September outages from data_2.odt
+    # Add September outages from data_2.odt (filtering out approximate overlapping duplicates)
     for _, r in df_sep_outages.iterrows():
+        # Skip 2026-09-24 00:16 (overlaps with true 01:20 5-min telemetry) and 2026-09-26 23:00 (inside 22:20-23:15)
+        if (r["date"] == "2026-09-24" and r["start_time"] == "00:16") or \
+           (r["date"] == "2026-09-26" and r["start_time"] == "23:00"):
+            continue
         new_outage_events.append({
             "date": r["date"],
             "start_time": r["start_time"],
             "end_time": r["end_time"],
             "duration_minutes": r["duration_minutes"],
-            "energy_kwh": round(abs(r["min_inverter_power_kw"]) * (r["duration_minutes"] / 60.0), 3),
+            "energy_kwh": min(round(abs(r["min_inverter_power_kw"]) * (r["duration_minutes"] / 60.0), 3), 5.12),
             "avg_load_kw": round(abs(r["min_inverter_power_kw"]), 2),
             "soc_start_pct": np.nan,
             "soc_end_pct": np.nan,
             "event_type": "grid_outage_or_peak_discharge"
         })
 
-    # Add October blackout events from Prompt 3
-    # 1. Oct 25-26 (206 min)
+    # Add October blackout events from Prompt 3 (calibrated with 5-minute station telemetry)
+    # 1. Oct 25-26 overnight blackout (206 min, 47% SoC consumed = 2.406 kWh, SoC 100% -> 53%)
     new_outage_events.append({
         "date": "2026-10-25",
         "start_time": "21:48",
         "end_time": "01:14",
         "duration_minutes": 206,
-        "energy_kwh": round(1.5 * (206 / 60.0), 3),  # ~5.15 kWh served by battery
-        "avg_load_kw": 1.5,
+        "energy_kwh": 2.406,
+        "avg_load_kw": 0.701,
         "soc_start_pct": 100.0,
-        "soc_end_pct": 15.0,
+        "soc_end_pct": 53.0,
         "event_type": "grid_outage_or_peak_discharge"
     })
-    # 2. Oct 26 Peak outage (15 min)
+    # 2. Oct 26 Peak outage (16 min, 18:04 to 18:20, 0.260 kWh, SoC 99% -> 95%)
     new_outage_events.append({
         "date": "2026-10-26",
         "start_time": "18:04",
         "end_time": "18:20",
-        "duration_minutes": 15,
-        "energy_kwh": round(2.0 * (15 / 60.0), 3),
-        "avg_load_kw": 2.0,
-        "soc_start_pct": 100.0,
-        "soc_end_pct": 90.0,
+        "duration_minutes": 16,
+        "energy_kwh": 0.260,
+        "avg_load_kw": 1.040,
+        "soc_start_pct": 99.0,
+        "soc_end_pct": 95.0,
         "event_type": "grid_outage_or_peak_discharge"
     })
 
     df_new_outages = pd.DataFrame(new_outage_events)
     combined_outages = pd.concat([existing_outages, df_new_outages], ignore_index=True)
+    # Clean duplicates: remove redundant 2026-10-26 00:00 and 18:05 if present
+    combined_outages = combined_outages[
+        ~((combined_outages["date"] == "2026-10-26") & (combined_outages["start_time"].isin(["00:00", "18:05"])))
+    ]
     combined_outages = combined_outages.drop_duplicates(subset=["date", "start_time"]).sort_values(["date", "start_time"]).reset_index(drop=True)
+    combined_outages["energy_kwh"] = combined_outages["energy_kwh"].clip(upper=5.12)
     combined_outages.to_csv(outage_file, index=False)
     print(f"  ✓ Saved unified outage ground truth: {outage_file} ({len(combined_outages)} total confirmed blackout events)")
 

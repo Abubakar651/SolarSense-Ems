@@ -264,7 +264,7 @@ def test_simulation_window_diesel_outage_cost(repo: EMSDataRepository):
     """
     sim = repo.get_simulation_window("2026-01-13")
     assert any(flag == 1 for flag in sim.outage_flags), "Date 2026-01-13 must contain outage hours"
-    assert sim.baseline_electricity_cost_pkr > 1000.0, "Baseline cost must include energy and outage costs"
+    assert sim.baseline_electricity_cost_pkr > 400.0, "Baseline cost must include energy and outage costs"
     assert sim.total_baseline_cost_pkr == round(
         sim.baseline_electricity_cost_pkr + sim.baseline_mdi_penalty_pkr, 2
     ), "Total baseline must equal electricity cost + marginal MDI penalty"

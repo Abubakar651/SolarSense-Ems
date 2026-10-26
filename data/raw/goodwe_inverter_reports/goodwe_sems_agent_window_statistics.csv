@@ -1,0 +1,21 @@
+date,window,peak_power_kw,min_power_kw,notes
+2026-03-20,W2 Spring Peak,5.473,-0.023,Spring equinox — highest peak overall!
+2026-03-21,W2 Spring Peak,4.395,-0.022,Good spring day
+2026-03-22,W2 Spring Peak,4.925,-0.022,Strong spring generation
+2026-03-23,W2 Spring Peak,5.217,-0.022,Excellent spring day
+2026-09-15,W1 Panel Wash,4.612,-4.103,Grid outage visible (negative spikes ~-4.1 kW)
+2026-09-16,W1 Panel Wash,4.45,-1.013,Evening load events visible
+2026-09-17,W1 Panel Wash,4.854,-0.025,"Clean sunny day, strong generation"
+2026-09-18,W1 Panel Wash,4.971,-0.025,Excellent generation day
+2026-09-19,W1 Panel Wash,4.823,-4.122,Grid outage ~23:30 (-4.1 kW)
+2026-09-20,W1 Panel Wash,5.015,-3.608,"Best day of window, outage at end"
+2026-09-21,W1 Panel Wash,5.023,-3.124,"Peak 5.023 kW, evening outage"
+2026-09-22,W1 Panel Wash,4.43,-3.098,"Moderate generation, evening outage"
+2026-09-23,W1 Panel Wash,4.068,-3.108,Early morning outage (00:18–01:30)
+2026-09-24,W1 Panel Wash,4.255,-3.597,Early morning outage (00:16–01:50)
+2026-09-25,W1 Panel Wash,4.674,-0.024,"Clean day, no outage"
+2026-09-26,W1 Panel Wash,5.19,-3.097,Highest peak of window! Evening outage
+2026-09-27,W1 Panel Wash,4.633,-3.123,Evening outage ~23:50
+2026-09-28,W1 Panel Wash,4.674,-1.529,Partial morning outage
+2026-09-29,W1 Panel Wash,4.75,-1.021,Very clean generation curve
+2026-09-30,W1 Panel Wash,4.413,-0.996,"Good generation, minor evening dip"

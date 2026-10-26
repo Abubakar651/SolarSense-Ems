@@ -1,0 +1,11 @@
+alarm_name,start_time,end_time,status,severity,duration_minutes
+Grid Power Outage (Grid Loss),2026-10-26 19:27:56,2026-10-26 19:29:02,Recovered,Fault,1.1
+Grid Line Under-Voltage L2,2026-10-26 19:27:56,2026-10-26 19:29:02,Recovered,Fault,1.1
+Grid Under-Frequency L2,2026-10-26 19:27:56,2026-10-26 19:29:02,Recovered,Fault,1.1
+Grid Under-Voltage Protection,2026-10-26 18:18:56,2026-10-26 18:20:03,Recovered,Fault,1.12
+Grid Over-Frequency Protection,2026-10-26 18:18:56,2026-10-26 18:20:03,Recovered,Fault,1.12
+Grid Power Outage (Grid Loss),2026-10-26 18:04:56,2026-10-26 18:20:03,Recovered,Fault,15.12
+Grid Over-Frequency L2,2026-10-26 18:04:56,2026-10-26 18:19:02,Recovered,Fault,14.1
+Grid Line Under-Voltage L2,2026-10-26 18:04:56,2026-10-26 18:19:02,Recovered,Fault,14.1
+Grid Line Under-Voltage L2,2026-10-25 21:48:51,2026-10-26 01:14:56,Recovered,Fault,206.08
+Grid Power Outage (Grid Loss),2026-10-25 21:48:51,2026-10-26 01:14:56,Recovered,Fault,206.08

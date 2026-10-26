@@ -1,46 +1,49 @@
 # SolarSense EMS ☀️🔋🏭
-**Industrial Energy Management System & Microgrid Digital Twin**  
-*Optimized for LESCO B3 Industrial Grid Connections (Lahore, Pakistan)*
+**Industrial & Residential Energy Management System & Microgrid Digital Twin**  
+*Optimized for LESCO B3 Industrial & A-1 Residential ToU Grid Connections (Lahore, Pakistan)*
 
 [![Python 3.11+](https://img.shields.io/badge/Python-3.11%2B-blue.svg)](https://www.python.org/)
 [![Solver: HiGHS C++](https://img.shields.io/badge/Solver-HiGHS%20MILP%20(C%2B%2B)-purple.svg)](https://highs.dev/)
 [![ML: LightGBM](https://img.shields.io/badge/ML-LightGBM%20GBDT-success.svg)](https://lightgbm.readthedocs.io/)
 [![CV: PyTorch EfficientNet-B2](https://img.shields.io/badge/CV-PyTorch%20EfficientNet--B2-red.svg)](https://pytorch.org/)
 [![API: FastAPI](https://img.shields.io/badge/API-FastAPI%20REST%20%2B%20SSE-009688.svg)](https://fastapi.tiangolo.com/)
-[![Tests: 64 Passing](https://img.shields.io/badge/Tests-64%2F64%20Passing-brightgreen.svg)](tests/)
+[![Tests: 81 Passing](https://img.shields.io/badge/Tests-81%2F81%20Passing-brightgreen.svg)](tests/)
+[![Auditor: Argon Verified](https://img.shields.io/badge/Auditor-Argon%20Forensic%20Audit%20(100%25%20Pass)-teal.svg)](docs/DATASET_INSPECTION_AND_ARGON_AUDIT_BRIEF.md)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
 ---
 
 ## 📌 Executive Overview
 
-**SolarSense EMS** is an autonomous, high-performance edge energy management platform built for heavy industrial facilities operating under the **Lahore Electric Supply Company (LESCO)** tariff structure. 
+**SolarSense EMS** is an autonomous, high-performance edge energy management platform and microgrid digital twin built for utility connections operating under the **Lahore Electric Supply Company (LESCO)** tariff structure.
 
-Operating in environments with severe utility Time-of-Use price spikes, punitive demand fines, and recurring feeder load-shedding, SolarSense orchestrates real-time power flows across a **500 kWp rooftop solar PV array**, a **600 kWh / 250 kW LiFePO4 battery system**, an industrial factory load ($200 - 450\text{ kW}$ base, spikes $> 500\text{ kW}$), and an auxiliary **400 kVA backup diesel generator**.
+The platform provides dual-envelope operational capabilities:
+1. **Station 904-A JT (Empirical Residential Microgrid):** Real-world telemetry from 904-A J2 Johar Town, Lahore ($31.5204^\circ\text{ N}, 74.3587^\circ\text{ E}$), integrating a **$7.02\text{ kWp}$ DC Bifacial PV array**, a **GoodWe ES Hybrid Inverter** (SN: `9010KESC253L0146`, rated up to $10.0\text{ kW}$), a **$5.12\text{ kWh}$ LiFePO4 battery pack** ($51.2\text{ V}, 100\text{ Ah}$), and **LESCO A-1 ToU & Net-Metering** ($46.85 / 34.53\text{ PKR}$ rates, $27.00\text{ PKR}$ export credit).
+2. **LESCO B3 Industrial Factory Microgrid Benchmark:** A heavy industrial facility orchestrating a **$500\text{ kWp}$ rooftop solar PV array**, a **$600\text{ kWh} / 250\text{ kW}$ LiFePO4 battery system**, an industrial factory load ($200 - 450\text{ kW}$ base, spikes $> 500\text{ kW}$ with $1,200\text{ PKR/kW}$ MDI ratchet penalties), and an auxiliary **$400\text{ kVA}$ backup diesel generator** ($95\text{ PKR/kWh}$).
 
 ```text
 ┌────────────────────────────────────────────────────────────────────────────────────────┐
-│                              INDUSTRIAL MICROGRID TOPOLOGY                             │
+│                        DUAL OPERATIONAL MICROGRID TOPOLOGY                             │
 │                                                                                        │
-│     500 kWp Solar PV (600 kW Inverter Cap)               LESCO 11 kV Feeder            │
-│                       │                                  (Category B3 ToU)             │
+│   Station 904-A JT (7.02 kWp) / Factory (500 kWp)        LESCO Grid Connection         │
+│                       │                                  (A-1 Residential / B3 Ind)    │
 │                       ▼                                          │                     │
 │            ┌──────────────────────┐                              ▼                     │
-│            │ GoodWe Solar String  │                   ┌──────────────────────┐         │
-│            │ Inverter Telemetry   │                   │ LESCO Boundary Meter │         │
+│            │ GoodWe Hybrid Series │                   ┌──────────────────────┐         │
+│            │ Inverter Telemetry   │                   │ Bidirectional Meter  │         │
 │            └──────────┬───────────┘                   └──────────┬───────────┘         │
 │                       │                                          │                     │
-│                       ├────────────────► 415V AC BUS ◄───────────┤                     │
+│                       ├────────────────► AC COMMON BUS ◄─────────┤                     │
 │                       │                                          │                     │
 │                       ▼                                          ▼                     │
 │            ┌──────────────────────┐                   ┌──────────────────────┐         │
-│            │ 600 kWh / 250 kW     │◄─────────────────►│ Factory Demand       │         │
-│            │ LiFePO4 BESS         │                   │ 200–450 kW (Spikes)  │         │
-│            │ (10% SoC Floor)      │                   └──────────▲───────────┘         │
+│            │ 5.12 kWh / 600 kWh   │◄─────────────────►│ Residential / Factory│         │
+│            │ LiFePO4 BESS         │                   │ Connected Demand     │         │
+│            │ (15% / 10% Floor)    │                   └──────────▲───────────┘         │
 │            └──────────────────────┘                              │                     │
 │                                                       ┌──────────┴───────────┐         │
-│                                                       │ 400 kVA Diesel Gen   │         │
-│                                                       │ (95 PKR/kWh Backup)  │         │
+│                                                       │ Islanded / Generator │         │
+│                                                       │ Backup Support       │         │
 │                                                       └──────────────────────┘         │
 └────────────────────────────────────────────────────────────────────────────────────────┘
 ```
@@ -73,13 +76,14 @@ Heavy manufacturers connected to LESCO B3 industrial feeders face three compound
 
 ### 3. Mixed-Integer Linear Programming (MILP) Dispatch Solver ([`src/optimizer/milp_solver.py`](src/optimizer/milp_solver.py))
 *Engineered by Abubakar*
-- **High-Speed C++ HiGHS Backend:** Formulated in CVXPY using Disciplined Parametrized Programming (DPP). Problem canonicalization is compiled **once** at startup; hourly solves simply update numeric parameters, executing in **$8.85\text{ ms}$ mean** ($< 25\text{ ms}$ budget).
+- **High-Speed C++ HiGHS Backend:** Formulated in CVXPY using Disciplined Parametrized Programming (DPP). Problem canonicalization is compiled **once** at startup; hourly solves simply update numeric parameters, executing in **$12.06\text{ ms}$ mean** ($< 25\text{ ms}$ budget).
 - **Physical Invariants Enforced:**
   - **Power Balance with Solar Curtailment Slack ($p_{\text{curtail}} \ge 0$):** Absorbs excess solar during sunny midday blackouts with a full battery.
   - **Mutual Exclusivity:** Enforced with binary variables ($u_{\text{ch}} \in \{0, 1\}$) to eliminate parasitic micro-cycling.
   - **Throughput Wear Penalty ($2.00\text{ PKR/kWh}$):** Minimizes battery degradation.
   - **Outage MDI Immunity:** Enforces $p_{\text{grid}} = 0$ during blackouts, ensuring load spikes during grid outages do not incur utility demand penalties.
-  - **The Live-Grid Soft Reserve Guard (Anti-Hoarding Physics):** Start-of-hour blackout reserve is strictly gated by $\text{live}[t] > 0.5$. Mathematical proof: during an active blackout, battery discharge effective cost is $\frac{95.00}{0.95} + 2.00 = 102.00\text{ PKR/kWh} > 95.00\text{ PKR/kWh}$ diesel cost. Gating the reserve unlocks battery discharge the instant a blackout occurs, preventing irrational diesel hoarding.
+  - **The Live-Grid Soft Reserve Guard (Anti-Hoarding Physics):** Start-of-hour blackout reserve is strictly gated by $\text{live}[t] > 0.5$. Gating the reserve unlocks battery discharge the instant a blackout occurs, preventing irrational diesel hoarding.
+  - **Post-Blackout Peak Recharge Suppression:** Gating peak grid import ($p_{\text{grid}}[t] \le \text{load}[t]$) during Peak ToU hours (18:00–22:00) when $\text{SoC} \ge 15\%$ prevents grid-to-battery charging at 46.85 PKR/kWh. Solves the stock GoodWe firmware flaw proven on Oct 26, achieving **27.64% daily savings** (PKR 517.46/day net reduction).
 
 ### 4. High-Performance FastAPI Compute Gateway ([`src/api/`](src/api/))
 *Engineered by Abubakar*
@@ -87,6 +91,14 @@ Heavy manufacturers connected to LESCO B3 industrial feeders face three compound
 - **Non-Blocking Compute:** Offloads CPU-bound MILP solves to `starlette.concurrency.run_in_threadpool`.
 - **Sub-5ms Endpoints:** `GET /api/window` executes in **$1.37\text{ ms}$**; `POST /api/optimize` executes in **$12.36\text{ ms}$**.
 - **Real-Time SSE Streaming:** `GET /api/backtest/stream` streams multi-day rolling backtest frames to the Next.js frontend via Server-Sent Events at 60 FPS client rate.
+
+### 5. Independent Forensic Energy Audit by Argon ([`docs/DATASET_INSPECTION_AND_ARGON_AUDIT_BRIEF.md`](docs/DATASET_INSPECTION_AND_ARGON_AUDIT_BRIEF.md))
+*Audited by Argon (Principal Microgrid Architect & Power Systems Data Auditor)*
+- **16-Month Macroscopic Energy Balance (Pass):** $\sum \text{Load} (16,127.5\text{ kWh}) = \text{PV} (12,135.1) + \text{Purchased} (10,404.2) - \text{Sold} (5,243.2) - \text{Losses} (1,168.6\text{ kWh})$. Physical loss residual of **$2.42\text{ kWh/day}$** ($5.18\%$ of gross input) decomposes exactly into inverter standby tare ($1.56\text{ kWh/day}$), BESS round-trip dissipation ($0.44\text{ kWh/day}$), and DC-AC conversion ($0.42\text{ kWh/day}$).
+- **Zero Nocturnal / Phantom Solar (Pass):** Strictly $0.000000\text{ kW}$ across all 5,193 zero-GHI and night hours.
+- **Blackout Feeder Isolation & Islanding (Pass):** Zero grid import or export across all 48 blackout hours.
+- **Physical Storage Bounds (Pass):** 113 confirmed blackout events with 0 breaches of the $5.12\text{ kWh}$ battery capacity ceiling ($\max \le 3.73\text{ kWh}$).
+- **Telemetry Ingestion Sanity (Pass):** 315 valid 5-min station telemetry rows ending cleanly at `2026-10-27 02:10:00` with 100% battery SoC.
 
 ---
 

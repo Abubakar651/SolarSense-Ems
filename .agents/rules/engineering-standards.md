@@ -87,3 +87,31 @@ At the end of EVERY coding task, run `pytest` and a micro-benchmark in the termi
 2. **Latency & Memory Benchmark:** Measured execution time (`time.perf_counter()`) compared against Section 2 budgets.
 3. **Physics & Leakage Audit:** Confirmation of `outage_flag` physics, monthly MDI ratchet state, causal lag boundaries, and DTO immutability.
 4. **Edge Cases Verified:** Specific boundary conditions asserted in the test suite.
+
+## 8. Detailed Git Commit & Repository Push Standards
+
+Whenever you commit code and push to the remote repository, your commit message MUST be detailed, structured, and informative. Never produce single-line, generic, or vague commit messages (such as "update code", "fix bugs", or "make changes").
+
+Every commit message MUST adhere to this exact 4-part structure:
+
+1. **Header (Conventional Commit Format):**
+   `<type>(<scope>): <imperative summary of change>` (maximum 72 characters).
+   - Allowed types: `feat`, `fix`, `refactor`, `perf`, `test`, `docs`, `chore`, `audit`.
+   - Examples: `fix(audit): resolve 6 forensic edge cases & implement peak recharge suppression`, `feat(optimizer): add residential ToU battery dispatch & post-blackout capping`.
+
+2. **Context & Motivation:**
+   1–2 paragraphs explaining:
+   - Why this change was necessary (e.g., physical invariant violation, audit report finding, hardware telemetry mismatch, new operational feature).
+   - Real-world domain context (e.g., LESCO A-1 vs B3 tariffs, GoodWe hybrid inverter behavior, blackout islanding dynamics).
+
+3. **Detailed Breakdown of Changes:**
+   A categorized bulleted list specifying exact files and architectural edits:
+   - Specific equations, constraints, or parameters added/modified (e.g., CVXPY DPP parameters, HiGHS bounds).
+   - Specific data files cleaned, deduplicated, or truncated (e.g., row counts, capacity caps, timestamp bounds).
+   - Configuration constants or DTO updates (e.g., `feature_store.py`, `lesco-tarrif.json`).
+
+4. **Verification & Proof ("Show Me Proof"):**
+   - Exact `pytest` results (e.g., `81 passed in 4.64s`).
+   - Benchmark latency measurements (`time.perf_counter()` against Section 2 hard budgets).
+   - Confirmation of physical invariants (e.g., zero nocturnal solar leakage, energy conservation, $\le 5.12\text{ kWh}$ BESS ceiling).
+

@@ -6,6 +6,11 @@ SolarSense EMS — Phase 1 Step 5
 Merges all silver-tier processed tables into the unified Gold-layer
 Master EMS Feature Store.
 
+Step 0 (new): runs repair_master_dataset.run_repair() — fixes nighttime phantom solar in the
+5-min telemetry and reconstructs hourly PV for all 464 days, anchored to the daily portal log.
+`solar_energy_kwh` is therefore complete (11,136 rows) and `solar_source` records provenance
+('measured_5min' | 'reconstructed').
+
 Input tables (all on hourly timestamp index):
   1. goodwe_lahore_hourly.csv       — Solar generation telemetry (39 high-res days)
   2. goodwe_lahore_daily.csv        — 464-day daily generation history
@@ -37,10 +42,18 @@ import pandas as pd
 import warnings
 warnings.filterwarnings("ignore")
 
+try:  # `python -m src.data_engineering.build_master_feature_store`
+    from src.data_engineering.repair_master_dataset import run_repair, verify_master
+except ImportError:  # `python src/data_engineering/build_master_feature_store.py`
+    import sys
+    sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../..")))
+    from src.data_engineering.repair_master_dataset import run_repair, verify_master
+
 BASE = os.path.abspath(os.path.join(os.path.dirname(__file__), "../.."))
 
 PATHS = {
     "hourly_5min": os.path.join(BASE, "data/processed/solar_timeseries/goodwe_lahore_hourly.csv"),
+    "reconstructed": os.path.join(BASE, "data/processed/solar_timeseries/goodwe_lahore_hourly_reconstructed.csv"),
     "daily":       os.path.join(BASE, "data/processed/solar_timeseries/goodwe_lahore_daily.csv"),
     "weather":     os.path.join(BASE, "data/processed/weather/lahore_historical_weather_hourly.csv"),
     "soiling":     os.path.join(BASE, "data/processed/soiling/soiling_analysis_lahore.csv"),
@@ -48,6 +61,7 @@ PATHS = {
     "outages":     os.path.join(BASE, "data/processed/grid_outages/lesco_johar_town_outages.csv"),
 }
 OUT_FILE = os.path.join(BASE, "data/processed/master_ems_timeseries.csv")
+PARQUET_CACHE = os.path.join(BASE, "data/processed/master_ems_timeseries.parquet")
 
 
 def load_all_tables() -> dict:
@@ -66,6 +80,9 @@ def main():
     print("=" * 60)
     print("SolarSense EMS — Phase 1 Step 5: Master Feature Store")
     print("=" * 60)
+
+    print("\n[0/6] Forensic repair + weather-anchored PV reconstruction...")
+    run_repair(verbose=True)
 
     print("\n[1/6] Loading all silver-tier tables...")
     T = load_all_tables()
@@ -120,6 +137,16 @@ def main():
         df = df.merge(hr[hr_cols], on="timestamp", how="left")
         print(f"  → 5-min telemetry merged: {df['solar_energy_kwh'].notna().sum():,} non-null hourly solar records")
 
+    # Replace the 39-day telemetry-only solar column with the 464-day anchored reconstruction
+    rec = T["reconstructed"].copy()
+    if len(rec):
+        rec["timestamp"] = pd.to_datetime(rec["timestamp"])
+        df = df.drop(columns=["solar_energy_kwh", "solar_peak_kw"], errors="ignore").merge(
+            rec[["timestamp", "solar_energy_kwh", "solar_peak_kw", "solar_source"]],
+            on="timestamp", how="left")
+        print(f"  → Reconstructed PV merged: {df['solar_energy_kwh'].notna().sum():,} non-null hourly solar records "
+              f"({(df['solar_source'] == 'reconstructed').sum():,} reconstructed hours)")
+
     # ── Merge 4: Daily soiling analysis ──
     print("\n[6/6] Merging soiling analysis and 464-day generation history...")
     soil = T["soiling"].copy()
@@ -162,9 +189,8 @@ def main():
     #            negative = factory drawing from grid
     # Use hourly solar if available, otherwise distribute daily evenly across daylight hours
     df["solar_kwh_for_net"] = df["solar_energy_kwh"].fillna(
-        df.apply(lambda r: r["generation_kwh_daily"] / 10.0
-                 if (pd.notna(r["generation_kwh_daily"]) and r["is_daytime"] == 1)
-                 else 0.0, axis=1)
+        pd.Series(np.where(df["generation_kwh_daily"].notna() & (df["is_daytime"] == 1),
+                           df["generation_kwh_daily"] / 10.0, 0.0), index=df.index)
     )
     df["net_power_kw"]    = (df["solar_kwh_for_net"] - df["factory_load_kw"]).round(3)
     df["solar_cover_pct"] = np.where(
@@ -180,7 +206,7 @@ def main():
         "ghi_wm2", "dni_wm2", "dhi_wm2", "temp_c", "rain_mm", "wind_ms",
         "humidity_pct", "ghi_kwh_m2", "is_daytime", "rain_event",
         # Solar (hourly telemetry — 39 high-res days)
-        "solar_energy_kwh", "solar_peak_kw",
+        "solar_energy_kwh", "solar_peak_kw", "solar_source",
         "bat_discharged_kwh", "bat_charged_kwh",
         "battery_soc_mean", "battery_soc_min",
         # Solar (daily macro — 464 days)
@@ -202,6 +228,9 @@ def main():
 
     # ── Save ──
     df.to_csv(OUT_FILE, index=False)
+    if os.path.exists(PARQUET_CACHE):  # derived cache of the previous CSV; EMSDataRepository recompiles it
+        os.remove(PARQUET_CACHE)
+        print("  ↻ Invalidated stale master_ems_timeseries.parquet cache")
 
     # ── Validation Report ──
     print("\n" + "═" * 60)
@@ -224,6 +253,12 @@ def main():
     print(f"    Total Solar Generated : {total_gen:.1f} kWh  ({total_gen/1000:.2f} MWh)")
     print(f"    Total Factory Load    : {total_load:.2f} MWh (est.)")
     print(f"    Solar Self-Coverage   : {total_gen / (total_load*1000) * 100:.1f}% of factory demand")
+    audit = verify_master(OUT_FILE)
+    print(f"\n  Physics audit (master CSV):")
+    print(f"    Solar nulls                 : {audit['solar_nulls']:.0f} (expect 0)")
+    print(f"    Night rows with solar > 0   : {audit['night_rows_with_solar']:.0f} (expect 0)")
+    print(f"    Max hourly solar            : {audit['max_hourly_kw']:.3f} kW")
+    print(f"    Max |daily sum - portal log|: {audit['max_abs_daily_err_kwh']:.2e} kWh")
     print(f"\n  ✓ Saved → {OUT_FILE}")
     print("\n✅ Step 5 complete — Phase 1 DONE!\n")
 

@@ -11,7 +11,7 @@ Runs one epoch on a tiny synthetic ImageFolder (no network, no real dataset) and
 from pathlib import Path
 
 import pytest
-import torch
+torch = pytest.importorskip("torch")
 from PIL import Image
 
 from src.vision.train_classifier import build_model, train_classifier

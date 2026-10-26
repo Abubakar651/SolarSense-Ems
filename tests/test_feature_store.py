@@ -255,8 +255,9 @@ def test_mdi_outage_physics_reconciliation(repo: EMSDataRepository):
     spikes = repo.get_mdi_spikes(threshold_kw=500.0)
     total_penalty = ((spikes["grid_import_kw"] - 500.0) * float(repo.policy.mdi_penalty_per_kw_pkr)).sum()
     
-    # Historical ground-truth baseline loss: 2,360,353.20 PKR
-    assert abs(total_penalty - 2360353.20) < 1.0, f"MDI penalty must equal 2.36M PKR, got {total_penalty:,.2f}"
+    # Historical baseline loss. Was 2,360,353.20 PKR before the solar series was repaired/reconstructed
+    # (repair_master_dataset.py); net grid draw = load - solar, so the baseline re-pins to the new solar.
+    assert abs(total_penalty - 2334661.20) < 1.0, f"MDI penalty must equal 2.33M PKR, got {total_penalty:,.2f}"
 
     # Verify that monthly ratchet in get_optimization_slice ignores blackout hours
     # and tracks net grid peak import, staying >= 500.0 kW

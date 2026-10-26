@@ -8,6 +8,7 @@ kaggle.json
 # Large Datasets & Archives
 data/raw/
 data/processed/
+data/backups/
 *.zip
 *.tar.gz
 *.7z

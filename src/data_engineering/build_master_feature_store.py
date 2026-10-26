@@ -57,7 +57,7 @@ PATHS = {
     "daily":       os.path.join(BASE, "data/processed/solar_timeseries/goodwe_lahore_daily.csv"),
     "weather":     os.path.join(BASE, "data/processed/weather/lahore_historical_weather_hourly.csv"),
     "soiling":     os.path.join(BASE, "data/processed/soiling/soiling_analysis_lahore.csv"),
-    "factory":     os.path.join(BASE, "data/processed/factory_load/lahore_industrial_load_hourly.csv"),
+    "residential": os.path.join(BASE, "data/processed/residential_load/lahore_residential_load_hourly.csv"),
     "outages":     os.path.join(BASE, "data/processed/grid_outages/lesco_johar_town_outages.csv"),
 }
 OUT_FILE = os.path.join(BASE, "data/processed/master_ems_timeseries.csv")
@@ -114,16 +114,18 @@ def main():
         df = df.merge(wx[wx_cols], on="timestamp", how="left")
         print(f"  → Weather merged: {df['ghi_wm2'].notna().sum():,} non-null GHI values")
 
-    # ── Merge 2: Factory load (hourly) ──
-    print("\n[4/6] Merging factory load profile...")
-    fl = T["factory"].copy()
-    if len(fl):
-        fl["timestamp"] = pd.to_datetime(fl["timestamp"])
-        fl_cols = ["timestamp", "factory_load_kw", "tariff_window",
+    # ── Merge 2: Residential load (hourly) ──
+    print("\n[4/6] Merging residential load profile...")
+    rl = T.get("residential", pd.DataFrame()).copy()
+    if len(rl):
+        rl["timestamp"] = pd.to_datetime(rl["timestamp"])
+        rl_cols = ["timestamp", "residential_load_kw", "tariff_window",
                    "tariff_rate_pkr", "electricity_cost_pkr"]
-        fl_cols = [c for c in fl_cols if c in fl.columns]
-        df = df.merge(fl[fl_cols], on="timestamp", how="left")
-        print(f"  → Factory load merged: mean {df['factory_load_kw'].mean():.1f} kW")
+        rl_cols = [c for c in rl_cols if c in rl.columns]
+        df = df.merge(rl[rl_cols], on="timestamp", how="left")
+        # Backwards-compatible alias for existing endpoints
+        df["factory_load_kw"] = df["residential_load_kw"]
+        print(f"  → Residential load merged: mean {df['residential_load_kw'].mean():.2f} kW (peak {df['residential_load_kw'].max():.2f} kW)")
 
     # ── Merge 3: High-resolution 5-min aggregated hourly solar data ──
     print("\n[5/6] Merging GoodWe 5-min solar telemetry (39 days)...")
@@ -192,10 +194,10 @@ def main():
         pd.Series(np.where(df["generation_kwh_daily"].notna() & (df["is_daytime"] == 1),
                            df["generation_kwh_daily"] / 10.0, 0.0), index=df.index)
     )
-    df["net_power_kw"]    = (df["solar_kwh_for_net"] - df["factory_load_kw"]).round(3)
+    df["net_power_kw"]    = (df["solar_kwh_for_net"] - df["residential_load_kw"]).round(3)
     df["solar_cover_pct"] = np.where(
-        df["factory_load_kw"] > 0,
-        (df["solar_kwh_for_net"] / df["factory_load_kw"] * 100).clip(0, 200),
+        df["residential_load_kw"] > 0,
+        (df["solar_kwh_for_net"] / df["residential_load_kw"] * 100).clip(0, 500),
         0.0
     ).round(1)
 
@@ -216,8 +218,8 @@ def main():
         "soiling_loss_kwh", "soiling_loss_pkr", "soiling_model_pr",
         "event_type", "days_since_last_wash",
         "ghi_kwh_m2_daily", "temp_c_mean", "temp_c_max", "rain_mm_total",
-        # Factory demand
-        "factory_load_kw", "tariff_window", "tariff_rate_pkr", "electricity_cost_pkr",
+        # Residential demand (primary) and backward-compatible alias
+        "residential_load_kw", "factory_load_kw", "tariff_window", "tariff_rate_pkr", "electricity_cost_pkr",
         # Grid
         "outage_flag", "outage_energy_kwh",
         # EMS derived
@@ -244,15 +246,15 @@ def main():
     print(f"    High-res 5-min telemetry  : {df['solar_energy_kwh'].notna().sum():,} hours ({df['solar_energy_kwh'].notna().sum()/len(df)*100:.1f}%)")
     print(f"    464-day daily history     : {df['generation_kwh_daily'].notna().sum():,} hours ({df['generation_kwh_daily'].notna().sum()/len(df)*100:.1f}%)")
     print(f"  Weather coverage            : {df['ghi_wm2'].notna().sum():,} hours ({df['ghi_wm2'].notna().sum()/len(df)*100:.1f}%)")
-    print(f"  Factory load coverage       : {df['factory_load_kw'].notna().sum():,} hours ({df['factory_load_kw'].notna().sum()/len(df)*100:.1f}%)")
+    print(f"  Residential load coverage   : {df['residential_load_kw'].notna().sum():,} hours ({df['residential_load_kw'].notna().sum()/len(df)*100:.1f}%)")
     print(f"  Soiling data coverage       : {df['performance_ratio'].notna().sum():,} days")
     print(f"  Grid outage flagged hours   : {df['outage_flag'].sum()}")
     print(f"\n  Energy Totals (464-day history):")
     total_gen  = df.groupby("date")["generation_kwh_daily"].first().sum()
-    total_load = df["factory_load_kw"].sum() / 1000  # MWh
-    print(f"    Total Solar Generated : {total_gen:.1f} kWh  ({total_gen/1000:.2f} MWh)")
-    print(f"    Total Factory Load    : {total_load:.2f} MWh (est.)")
-    print(f"    Solar Self-Coverage   : {total_gen / (total_load*1000) * 100:.1f}% of factory demand")
+    total_load = df["residential_load_kw"].sum()  # kWh
+    print(f"    Total Solar Generated   : {total_gen:.1f} kWh  ({total_gen/1000:.2f} MWh)")
+    print(f"    Total Residential Load  : {total_load:.1f} kWh ({total_load/1000:.2f} MWh)")
+    print(f"    Solar Self-Coverage     : {total_gen / total_load * 100:.1f}% of residential demand")
     audit = verify_master(OUT_FILE)
     print(f"\n  Physics audit (master CSV):")
     print(f"    Solar nulls                 : {audit['solar_nulls']:.0f} (expect 0)")

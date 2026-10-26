@@ -1,23 +1,23 @@
 {
   "energy_cost_config": {
     "tariff_rates_pkr_per_kwh": {
-      "peak_rate": 60.0,
-      "off_peak_rate": 38.0,
-      "solar_export_rate": 9.0
+      "peak_rate": 46.85,
+      "off_peak_rate": 34.53,
+      "solar_export_rate": 27.0
     },
     "peak_hours_schedule": {
       "peak_start_hour": 18,
       "peak_end_hour": 22
     },
     "demand_limit_and_penalties": {
-      "sanctioned_demand_limit_kw": 500.0,
-      "demand_penalty_pkr_per_kw": 1200.0
+      "sanctioned_demand_limit_kw": 10.0,
+      "demand_penalty_pkr_per_kw": 0.0
     },
     "backup_and_outage_costs": {
       "diesel_generator_cost_pkr_per_kwh": 95.0
     },
     "maintenance_costs": {
-      "solar_cleaning_cost_pkr": 15000.0
+      "solar_cleaning_cost_pkr": 1500.0
     }
   }
 }

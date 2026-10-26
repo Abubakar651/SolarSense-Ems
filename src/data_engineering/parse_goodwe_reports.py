@@ -32,7 +32,7 @@ warnings.filterwarnings("ignore", category=UserWarning)
 # ──────────────────────────────────────────────────────
 # CONSTANTS
 # ──────────────────────────────────────────────────────
-REPORTS_DIR = os.path.join(os.path.dirname(__file__), "../../solar 5 minute data")
+REPORTS_DIR = os.path.join(os.path.dirname(__file__), "../../data/raw/goodwe_inverter_reports")
 OUT_DIR_TS   = os.path.join(os.path.dirname(__file__), "../../data/processed/solar_timeseries")
 OUT_DIR_OUT  = os.path.join(os.path.dirname(__file__), "../../data/processed/grid_outages")
 RAW_DIR      = os.path.join(os.path.dirname(__file__), "../../data/raw/solar_timeseries/goodwe_lahore")
@@ -667,17 +667,92 @@ def build_hourly(df_5min):
     return agg
 
 
+def parse_station_reports(reports_dir):
+    """Parse Station Operation Report XLSX files into 5-minute household load, PV, and BESS telemetry."""
+    import re
+    files = sorted(glob.glob(os.path.join(reports_dir, "Station Operation Report(*)_*.xlsx")))
+    all_rows = []
+    seen_dates = set()
+
+    for fpath in files:
+        base = os.path.basename(fpath)
+        try:
+            wb = openpyxl.load_workbook(fpath, data_only=True)
+            ws = wb.active
+            date_header = ws.cell(2, 1).value
+            m = re.search(r"(\d{2})/(\d{2})/(\d{4})", str(date_header))
+            if not m:
+                continue
+            date_str = f"{m.group(3)}-{m.group(2)}-{m.group(1)}"
+            if date_str in seen_dates:
+                continue
+            seen_dates.add(date_str)
+
+            time_labels = [ws.cell(3, c).value for c in range(3, ws.max_column + 1)]
+            indicators = {}
+            for r in range(4, ws.max_row + 1):
+                ind = ws.cell(r, 2).value
+                if ind:
+                    vals = []
+                    for c in range(3, ws.max_column + 1):
+                        v = ws.cell(r, c).value
+                        try:
+                            vals.append(float(v) if v is not None else 0.0)
+                        except (ValueError, TypeError):
+                            vals.append(0.0)
+                    indicators[ind] = vals
+
+            n = len(time_labels)
+            pv = indicators.get("PV Power(kW)", [0.0] * n)
+            load = indicators.get("Load Power(kW)", [0.0] * n)
+            bat = indicators.get("Battery Power(kW)", [0.0] * n)
+            soc = indicators.get("Battery SOC(%)", [0.0] * n)
+            grid = indicators.get("Grid Power(kW)", [0.0] * n)
+
+            for i in range(n):
+                t_label = time_labels[i]
+                if not t_label:
+                    continue
+                all_rows.append({
+                    "timestamp": f"{date_str} {t_label}:00",
+                    "pv_power_kw": round(pv[i], 3),
+                    "load_power_kw": round(load[i], 3),
+                    "battery_power_kw": round(bat[i], 3),
+                    "battery_soc_pct": round(soc[i], 1),
+                    "grid_power_kw": round(grid[i], 3),
+                    "date": date_str,
+                })
+        except Exception as e:
+            print(f"  Warning: failed to parse {base}: {e}")
+
+    df_st = pd.DataFrame(all_rows)
+    if not df_st.empty:
+        df_st = df_st.sort_values("timestamp").drop_duplicates("timestamp").reset_index(drop=True)
+    return df_st
+
+
 def parse_daily_history():
-    """Parse the hardcoded 464-day daily generation history."""
-    import io
-    df = pd.read_csv(io.StringIO(DAILY_DATA_RAW))
-    df["Date"] = pd.to_datetime(df["Date"])
+    """Parse daily generation history, preferring the authoritative 483-day SEMS agent dataset if available."""
+    agent_daily_path = os.path.join(os.path.dirname(__file__), "../../data/raw/goodwe_inverter_reports/goodwe_sems_agent_daily_pv_2025_2026.csv")
+    if os.path.exists(agent_daily_path):
+        df_raw = pd.read_csv(agent_daily_path)
+        df_raw["Date"] = pd.to_datetime(df_raw["date"])
+        df = pd.DataFrame({
+            "Date": df_raw["Date"],
+            "generation_kwh": df_raw["generation_kwh"].astype(float),
+            "battery_charged_kwh": 0.0,
+            "battery_discharged_kwh": 0.0,
+        })
+    else:
+        import io
+        df = pd.read_csv(io.StringIO(DAILY_DATA_RAW))
+        df["Date"] = pd.to_datetime(df["Date"])
+
     df = df.sort_values("Date").drop_duplicates("Date").reset_index(drop=True)
     df.columns = ["date", "generation_kwh", "battery_charged_kwh", "battery_discharged_kwh"]
     df["wash_event"] = (df["date"].dt.strftime("%Y-%m-%d") == KNOWN_WASH_DATE).astype(int)
     df["days_since_wash"] = np.nan
 
-    # Mark days since known wash forward
     wash_idx = df[df["wash_event"] == 1].index
     if len(wash_idx):
         for idx in range(wash_idx[0], len(df)):
@@ -691,46 +766,63 @@ def main():
     print("SolarSense EMS — Phase 1 Step 1: GoodWe Data Parser")
     print("=" * 60)
 
-    reports_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../solar 5 minute data"))
+    reports_dir = os.path.abspath(REPORTS_DIR)
     out_ts  = os.path.abspath(OUT_DIR_TS)
     out_out = os.path.abspath(OUT_DIR_OUT)
     raw_dir = os.path.abspath(RAW_DIR)
 
     # ── Parse 5-minute XLSX reports ──
-    print("\n[1/4] Parsing GoodWe XLSX operation reports...")
+    print(f"\n[1/5] Parsing GoodWe Inverter XLSX operation reports from {reports_dir}...")
     df_5min, df_outages = parse_xlsx_reports(reports_dir)
     print(f"      → {len(df_5min):,} five-minute rows across {df_5min['date'].nunique()} dates")
     print(f"      → {len(df_outages)} battery discharge / grid outage events detected")
 
+    # ── Parse Station 5-min reports ──
+    print("\n[2/5] Parsing Station Operation Reports (measured household load & grid flows)...")
+    df_station = parse_station_reports(reports_dir)
+    print(f"      → {len(df_station):,} station 5-min records across {df_station['date'].nunique() if not df_station.empty else 0} dates")
+
     # ── Build hourly aggregation ──
-    print("\n[2/4] Aggregating 5-min → hourly...")
+    print("\n[3/5] Aggregating 5-min → hourly...")
     df_hourly = build_hourly(df_5min)
     print(f"      → {len(df_hourly):,} hourly rows across {df_hourly['date'].nunique()} dates")
 
-    # ── Parse 464-day daily history ──
-    print("\n[3/4] Parsing 464-day daily history...")
+    # ── Parse daily history ──
+    print("\n[4/5] Parsing daily generation history...")
     df_daily = parse_daily_history()
     print(f"      → {len(df_daily)} daily rows | {df_daily['date'].min().date()} → {df_daily['date'].max().date()}")
     print(f"      → Total cumulative generation: {df_daily['generation_kwh'].sum():.1f} kWh")
     print(f"      → Known wash anchor: {KNOWN_WASH_DATE}")
 
     # ── Save outputs ──
-    print("\n[4/4] Saving outputs...")
+    print("\n[5/5] Saving outputs...")
     os.makedirs(out_ts,  exist_ok=True)
     os.makedirs(out_out, exist_ok=True)
     os.makedirs(raw_dir, exist_ok=True)
 
-    path_5min   = os.path.join(out_ts,  "goodwe_lahore_5min.csv")
-    path_hourly = os.path.join(out_ts,  "goodwe_lahore_hourly.csv")
-    path_daily  = os.path.join(out_ts,  "goodwe_lahore_daily.csv")
-    path_out    = os.path.join(out_out, "lesco_johar_town_outages.csv")
-    path_raw    = os.path.join(raw_dir, "goodwe_lahore_daily_raw.csv")
+    path_5min    = os.path.join(out_ts,  "goodwe_lahore_5min.csv")
+    path_hourly  = os.path.join(out_ts,  "goodwe_lahore_hourly.csv")
+    path_daily   = os.path.join(out_ts,  "goodwe_lahore_daily.csv")
+    path_station = os.path.join(out_ts,  "goodwe_station_5min_telemetry.csv")
+    path_out     = os.path.join(out_out, "lesco_johar_town_outages.csv")
+    path_raw     = os.path.join(raw_dir, "goodwe_lahore_daily_raw.csv")
 
     df_5min.to_csv(path_5min,   index=False)
     df_hourly.to_csv(path_hourly, index=False)
     df_daily.to_csv(path_daily,  index=False)
-    df_outages.to_csv(path_out,  index=False)
     df_daily.to_csv(path_raw,    index=False)
+    if not df_station.empty:
+        df_station.to_csv(path_station, index=False)
+        print(f"      ✓ {path_station}")
+
+    # Merge outages with existing ground truth to never drop confirmed blackouts
+    if os.path.exists(path_out):
+        existing_outages = pd.read_csv(path_out)
+        combined_outages = pd.concat([existing_outages, df_outages], ignore_index=True)
+        combined_outages = combined_outages.drop_duplicates(subset=["date", "start_time"]).sort_values(["date", "start_time"]).reset_index(drop=True)
+        combined_outages.to_csv(path_out, index=False)
+    else:
+        df_outages.to_csv(path_out, index=False)
 
     print(f"      ✓ {path_5min}")
     print(f"      ✓ {path_hourly}")

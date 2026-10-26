@@ -99,13 +99,17 @@ def repair_5min_telemetry(f5: pl.DataFrame, wx: pl.DataFrame) -> Tuple[pl.DataFr
         f5 = f5.with_columns(pl.col("solar_power_kw").alias("solar_power_kw_legacy"))
 
     lut = wx.select(pl.col("timestamp").alias("hts"), "ghi_wm2")
+    max_wx_ts = wx["timestamp"].max()
+
+    # Split telemetry into in-spine (weather-aligned) and post-spine (recent/current day)
+    f5_in = f5.filter(pl.col("timestamp") <= max_wx_ts)
+    f5_out = f5.filter(pl.col("timestamp") > max_wx_ts)
+
     j = (
-        f5.with_columns(pl.col("timestamp").dt.truncate("1h").alias("hts"))
+        f5_in.with_columns(pl.col("timestamp").dt.truncate("1h").alias("hts"))
         .join(lut, on="hts", how="left")
         .sort("timestamp")
     )
-    if j["ghi_wm2"].null_count():
-        raise ValueError("5-min telemetry contains timestamps outside the weather spine")
 
     ghi = j["ghi_wm2"].to_numpy()
     pv = compute_pv_true_kw(j["active_power_kw"].to_numpy(), j["battery_power_kw"].to_numpy(), ghi)
@@ -128,6 +132,18 @@ def repair_5min_telemetry(f5: pl.DataFrame, wx: pl.DataFrame) -> Tuple[pl.DataFr
         pl.Series("pv_true_kw", pv),
         pl.Series("solar_power_kw", pv),
     ).drop(["hts", "ghi_wm2"])
+
+    if not f5_out.is_empty():
+        out_hours = f5_out["timestamp"].dt.hour().to_numpy()
+        out_daytime = (out_hours >= 6) & (out_hours <= 18)
+        out_pv = np.clip(f5_out["active_power_kw"].to_numpy() - f5_out["battery_power_kw"].to_numpy(), 0.0, ARRAY_KWP)
+        out_pv = np.where(out_daytime, out_pv, 0.0)
+        f5_out_fixed = f5_out.with_columns(
+            pl.Series("pv_true_kw", out_pv),
+            pl.Series("solar_power_kw", out_pv),
+        )
+        j = pl.concat([j, f5_out_fixed]).sort("timestamp")
+
     return j, stats
 
 

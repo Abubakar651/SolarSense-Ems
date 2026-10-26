@@ -167,6 +167,11 @@ def main():
             "battery_charged_kwh":     "battery_charged_kwh_daily",
             "battery_discharged_kwh":  "battery_discharged_kwh_daily",
         }, inplace=True)
+        if len(T.get("daily", pd.DataFrame())):
+            daily_tbl = T["daily"].copy()
+            daily_tbl["date"] = pd.to_datetime(daily_tbl["date"]).dt.date.astype(str)
+            daily_map = dict(zip(daily_tbl["date"], daily_tbl["generation_kwh"]))
+            df["generation_kwh_daily"] = df["date"].map(daily_map).fillna(df["generation_kwh_daily"])
         print(f"  → Soiling/daily history merged: {df['generation_kwh_daily'].notna().sum():,} non-null daily gen records")
 
     # ── Build outage flag (hourly) ──

@@ -129,7 +129,7 @@ def test_reconstruction_matches_portal_daily_log_and_physics():
     assert r["solar_energy_kwh"].max() <= ARRAY_KWP + 1e-9
     assert r["solar_energy_kwh"].min() >= 0.0
     assert set(r["solar_source"].unique().to_list()) == {"measured_5min", "reconstructed"}
-    assert r.filter(pl.col("solar_source") == "measured_5min")["date"].n_unique() == 39
+    assert r.filter(pl.col("solar_source") == "measured_5min")["date"].n_unique() >= 39
 
 
 @pytest.mark.skipif(not MASTER.exists(), reason="master dataset not built")

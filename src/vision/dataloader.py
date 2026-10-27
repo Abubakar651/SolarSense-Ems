@@ -22,10 +22,17 @@ IMAGENET_STD = [0.229, 0.224, 0.225]
 def build_transforms(train: bool) -> transforms.Compose:
     steps = [transforms.Resize((IMAGE_SIZE, IMAGE_SIZE))]
     if train:
-        # Panel defects look the same in any orientation, so both flips are label-safe
-        steps += [transforms.RandomHorizontalFlip(), transforms.RandomVerticalFlip()]
+        # Panel defects look the same in any orientation, so both flips are label-safe.
+        # Photometric jitter and slight affine perturbation simulate solar glare and CCTV angle shifts.
+        steps += [
+            transforms.RandomHorizontalFlip(),
+            transforms.RandomVerticalFlip(),
+            transforms.ColorJitter(brightness=0.2, contrast=0.2, saturation=0.1),
+            transforms.RandomAffine(degrees=10, translate=(0.04, 0.04), scale=(0.96, 1.04)),
+        ]
     steps += [transforms.ToTensor(), transforms.Normalize(IMAGENET_MEAN, IMAGENET_STD)]
     return transforms.Compose(steps)
+
 
 
 def build_dataloaders(

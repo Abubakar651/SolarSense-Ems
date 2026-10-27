@@ -28,12 +28,15 @@ EPOCHS = 15
 RANDOM_SEED = 42
 
 
-def build_model(num_classes: int, pretrained: bool = True) -> nn.Module:
+def build_model(num_classes: int, pretrained: bool = True, dropout: float = 0.4) -> nn.Module:
     weights = EfficientNet_B2_Weights.IMAGENET1K_V1 if pretrained else None
     model = efficientnet_b2(weights=weights)
-    # Swap only the 1000-class ImageNet head; the whole backbone is fine-tuned
     in_features = model.classifier[1].in_features
-    model.classifier[1] = nn.Linear(in_features, num_classes)
+    # Upgraded classifier head with dropout regularization to combat overfitting on small datasets
+    model.classifier = nn.Sequential(
+        nn.Dropout(p=dropout),
+        nn.Linear(in_features, num_classes)
+    )
     return model
 
 
@@ -43,8 +46,9 @@ def run_epoch(
     criterion: nn.Module,
     device: torch.device,
     optimizer: torch.optim.Optimizer | None = None,
+    use_tta: bool = False,
 ) -> dict[str, float]:
-    """Trains for one pass when given an optimizer, otherwise evaluates."""
+    """Trains for one pass when given an optimizer, otherwise evaluates with optional Test-Time Augmentation."""
     is_train = optimizer is not None
     model.train(is_train)
     total_loss, y_true, y_pred = 0.0, [], []
@@ -52,7 +56,15 @@ def run_epoch(
     with torch.set_grad_enabled(is_train):
         for images, labels in loader:
             images, labels = images.to(device), labels.to(device)
-            logits = model(images)
+            if is_train or not use_tta:
+                logits = model(images)
+            else:
+                # 3-pass Test-Time Augmentation (original, horizontal flip, vertical flip)
+                l1 = model(images)
+                l2 = model(torch.flip(images, dims=[3]))
+                l3 = model(torch.flip(images, dims=[2]))
+                logits = (l1 + l2 + l3) / 3.0
+
             loss = criterion(logits, labels)
             if is_train:
                 optimizer.zero_grad()
@@ -66,7 +78,6 @@ def run_epoch(
     return {
         "loss": total_loss / len(y_true),
         "accuracy": correct / len(y_true),
-        # Macro-F1 weights the small damage classes equally with clean/dusty
         "macro_f1": float(f1_score(y_true, y_pred, average="macro", zero_division=0)),
     }
 
@@ -78,16 +89,37 @@ def train_classifier(
     lr: float = 3e-4,
     batch_size: int = 16,
     pretrained: bool = True,
+    dropout: float = 0.4,
+    use_class_weights: bool = True,
+    use_tta: bool = True,
 ) -> dict[str, dict[str, float]]:
     torch.manual_seed(RANDOM_SEED)
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     loaders = build_dataloaders(root=root, batch_size=batch_size)
     class_to_idx = loaders["train"].dataset.class_to_idx
+    num_classes = len(class_to_idx)
 
-    model = build_model(num_classes=len(class_to_idx), pretrained=pretrained).to(device)
-    criterion = nn.CrossEntropyLoss()
-    optimizer = torch.optim.Adam(model.parameters(), lr=lr)
+    model = build_model(num_classes=num_classes, pretrained=pretrained, dropout=dropout).to(device)
+
+    # Class-weighted cross entropy to combat minority defect under-representation (e.g. physical_damage)
+    if use_class_weights and hasattr(loaders["train"].dataset, "samples"):
+        train_targets = [s[1] for s in loaders["train"].dataset.samples]
+        counts = torch.bincount(torch.tensor(train_targets), minlength=num_classes).float()
+        counts = torch.clamp(counts, min=1.0)
+        weights = len(train_targets) / (num_classes * counts)
+        criterion = nn.CrossEntropyLoss(weight=weights.to(device))
+    else:
+        criterion = nn.CrossEntropyLoss()
+
+    # Differential learning rate with AdamW: head learns faster, pretrained backbone fine-tunes gently
+    optimizer = torch.optim.AdamW(
+        [
+            {"params": model.features.parameters(), "lr": lr * 0.1},
+            {"params": model.classifier.parameters(), "lr": lr},
+        ],
+        weight_decay=1e-4,
+    )
     scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=epochs)
 
     save_path = Path(save_path)
@@ -95,9 +127,9 @@ def train_classifier(
     best_val: dict[str, float] | None = None
 
     for epoch in range(1, epochs + 1):
-        current_lr = optimizer.param_groups[0]["lr"]
+        current_lr = optimizer.param_groups[1]["lr"]
         train_m = run_epoch(model, loaders["train"], criterion, device, optimizer)
-        val_m = run_epoch(model, loaders["val"], criterion, device)
+        val_m = run_epoch(model, loaders["val"], criterion, device, use_tta=use_tta)
         scheduler.step()
         print(
             f"Epoch {epoch:>2}/{epochs} | lr {current_lr:.2e} | "
@@ -105,7 +137,7 @@ def train_classifier(
             f"val loss {val_m['loss']:.4f} acc {val_m['accuracy']:.4f} f1 {val_m['macro_f1']:.4f}"
         )
 
-        # Classes are imbalanced (clean/dusty ~3x each damage class), so select on macro-F1
+        # Classes are imbalanced, so select checkpoint on validation macro-F1
         if best_val is None or val_m["macro_f1"] > best_val["macro_f1"]:
             best_val = val_m
             torch.save(
@@ -123,8 +155,9 @@ def train_classifier(
 
     checkpoint = torch.load(save_path, map_location=device)
     model.load_state_dict(checkpoint["model_state_dict"])
-    test_m = run_epoch(model, loaders["test"], criterion, device)
+    test_m = run_epoch(model, loaders["test"], criterion, device, use_tta=use_tta)
     return {"best_epoch": checkpoint["epoch"], "val": best_val, "test": test_m}
+
 
 
 if __name__ == "__main__":

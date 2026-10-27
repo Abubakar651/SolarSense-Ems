@@ -22,7 +22,9 @@ from torchvision.models import EfficientNet_B2_Weights, efficientnet_b2
 
 from src.vision.dataloader import IMAGE_SIZE, build_dataloaders
 
+AUGMENTED_ROOT = Path("data/processed/panel_images/solarsense_augmented_v1")
 HYBRID_ROOT = Path("data/processed/panel_images/solarsense_hybrid_v1")
+DEFAULT_DATASET_ROOT = AUGMENTED_ROOT if AUGMENTED_ROOT.exists() else HYBRID_ROOT
 DEFAULT_CHECKPOINT_PATH = Path("models/efficientnet_b2_defects.pth")
 EPOCHS = 15
 RANDOM_SEED = 42
@@ -59,11 +61,12 @@ def run_epoch(
             if is_train or not use_tta:
                 logits = model(images)
             else:
-                # 3-pass Test-Time Augmentation (original, horizontal flip, vertical flip)
+                # 4-pass Test-Time Augmentation (original, horizontal flip, vertical flip, 180-deg flip)
                 l1 = model(images)
                 l2 = model(torch.flip(images, dims=[3]))
                 l3 = model(torch.flip(images, dims=[2]))
-                logits = (l1 + l2 + l3) / 3.0
+                l4 = model(torch.flip(torch.flip(images, dims=[3]), dims=[2]))
+                logits = (l1 + l2 + l3 + l4) / 4.0
 
             loss = criterion(logits, labels)
             if is_train:
@@ -83,15 +86,17 @@ def run_epoch(
 
 
 def train_classifier(
-    root: Path = HYBRID_ROOT,
+    root: Path = DEFAULT_DATASET_ROOT,
     save_path: Path = DEFAULT_CHECKPOINT_PATH,
     epochs: int = EPOCHS,
+    warmup_epochs: int = 2,
     lr: float = 3e-4,
     batch_size: int = 16,
     pretrained: bool = True,
     dropout: float = 0.4,
     use_class_weights: bool = True,
     use_tta: bool = True,
+    label_smoothing: float = 0.08,
 ) -> dict[str, dict[str, float]]:
     torch.manual_seed(RANDOM_SEED)
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -102,15 +107,15 @@ def train_classifier(
 
     model = build_model(num_classes=num_classes, pretrained=pretrained, dropout=dropout).to(device)
 
-    # Class-weighted cross entropy to combat minority defect under-representation (e.g. physical_damage)
+    # Class-weighted cross entropy with label smoothing to prevent overconfidence and under-representation
     if use_class_weights and hasattr(loaders["train"].dataset, "samples"):
         train_targets = [s[1] for s in loaders["train"].dataset.samples]
         counts = torch.bincount(torch.tensor(train_targets), minlength=num_classes).float()
         counts = torch.clamp(counts, min=1.0)
         weights = len(train_targets) / (num_classes * counts)
-        criterion = nn.CrossEntropyLoss(weight=weights.to(device))
+        criterion = nn.CrossEntropyLoss(weight=weights.to(device), label_smoothing=label_smoothing)
     else:
-        criterion = nn.CrossEntropyLoss()
+        criterion = nn.CrossEntropyLoss(label_smoothing=label_smoothing)
 
     # Differential learning rate with AdamW: head learns faster, pretrained backbone fine-tunes gently
     optimizer = torch.optim.AdamW(
@@ -127,6 +132,14 @@ def train_classifier(
     best_val: dict[str, float] | None = None
 
     for epoch in range(1, epochs + 1):
+        # Warmup phase: freeze backbone feature layers to prevent noisy early gradients from corrupting ImageNet weights
+        if epoch <= warmup_epochs:
+            for p in model.features.parameters():
+                p.requires_grad = False
+        else:
+            for p in model.features.parameters():
+                p.requires_grad = True
+
         current_lr = optimizer.param_groups[1]["lr"]
         train_m = run_epoch(model, loaders["train"], criterion, device, optimizer)
         val_m = run_epoch(model, loaders["val"], criterion, device, use_tta=use_tta)

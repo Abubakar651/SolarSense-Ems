@@ -75,3 +75,22 @@ def test_missing_split_folder_raises(tmp_path: Path):
     (tmp_path / "train" / "clean").mkdir(parents=True)
     with pytest.raises(FileNotFoundError):
         train_classifier(root=tmp_path, save_path=tmp_path / "m.pth", epochs=1, pretrained=False)
+
+
+def test_offline_dataset_augmentation(tmp_path: Path):
+    from src.vision.augment_dataset import generate_augmented_dataset
+
+    in_root = tmp_path / "in"
+    out_root = tmp_path / "out"
+    for split in ("train", "val", "test"):
+        for cls in ("clean", "dusty"):
+            d = in_root / split / cls
+            d.mkdir(parents=True)
+            Image.new("RGB", (32, 32), (100, 100, 100)).save(d / "sample_0.jpg")
+
+    counts = generate_augmented_dataset(input_root=in_root, output_root=out_root, target_per_class=4)
+    assert counts["train/clean"] == 4
+    assert counts["train/dusty"] == 4
+    assert (out_root / "train" / "clean").is_dir()
+    assert len(list((out_root / "train" / "clean").glob("*.jpg"))) == 4
+    assert len(list((out_root / "test" / "clean").glob("*.jpg"))) == 1

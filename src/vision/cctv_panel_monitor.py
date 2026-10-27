@@ -79,22 +79,31 @@ class CCTVPanelMonitor:
 
         ALERTS_DIR.mkdir(parents=True, exist_ok=True)
 
-    def predict_pil_image(self, pil_img: Image.Image, use_tta: bool = True) -> Dict[str, Any]:
-        """Classifies a PIL image using Test-Time Augmentation (TTA)."""
+    def predict_pil_image(
+        self,
+        pil_img: Image.Image,
+        use_tta: bool = True,
+        temperature: float = 0.75,
+    ) -> Dict[str, Any]:
+        """Classifies a PIL image using 4-pass Test-Time Augmentation (TTA) and calibrated softmax."""
         tensor = self.transform(pil_img.convert("RGB")).unsqueeze(0).to(self.device)
 
         with torch.no_grad():
             if not use_tta:
                 logits = self.model(tensor)
             else:
-                # 3-pass TTA (original, horizontal flip, vertical flip)
+                # 4-pass TTA (original, horizontal flip, vertical flip, 180-degree diagonal flip)
                 l1 = self.model(tensor)
                 l2 = self.model(torch.flip(tensor, dims=[3]))
                 l3 = self.model(torch.flip(tensor, dims=[2]))
-                logits = (l1 + l2 + l3) / 3.0
+                l4 = self.model(torch.flip(torch.flip(tensor, dims=[3]), dims=[2]))
+                logits = (l1 + l2 + l3 + l4) / 4.0
 
-            probs = torch.softmax(logits, dim=1)[0]
-            pred_idx = logits.argmax(dim=1).item()
+            # Temperature-scaled confidence calibration
+            t = max(temperature, 0.1)
+            scaled_logits = logits / t
+            probs = torch.softmax(scaled_logits, dim=1)[0]
+            pred_idx = probs.argmax().item()
             pred_label = self.idx_to_class[pred_idx]
             confidence = probs[pred_idx].item()
 
@@ -112,11 +121,16 @@ class CCTVPanelMonitor:
             },
         }
 
-    def process_frame(self, frame_bgr: np.ndarray, draw_overlay: bool = True) -> Tuple[Dict[str, Any], np.ndarray]:
+    def process_frame(
+        self,
+        frame_bgr: np.ndarray,
+        draw_overlay: bool = True,
+        temperature: float = 0.75,
+    ) -> Tuple[Dict[str, Any], np.ndarray]:
         """Runs defect detection on an OpenCV BGR frame and renders a HUD overlay."""
         rgb_frame = cv2.cvtColor(frame_bgr, cv2.COLOR_BGR2RGB)
         pil_img = Image.fromarray(rgb_frame)
-        diag = self.predict_pil_image(pil_img)
+        diag = self.predict_pil_image(pil_img, temperature=temperature)
 
         annotated = frame_bgr.copy()
         if draw_overlay:
@@ -152,6 +166,7 @@ class CCTVPanelMonitor:
         sample_interval_sec: float = 5.0,
         max_frames: Optional[int] = None,
         save_alerts: bool = True,
+        temperature: float = 0.75,
     ) -> list[Dict[str, Any]]:
         """Processes an RTSP stream URL, local video file, or camera index."""
         print("=" * 70)
@@ -167,7 +182,7 @@ class CCTVPanelMonitor:
 
         if source_path.is_file() and source_path.suffix.lower() in image_extensions:
             frame = cv2.imread(str(source_path))
-            diag, annotated = self.process_frame(frame)
+            diag, annotated = self.process_frame(frame, temperature=temperature)
             if save_alerts and diag["condition"] != "clean":
                 out_path = ALERTS_DIR / f"alert_{datetime.now().strftime('%Y%m%d_%H%M%S')}.jpg"
                 cv2.imwrite(str(out_path), annotated)
@@ -190,7 +205,7 @@ class CCTVPanelMonitor:
                 frame = cv2.imread(str(img_p))
                 if frame is None:
                     continue
-                diag, annotated = self.process_frame(frame)
+                diag, annotated = self.process_frame(frame, temperature=temperature)
                 diag["image_file"] = str(img_p)
                 history.append(diag)
 
@@ -231,7 +246,7 @@ class CCTVPanelMonitor:
                     last_sample_time = now
                     frame_idx += 1
 
-                    diag, annotated = self.process_frame(frame)
+                    diag, annotated = self.process_frame(frame, temperature=temperature)
                     history.append(diag)
 
                     status_msg = (
@@ -267,7 +282,13 @@ if __name__ == "__main__":
     parser.add_argument("--checkpoint", type=str, default=str(DEFAULT_CHECKPOINT_PATH), help="Model weights path")
     parser.add_argument("--interval", type=float, default=5.0, help="Sampling interval in seconds")
     parser.add_argument("--max-frames", type=int, default=10, help="Maximum frames to process in stream")
+    parser.add_argument("--temperature", type=float, default=0.75, help="Softmax temperature calibration factor")
     args = parser.parse_args()
 
     monitor = CCTVPanelMonitor(checkpoint_path=Path(args.checkpoint))
-    monitor.process_source(source=args.source, sample_interval_sec=args.interval, max_frames=args.max_frames)
+    monitor.process_source(
+        source=args.source,
+        sample_interval_sec=args.interval,
+        max_frames=args.max_frames,
+        temperature=args.temperature,
+    )

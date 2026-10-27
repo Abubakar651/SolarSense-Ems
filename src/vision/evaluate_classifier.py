@@ -24,15 +24,17 @@ from sklearn.metrics import accuracy_score, classification_report, confusion_mat
 from src.vision.dataloader import build_dataloaders
 from src.vision.train_classifier import (
     DEFAULT_CHECKPOINT_PATH,
-    HYBRID_ROOT,
+    DEFAULT_DATASET_ROOT,
     build_model,
 )
 
 
 def evaluate_model(
     checkpoint_path: Path = DEFAULT_CHECKPOINT_PATH,
-    dataset_root: Path = HYBRID_ROOT,
+    dataset_root: Path = DEFAULT_DATASET_ROOT,
     batch_size: int = 32,
+    use_tta: bool = True,
+    temperature: float = 0.75,
     save_plot_path: Path | None = Path("docs/samples/panel_defect_confusion_matrix.png"),
 ) -> dict:
     checkpoint_path = Path(checkpoint_path)
@@ -49,6 +51,8 @@ def evaluate_model(
     print(f"Device:          {device} ({torch.cuda.get_device_name(0) if torch.cuda.is_available() else 'CPU'})")
     print(f"Checkpoint:      {checkpoint_path}")
     print(f"Dataset Root:    {dataset_root}")
+    print(f"TTA Enabled:     {use_tta} (4-pass)")
+    print(f"Softmax Temp:    {temperature}")
     print("=" * 70)
 
     # 1. Load DataLoaders
@@ -68,21 +72,35 @@ def evaluate_model(
     print(f"\n[INFO] Loaded model trained for {checkpoint.get('epoch', '?')} epochs.")
     print(f"[INFO] Testing on {len(test_loader.dataset)} holdout images across {num_classes} classes: {class_names}")
 
-    # 3. Inference
-    y_true, y_pred, y_probs = [], [], []
+    # 3. Inference with optional 4-pass TTA & temperature calibration
+    y_true, y_pred, y_probs, confidences = [], [], [], []
+    t = max(temperature, 0.1)
+
     with torch.no_grad():
         for images, labels in test_loader:
             images = images.to(device)
-            logits = model(images)
-            probs = torch.softmax(logits, dim=1)
-            preds = logits.argmax(dim=1)
+            if not use_tta:
+                logits = model(images)
+            else:
+                l1 = model(images)
+                l2 = model(torch.flip(images, dims=[3]))
+                l3 = model(torch.flip(images, dims=[2]))
+                l4 = model(torch.flip(torch.flip(images, dims=[3]), dims=[2]))
+                logits = (l1 + l2 + l3 + l4) / 4.0
+
+            scaled_logits = logits / t
+            probs = torch.softmax(scaled_logits, dim=1)
+            preds = probs.argmax(dim=1)
+            batch_confs = probs.max(dim=1).values
 
             y_true.extend(labels.cpu().tolist())
             y_pred.extend(preds.cpu().tolist())
             y_probs.extend(probs.cpu().tolist())
+            confidences.extend(batch_confs.cpu().tolist())
 
     y_true = np.array(y_true)
     y_pred = np.array(y_pred)
+    mean_confidence = float(np.mean(confidences))
 
     # 4. Metrics
     acc = accuracy_score(y_true, y_pred)
@@ -97,6 +115,7 @@ def evaluate_model(
     print("HOLDOUT TEST SET ACCURACY & PERFORMANCE SCORECARD")
     print("=" * 70)
     print(f"Overall Accuracy:   {acc * 100:.2f}%  (Target: >= 94.0%)  {'[PASS]' if acc >= 0.94 else '[SUB-TARGET]'}")
+    print(f"Mean Confidence:    {mean_confidence * 100:.2f}%")
     print(f"Macro-F1 Score:     {macro_f1:.4f}   (Target: >= 0.920)  {'[PASS]' if macro_f1 >= 0.92 else '[SUB-TARGET]'}")
     print(f"Weighted-F1 Score:  {weighted_f1:.4f}")
     print("\nDetailed Per-Class Performance:")
@@ -164,8 +183,10 @@ def evaluate_model(
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="SolarSense EMS — Panel Defect Classifier Evaluator")
     parser.add_argument("--checkpoint", type=str, default=str(DEFAULT_CHECKPOINT_PATH), help="Path to .pth checkpoint")
-    parser.add_argument("--root", type=str, default=str(HYBRID_ROOT), help="Path to ImageFolder dataset root")
+    parser.add_argument("--root", type=str, default=str(DEFAULT_DATASET_ROOT), help="Path to ImageFolder dataset root")
     parser.add_argument("--batch-size", type=int, default=32, help="Batch size for DataLoader")
+    parser.add_argument("--temperature", type=float, default=0.75, help="Softmax temperature calibration factor")
+    parser.add_argument("--no-tta", action="store_true", help="Disable 4-pass Test-Time Augmentation")
     parser.add_argument("--save-plot", type=str, default="docs/samples/panel_defect_confusion_matrix.png", help="Path to save confusion matrix plot")
     args = parser.parse_args()
 
@@ -173,5 +194,7 @@ if __name__ == "__main__":
         checkpoint_path=Path(args.checkpoint),
         dataset_root=Path(args.root),
         batch_size=args.batch_size,
+        use_tta=not args.no_tta,
+        temperature=args.temperature,
         save_plot_path=Path(args.save_plot) if args.save_plot else None,
     )

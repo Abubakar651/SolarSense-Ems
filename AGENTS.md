@@ -8,8 +8,8 @@ Welcome to the **SolarSense Energy Management System (Lahore, Pakistan)** reposi
 
 The platform supports two complementary operational profiles:
 
-### A. Station 904-A JT (Empirical Residential Digital Twin)
-* **Location:** 904-A J2 Johar Town, Lahore ($31.5204^\circ\text{ N}, 74.3587^\circ\text{ E}$, Asia/Karachi UTC+05:00).
+### A. Station LHR-RES-01 (Empirical Residential Digital Twin)
+* **Location:** Lahore, Pakistan ($31.52^\circ\text{ N}, 74.36^\circ\text{ E}$, Asia/Karachi UTC+05:00).
 * **Hardware:** 
   * $7.02\text{ kWp}$ DC Bifacial PV Array ($12 \times 585\text{ W}$).
   * GoodWe ES / ES-Uniq Low-Voltage Hybrid Inverter (SN: `9010KESC253L0146`, rated up to $10.0\text{ kW}$).

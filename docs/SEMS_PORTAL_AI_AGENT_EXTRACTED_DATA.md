@@ -1,6 +1,6 @@
 # SolarSense EMS — SEMS+ Portal AI Agent Extracted Data & Station Ground Truth
 
-**Station:** 904-A JT | **Inverter Model / SN:** GoodWe GW6000-EH / `9010KESC253L0146`  
+**Station:** Station LHR-RES-01 (Lahore) | **Inverter Model / SN:** GoodWe GW6000-EH / `9010KESC253L0146`  
 **Location:** Lahore, Punjab, Pakistan (`31.5204° N, 74.3587° E`) | **Grid Feeder:** LESCO Sub-division  
 **Array Capacity:** 12 × 585 W = 7.02 kWp | **Battery Storage:** 5.12 kWh LiFePO4  
 **Extraction Period:** 2025-07-01 → 2026-10-26 (483 continuous calendar days / 16 billing months)

@@ -1,15 +1,15 @@
 # SolarSense EMS — Master Review Prompt for Argon
 **Target Auditor:** Argon — Principal Microgrid Architect & Power Systems Data Auditor  
-**System Under Audit:** Station 904-A JT, Johar Town, Lahore ($31.5204^\circ\text{ N}, 74.3587^\circ\text{ E}$, Asia/Karachi UTC+05:00)  
-**Dual Operating Envelope:** Residential Station 904-A JT & LESCO B3 Industrial Benchmark ($500\text{ kWp} / 600\text{ kWh} / 400\text{ kVA}$)  
-**Audit Bundle:** `solarsense_argon_audit_bundle.zip` (180 files, 3.71 MB compressed)  
+**System Under Audit:** Station LHR-RES-01, Lahore, Pakistan ($31.52^\circ\text{ N}, 74.36^\circ\text{ E}$, Asia/Karachi UTC+05:00)  
+**Dual Operating Envelope:** Residential Station LHR-RES-01 & LESCO B3 Industrial Benchmark ($500\text{ kWp} / 600\text{ kWh} / 400\text{ kVA}$)  
+**Audit Bundle:** `solarsense_argon_audit_bundle.zip` (194 files, 10.60 MB compressed)  
 
 ---
 
 ## 1. System Topology & Dual Operating Envelopes
 
-### A. Station 904-A JT (Empirical Residential Digital Twin)
-* **Location:** 904-A J2 Johar Town, Lahore ($31.5204^\circ\text{ N}, 74.3587^\circ\text{ E}$, Asia/Karachi UTC+05:00).
+### A. Station LHR-RES-01 (Empirical Residential Digital Twin)
+* **Location:** Lahore, Pakistan ($31.52^\circ\text{ N}, 74.36^\circ\text{ E}$, Asia/Karachi UTC+05:00).
 * **Hardware Profile:**
   * $7.02\text{ kWp}$ DC Bifacial PV Array ($12 \times 585\text{ W}$, Canadian Solar / Jinko equivalent).
   * GoodWe ES / ES-Uniq Low-Voltage Hybrid Inverter (SN: `9010KESC253L0146`, rated up to $10.0\text{ kW}$).
@@ -44,7 +44,7 @@ Following your previous forensic audit findings, all 6 edge cases and physical i
    - Implemented in `src/optimizer/milp_solver.py` via affine DPP parameter `p_grid <= peak_grid_cap`.
    - During LESCO Peak ToU hours (18:00–22:00, $46.85\text{ PKR/kWh}$), grid import is capped strictly at household load ($p_{\text{grid}} \le \text{load}$) whenever $\text{SoC} \ge 15\%$. Grid power is NEVER imported at peak rates to charge the battery.
 4. **Dual Topology & Parameter Governance:**
-   - Formalized `BESSConfig.station_904a_residential()` ($5.12\text{ kWh}$, $5.0\text{ kW}$) vs. `BESSConfig.industrial_600kwh()` ($600.0\text{ kWh}$, $250.0\text{ kW}$).
+   - Formalized `BESSConfig.station_residential()` ($5.12\text{ kWh}$, $5.0\text{ kW}$) vs. `BESSConfig.industrial_600kwh()` ($600.0\text{ kWh}$, $250.0\text{ kW}$).
    - Tariff loaded from `src/lesco-tarrif.json` with dedicated `lesco_a1_residential()` and `lesco_b3_industrial()` methods.
 5. **Nocturnal Solar Zero Leakage:**
    - Enforced $p_{\text{solar}} == 0.000000\text{ kW}$ whenever $\text{GHI} \le 0$ and during night hours (20:00–04:00 PKT).
@@ -70,4 +70,4 @@ Please extract `solarsense_argon_audit_bundle.zip` into your inspection environm
 3. **Architecture & Standards Compliance:**
    - Review `AGENTS.md`, `.agents/rules/engineering-standards.md`, and `src/data_engineering/feature_store.py` for immutable zero-copy Arrow memory, binary search time indexing, and typed frozen DTOs.
 4. **Final Forensic Audit Sign-off:**
-   - Provide an updated, definitive **Executive Pass/Fail Audit Scorecard** for Station 904-A JT and the LESCO B3 Industrial Benchmark.
+   - Provide an updated, definitive **Executive Pass/Fail Audit Scorecard** for Station LHR-RES-01 and the LESCO B3 Industrial Benchmark.

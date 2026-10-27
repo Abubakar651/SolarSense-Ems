@@ -1,7 +1,7 @@
 # SolarSense EMS — Master Dataset Inspection Report & Argon Audit Brief
 
 **System:** SolarSense Residential Energy Management System  
-**Station:** 904-A JT | **Inverter Model / SN:** GoodWe GW6000-EH / `9010KESC253L0146`  
+**Station:** Station LHR-RES-01 (Lahore) | **Inverter Model / SN:** GoodWe GW6000-EH / `9010KESC253L0146`  
 **Location:** Lahore, Punjab, Pakistan (`31.5204° N, 74.3587° E`, UTC+05:00)  
 **Hardware Topology:** 7.02 kWp DC Solar PV (12 × 585 W Tier-1 Bifacial) + 5.12 kWh LiFePO4 BESS (51.2V 100Ah)  
 **Tariff Class:** LESCO / NEPRA Tariff A-1 Residential Time-of-Use (ToU) & Net-Metering (10 kW Sanctioned Load)  

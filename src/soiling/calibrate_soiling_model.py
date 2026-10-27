@@ -350,7 +350,7 @@ def main():
         import matplotlib.dates as mdates
 
         fig, axes = plt.subplots(3, 1, figsize=(14, 10), sharex=False)
-        fig.suptitle("SolarSense EMS — Lahore Solar Soiling Analysis\nStation: 904-A JT | Inverter: 9010KESC253L0146",
+        fig.suptitle("SolarSense EMS — Lahore Solar Soiling Analysis\nStation: LHR-RES-01 (Lahore) | Inverter: 9010KESC253L0146",
                      fontsize=13, fontweight="bold")
 
         # Plot 1: Full 464-day daily generation with wash events

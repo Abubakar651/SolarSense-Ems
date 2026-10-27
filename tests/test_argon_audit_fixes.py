@@ -2,10 +2,10 @@
 SolarSense EMS — Unit Tests for Argon Forensic Energy Audit Edge Cases & Invariants
 ===================================================================================
 Directly tests and proves all 6 forensic edge cases and 4 dispatch upgrades from
-Argon's Forensic Energy Audit Report (Station 904-A JT, Johar Town, Lahore):
+Argon's Forensic Energy Audit Report (Station LHR-RES-01, Lahore):
 1. Station Telemetry Future Zero-Filled Row Truncation (exactly 315 rows, 100% SoC at 02:10)
 2. Outage Ground Truth Deduplication & Physical BESS Nameplate (<= 5.12 kWh)
-3. Station 904-A JT Residential Envelope & LESCO A-1 Tariff Integration
+3. Station LHR-RES-01 Residential Envelope & LESCO A-1 Tariff Integration
 4. Post-Blackout Peak-Window Recharge Suppression (proven on Oct 26 18:20–18:40)
 5. DPP Parameterization & Sub-25ms HiGHS Solve Latency
 """
@@ -86,7 +86,7 @@ def test_outage_dataset_nameplate_ceiling_and_deduplication():
     assert oct26_peak.iloc[0]["soc_end_pct"] == 95.0
 
 
-def test_station_904a_residential_envelope_and_tariff():
+def test_station_residential_envelope_and_tariff():
     """Argon Section 6.4: Verifies TariffPolicy and BESSConfig load residential parameters."""
     # Tariff from lesco-tarrif.json
     policy_json = TariffPolicy.from_json("src/lesco-tarrif.json")
@@ -97,7 +97,7 @@ def test_station_904a_residential_envelope_and_tariff():
     assert policy_json.mdi_penalty_per_kw_pkr == Decimal("0.00")
 
     # BESS hardware config
-    bess_res = BESSConfig.station_904a_residential()
+    bess_res = BESSConfig.station_residential()
     assert bess_res.capacity_kwh == 5.12
     assert bess_res.max_charge_kw == 5.0
     assert bess_res.max_discharge_kw == 5.0
@@ -114,7 +114,7 @@ def test_station_904a_residential_envelope_and_tariff():
 
 def test_post_blackout_peak_recharge_suppression():
     """Argon Section 7.1: Verifies optimizer suppresses peak grid recharge after a blackout."""
-    bess = BESSConfig.station_904a_residential()
+    bess = BESSConfig.station_residential()
     policy = TariffPolicy.lesco_a1_residential()
     optimizer = MILPBatteryOptimizer(bess=bess, policy=policy)
     optimizer.warm_up()
@@ -163,7 +163,7 @@ def test_post_blackout_peak_recharge_suppression():
 
 def test_dpp_and_latency_budget_on_residential_optimizer():
     """Argon Section 2 & 7: Verifies sub-25ms latency budget on residential optimizer."""
-    bess = BESSConfig.station_904a_residential()
+    bess = BESSConfig.station_residential()
     policy = TariffPolicy.lesco_a1_residential()
     optimizer = MILPBatteryOptimizer(bess=bess, policy=policy)
     optimizer.warm_up()

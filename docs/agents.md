@@ -51,7 +51,7 @@ The system architecture combines a **Master Orchestrator Agent** with specialize
 ### 🤖 Sub-Agent A: Peak Shaver & Battery Dispatch Optimizer (CVXPY + HiGHS)
 **Role:** Optimal 24-Hour Real-Time Power Flow Controller.
 * **Dual Operating Envelopes:**
-  * **Station 904-A JT Residential Envelope:** 7.02 kWp bifacial PV, GoodWe ES hybrid inverter (SN: `9010KESC253L0146`), 5.12 kWh LiFePO4 battery ($51.2\text{ V}, 100\text{ Ah}$, 1C / 5.0 kW rating), LESCO A-1 ToU (Peak $46.85\text{ PKR}$, Off-Peak $34.53\text{ PKR}$, Net Export $27.00\text{ PKR}$, $10.0\text{ kW}$ sanctioned load).
+  * **Station LHR-RES-01 Residential Envelope:** 7.02 kWp bifacial PV, GoodWe ES hybrid inverter (SN: `9010KESC253L0146`), 5.12 kWh LiFePO4 battery ($51.2\text{ V}, 100\text{ Ah}$, 1C / 5.0 kW rating), LESCO A-1 ToU (Peak $46.85\text{ PKR}$, Off-Peak $34.53\text{ PKR}$, Net Export $27.00\text{ PKR}$, $10.0\text{ kW}$ sanctioned load).
   * **LESCO B3 Industrial Benchmark:** 500 kWp PV, 600 kWh / 250 kW BESS, 500 kW sanctioned load ceiling with punitive $1,200\text{ PKR/kW}$ monthly MDI ratchet fines.
 * **Core Algorithmic Guarantees:**
   1. **Post-Blackout Peak Recharge Suppression:** Unlike GoodWe's stock firmware (which pulled 3.18 kW from the grid at 18:25 on Oct 26 to recharge a 95% battery during the expensive 46.85 PKR peak window), the optimizer enforces $p_{\text{grid}}[t] \le \text{load}[t]$ whenever $\text{SoC} \ge 15\%$, deferring battery recharge to off-peak hours (22:00 @ 34.53 PKR) or morning solar (27.00 PKR opportunity cost).

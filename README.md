@@ -18,14 +18,14 @@
 **SolarSense EMS** is an autonomous, high-performance edge energy management platform and microgrid digital twin built for utility connections operating under the **Lahore Electric Supply Company (LESCO)** tariff structure.
 
 The platform provides dual-envelope operational capabilities:
-1. **Station 904-A JT (Empirical Residential Microgrid):** Real-world telemetry from 904-A J2 Johar Town, Lahore ($31.5204^\circ\text{ N}, 74.3587^\circ\text{ E}$), integrating a **$7.02\text{ kWp}$ DC Bifacial PV array**, a **GoodWe ES Hybrid Inverter** (SN: `9010KESC253L0146`, rated up to $10.0\text{ kW}$), a **$5.12\text{ kWh}$ LiFePO4 battery pack** ($51.2\text{ V}, 100\text{ Ah}$), and **LESCO A-1 ToU & Net-Metering** ($46.85 / 34.53\text{ PKR}$ rates, $27.00\text{ PKR}$ export credit).
+1. **Station LHR-RES-01 (Empirical Residential Digital Twin):** Real-world telemetry from Lahore, Pakistan ($31.52^\circ\text{ N}, 74.36^\circ\text{ E}$), integrating a **$7.02\text{ kWp}$ DC Bifacial PV array**, a **GoodWe ES Hybrid Inverter** (SN: `9010KESC253L0146`, rated up to $10.0\text{ kW}$), a **$5.12\text{ kWh}$ LiFePO4 battery pack** ($51.2\text{ V}, 100\text{ Ah}$), and **LESCO A-1 ToU & Net-Metering** ($46.85 / 34.53\text{ PKR}$ rates, $27.00\text{ PKR}$ export credit).
 2. **LESCO B3 Industrial Factory Microgrid Benchmark:** A heavy industrial facility orchestrating a **$500\text{ kWp}$ rooftop solar PV array**, a **$600\text{ kWh} / 250\text{ kW}$ LiFePO4 battery system**, an industrial factory load ($200 - 450\text{ kW}$ base, spikes $> 500\text{ kW}$ with $1,200\text{ PKR/kW}$ MDI ratchet penalties), and an auxiliary **$400\text{ kVA}$ backup diesel generator** ($95\text{ PKR/kWh}$).
 
 ```text
 ┌────────────────────────────────────────────────────────────────────────────────────────┐
 │                        DUAL OPERATIONAL MICROGRID TOPOLOGY                             │
 │                                                                                        │
-│   Station 904-A JT (7.02 kWp) / Factory (500 kWp)        LESCO Grid Connection         │
+│   Station LHR-RES-01 (7.02 kWp) / Factory (500 kWp)      LESCO Grid Connection         │
 │                       │                                  (A-1 Residential / B3 Ind)    │
 │                       ▼                                          │                     │
 │            ┌──────────────────────┐                              ▼                     │

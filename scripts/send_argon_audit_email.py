@@ -25,7 +25,7 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 BUNDLE_PATH = REPO_ROOT / "solarsense_argon_audit_bundle.zip"
 PROMPT_PATH = REPO_ROOT / "docs" / "ARGON_AUDIT_PROMPT.md"
 DEFAULT_RECIPIENT = "abubakariqbal651@gmail.com"
-DEFAULT_SUBJECT = "SolarSense EMS — Station 904-A JT Audit Bundle & Review Prompt for Argon"
+DEFAULT_SUBJECT = "SolarSense EMS — Station LHR-RES-01 Audit Bundle & Review Prompt for Argon"
 
 
 def build_mime_message(

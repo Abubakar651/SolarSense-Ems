@@ -42,7 +42,7 @@ DEFAULT_CSV_PATH = Path("data/processed/master_ems_timeseries.csv")
 DEFAULT_PARQUET_PATH = Path("data/processed/master_ems_timeseries.parquet")
 
 # Battery physical envelope used to normalise/clamp the initial state of charge (kWh)
-# Residential Scale (Station 904-A JT: 51.2V 100Ah LiFePO4 pack)
+# Residential Scale (Station LHR-RES-01: 51.2V 100Ah LiFePO4 pack)
 RESIDENTIAL_BESS_CAPACITY_KWH = 5.12
 RESIDENTIAL_BESS_MIN_SOC_KWH = 0.768  # 15% emergency reserve floor (0.768 kWh)
 RESIDENTIAL_BESS_STANDARD_MIN_SOC_KWH = 2.816  # 55% nocturnal blackout reserve floor (2.816 kWh)
@@ -66,7 +66,7 @@ class TariffPolicy:
     Immutable LESCO Time-of-Use (ToU) Billing Configuration.
     Supports counterfactual simulations (e.g. rate hikes, diesel price inflation).
     Default values reflect official LESCO B3 Industrial tariff (500 kW sanctioned load, 1200 PKR/kW MDI).
-    Use TariffPolicy.from_json() or TariffPolicy.lesco_a1_residential() for Station 904-A JT Residential ToU.
+    Use TariffPolicy.from_json() or TariffPolicy.lesco_a1_residential() for Station LHR-RES-01 Residential ToU.
     """
     off_peak_rate_pkr: Decimal = Decimal("38.00")
     peak_rate_pkr: Decimal = Decimal("60.00")
@@ -83,7 +83,7 @@ class TariffPolicy:
 
     @classmethod
     def lesco_a1_residential(cls) -> TariffPolicy:
-        """Factory method for official LESCO A-1 Residential ToU & Net-Metering (Station 904-A JT)."""
+        """Factory method for official LESCO A-1 Residential ToU & Net-Metering (Station LHR-RES-01)."""
         return cls(
             off_peak_rate_pkr=Decimal("34.53"),
             peak_rate_pkr=Decimal("46.85"),

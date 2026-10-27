@@ -163,7 +163,9 @@ class CCTVPanelMonitor:
 
         # Handle single static image file
         source_path = Path(source)
-        if source_path.is_file() and source_path.suffix.lower() in {".jpg", ".jpeg", ".png", ".bmp", ".webp"}:
+        image_extensions = {".jpg", ".jpeg", ".png", ".bmp", ".webp"}
+
+        if source_path.is_file() and source_path.suffix.lower() in image_extensions:
             frame = cv2.imread(str(source_path))
             diag, annotated = self.process_frame(frame)
             if save_alerts and diag["condition"] != "clean":
@@ -172,6 +174,41 @@ class CCTVPanelMonitor:
                 diag["alert_snapshot"] = str(out_path)
             print(f"[RESULT] {diag['condition']} (Conf: {diag['confidence']*100:.1f}%, Severity: {diag['severity']})")
             return [diag]
+
+        # Handle directory of static images (batch panel inspection / virtual CCTV feed)
+        if source_path.is_dir():
+            image_files = sorted([p for p in source_path.rglob("*") if p.suffix.lower() in image_extensions])
+            if not image_files:
+                raise FileNotFoundError(f"No valid image files found in directory: {source_path}")
+
+            if max_frames:
+                image_files = image_files[:max_frames]
+
+            print(f"[BATCH] Discovered {len(image_files)} panel images in directory: {source_path}")
+            history = []
+            for idx, img_p in enumerate(image_files, 1):
+                frame = cv2.imread(str(img_p))
+                if frame is None:
+                    continue
+                diag, annotated = self.process_frame(frame)
+                diag["image_file"] = str(img_p)
+                history.append(diag)
+
+                status_msg = (
+                    f"[{idx:>3}/{len(image_files)}] {img_p.name:<25} | "
+                    f"Condition: {diag['condition']:<18} | Conf: {diag['confidence']*100:.1f}% | Severity: {diag['severity']:<8}"
+                )
+                print(status_msg)
+
+                if save_alerts and diag["condition"] != "clean":
+                    ts_str = datetime.now().strftime("%Y%m%d_%H%M%S")
+                    snap_path = ALERTS_DIR / f"alert_{ts_str}_{img_p.stem}_{diag['condition']}.jpg"
+                    cv2.imwrite(str(snap_path), annotated)
+                    diag["alert_snapshot"] = str(snap_path)
+
+            print("=" * 70)
+            print(f"Directory inspection complete. Evaluated {len(history)} panel pictures.")
+            return history
 
         # Handle video stream or video file
         src = int(source) if source.isdigit() else source

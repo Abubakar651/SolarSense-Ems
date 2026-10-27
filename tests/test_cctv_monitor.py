@@ -59,3 +59,19 @@ def test_process_frame_overlay(monitor):
 def test_missing_checkpoint_raises(tmp_path: Path):
     with pytest.raises(FileNotFoundError):
         CCTVPanelMonitor(checkpoint_path=tmp_path / "non_existent.pth")
+
+
+def test_process_source_directory(monitor, tmp_path: Path):
+    # Create two synthetic dummy test images in temporary directory
+    img_dir = tmp_path / "test_panels"
+    img_dir.mkdir()
+    img1 = Image.new("RGB", (100, 100), (200, 200, 200))
+    img2 = Image.new("RGB", (100, 100), (50, 50, 50))
+    img1.save(img_dir / "panel_01.jpg")
+    img2.save(img_dir / "panel_02.png")
+
+    results = monitor.process_source(source=str(img_dir), max_frames=2, save_alerts=False)
+    assert len(results) == 2
+    assert "condition" in results[0]
+    assert "confidence" in results[0]
+    assert results[0]["condition"] in monitor.class_to_idx

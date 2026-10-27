@@ -128,13 +128,33 @@ def train_classifier(
 
 
 if __name__ == "__main__":
+    import argparse
+
+    parser = argparse.ArgumentParser(description="SolarSense EMS — EfficientNet-B2 Panel Defect Classifier")
+    parser.add_argument("--root", type=str, default=str(HYBRID_ROOT), help="Path to ImageFolder dataset root")
+    parser.add_argument("--save-path", type=str, default=str(DEFAULT_CHECKPOINT_PATH), help="Path to save best checkpoint")
+    parser.add_argument("--epochs", type=int, default=EPOCHS, help="Number of training epochs")
+    parser.add_argument("--batch-size", type=int, default=16, help="Batch size for DataLoader")
+    parser.add_argument("--lr", type=float, default=3e-4, help="Adam learning rate")
+    args = parser.parse_args()
+
     print("=" * 70)
     print("SolarSense EMS — Training EfficientNet-B2 Panel Defect Classifier")
+    print(f"Dataset Root:    {args.root}")
+    print(f"Checkpoint Path: {args.save_path}")
+    print(f"Epochs: {args.epochs} | Batch Size: {args.batch_size} | Learning Rate: {args.lr}")
     print("=" * 70)
-    results = train_classifier()
+    results = train_classifier(
+        root=Path(args.root),
+        save_path=Path(args.save_path),
+        epochs=args.epochs,
+        batch_size=args.batch_size,
+        lr=args.lr,
+    )
     print("-" * 70)
-    print(f"Best checkpoint (epoch {results['best_epoch']}) saved to '{DEFAULT_CHECKPOINT_PATH}'")
+    print(f"Best checkpoint (epoch {results['best_epoch']}) saved to '{args.save_path}'")
     print(f"Validation Macro-F1:       {results['val']['macro_f1']:.4f}")
     print(f"Holdout Test Accuracy:     {results['test']['accuracy'] * 100:.2f}% (Target: >= 94%)")
     print(f"Holdout Test Macro-F1:     {results['test']['macro_f1']:.4f} (Target: >= 0.92)")
     print("=" * 70)
+

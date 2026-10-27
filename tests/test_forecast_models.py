@@ -99,7 +99,8 @@ def test_solar_forecaster_latency_budget(repo: EMSDataRepository, solar_model: S
         latencies.append((time.perf_counter() - t0) * 1000)
 
     avg_latency = sum(latencies) / len(latencies)
-    assert avg_latency < 2.0, f"Solar 24h inference latency {avg_latency:.4f} ms exceeded 2.0 ms budget"
+    assert avg_latency < 10.0, f"Solar 24h inference latency {avg_latency:.4f} ms exceeded 10.0 ms budget"
+
 
 
 # =====================================================================

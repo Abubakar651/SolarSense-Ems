@@ -13,6 +13,8 @@ data/argon_audit_pack/
 *.zip
 *.tar.gz
 *.7z
+*.eml
+.thunderbird_body_tmp.txt
 
 # Python artifacts
 __pycache__/

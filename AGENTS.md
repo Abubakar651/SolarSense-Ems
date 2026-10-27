@@ -20,7 +20,8 @@ The platform supports two complementary operational profiles:
   * Net-Metering Export: **$27.00\text{ PKR/kWh}$**
   * Sanctioned Load: **$10.0\text{ kW}$**; Demand Penalty: **$0.00\text{ PKR/kW}$**
 
-### B. LESCO B3 Industrial Factory Microgrid Benchmark
+### B. LESCO B3 Industrial Factory Microgrid Benchmark (Archived Benchmark — `archive/legacy_industrial/`)
+* **Status:** Historical simulation benchmark segregated into `archive/legacy_industrial/`.
 * **Facility Scale:** $500\text{ kWp}$ Solar PV, $600\text{ kWh} / 250\text{ kW}$ LiFePO4 BESS, $400\text{ kVA}$ Diesel Backup.
 * **Tariff Framework:** LESCO B3 Industrial Time-of-Use (Winter 17–21h, Summer 19–23h, Spring/Autumn 18–22h):
   * Peak Rate: **$60.00\text{ PKR/kWh}$**; Off-Peak Rate: **$38.00\text{ PKR/kWh}$**

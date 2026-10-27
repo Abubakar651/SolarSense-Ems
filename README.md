@@ -1,6 +1,6 @@
-# SolarSense EMS ☀️🔋🏭
-**Industrial & Residential Energy Management System & Microgrid Digital Twin**  
-*Optimized for LESCO B3 Industrial & A-1 Residential ToU Grid Connections (Lahore, Pakistan)*
+# SolarSense EMS ☀️🔋🏡
+**Autonomous Residential Energy Management System & Empirical Digital Twin**  
+*Engineered for LESCO A-1 Residential ToU & Net-Metering (Lahore, Pakistan)*
 
 [![Python 3.11+](https://img.shields.io/badge/Python-3.11%2B-blue.svg)](https://www.python.org/)
 [![Solver: HiGHS C++](https://img.shields.io/badge/Solver-HiGHS%20MILP%20(C%2B%2B)-purple.svg)](https://highs.dev/)
@@ -15,47 +15,54 @@
 
 ## 📌 Executive Overview
 
-**SolarSense EMS** is an autonomous, high-performance edge energy management platform and microgrid digital twin built for utility connections operating under the **Lahore Electric Supply Company (LESCO)** tariff structure.
+**SolarSense EMS** is an autonomous, high-performance edge energy management platform and empirical digital twin engineered specifically for residential grid connections operating under the **Lahore Electric Supply Company (LESCO)** tariff structure.
 
-The platform provides dual-envelope operational capabilities:
-1. **Station LHR-RES-01 (Empirical Residential Digital Twin):** Real-world telemetry from Lahore, Pakistan ($31.52^\circ\text{ N}, 74.36^\circ\text{ E}$), integrating a **$7.02\text{ kWp}$ DC Bifacial PV array**, a **GoodWe ES Hybrid Inverter** (SN: `9010KESC253L0146`, rated up to $10.0\text{ kW}$), a **$5.12\text{ kWh}$ LiFePO4 battery pack** ($51.2\text{ V}, 100\text{ Ah}$), and **LESCO A-1 ToU & Net-Metering** ($46.85 / 34.53\text{ PKR}$ rates, $27.00\text{ PKR}$ export credit).
-2. **LESCO B3 Industrial Factory Microgrid Benchmark:** A heavy industrial facility orchestrating a **$500\text{ kWp}$ rooftop solar PV array**, a **$600\text{ kWh} / 250\text{ kW}$ LiFePO4 battery system**, an industrial factory load ($200 - 450\text{ kW}$ base, spikes $> 500\text{ kW}$ with $1,200\text{ PKR/kW}$ MDI ratchet penalties), and an auxiliary **$400\text{ kVA}$ backup diesel generator** ($95\text{ PKR/kWh}$).
+The platform is anchored to real-world empirical hardware telemetry from **Station LHR-RES-01** in Lahore, Pakistan ($31.52^\circ\text{ N}, 74.36^\circ\text{ E}$, Asia/Karachi UTC+05:00):
+- **PV Generation:** $7.02\text{ kWp}$ DC Bifacial PV Array ($12 \times 585\text{ W}$, Canadian / Jinko Bifacial).
+- **Hybrid Inverter:** GoodWe ES / ES-Uniq Low-Voltage Hybrid Inverter (SN: `9010KESC253L0146`, rated up to $10.0\text{ kW}$).
+- **BESS Energy Storage:** $5.12\text{ kWh}$ LiFePO4 Battery Pack ($51.2\text{ V}, 100\text{ Ah}$, 1C / $5.0\text{ kW}$ charge/discharge rating, 15% reserve floor).
+- **Tariff Framework:** LESCO / NEPRA Residential Tariff A-1 Time-of-Use (ToU) & Net-Metering:
+  - **Peak Hours (18:00–22:00 PKT):** **$46.85\text{ PKR/kWh}$**
+  - **Off-Peak Hours (00:00–18:00 & 22:00–24:00 PKT):** **$34.53\text{ PKR/kWh}$**
+  - **Net-Metering Export Credit:** **$27.00\text{ PKR/kWh}$**
+  - **Sanctioned Connected Load:** **$10.0\text{ kW}$**
 
 ```text
 ┌────────────────────────────────────────────────────────────────────────────────────────┐
-│                        DUAL OPERATIONAL MICROGRID TOPOLOGY                             │
+│                   STATION LHR-RES-01 RESIDENTIAL MICROGRID TOPOLOGY                    │
 │                                                                                        │
-│   Station LHR-RES-01 (7.02 kWp) / Factory (500 kWp)      LESCO Grid Connection         │
-│                       │                                  (A-1 Residential / B3 Ind)    │
-│                       ▼                                          │                     │
-│            ┌──────────────────────┐                              ▼                     │
-│            │ GoodWe Hybrid Series │                   ┌──────────────────────┐         │
-│            │ Inverter Telemetry   │                   │ Bidirectional Meter  │         │
-│            └──────────┬───────────┘                   └──────────┬───────────┘         │
-│                       │                                          │                     │
-│                       ├────────────────► AC COMMON BUS ◄─────────┤                     │
-│                       │                                          │                     │
-│                       ▼                                          ▼                     │
-│            ┌──────────────────────┐                   ┌──────────────────────┐         │
-│            │ 5.12 kWh / 600 kWh   │◄─────────────────►│ Residential / Factory│         │
-│            │ LiFePO4 BESS         │                   │ Connected Demand     │         │
-│            │ (15% / 10% Floor)    │                   └──────────▲───────────┘         │
-│            └──────────────────────┘                              │                     │
-│                                                       ┌──────────┴───────────┐         │
-│                                                       │ Islanded / Generator │         │
-│                                                       │ Backup Support       │         │
-│                                                       └──────────────────────┘         │
+│   Bifacial PV Array (7.02 kWp)                             LESCO Grid Feeder           │
+│   (12 x 585W DC Bifacial)                                  (Tariff A-1 ToU)            │
+│              │                                                     │                   │
+│              ▼                                                     ▼                   │
+│   ┌─────────────────────────┐                           ┌─────────────────────┐        │
+│   │  GoodWe Hybrid Inverter │                           │ Bidirectional Meter │        │
+│   │  (SN: 9010KESC253L0146) │                           │ (Net-Metering ToU)  │        │
+│   └────────────┬────────────┘                           └──────────┬──────────┘        │
+│                │                                                   │                   │
+│                ├──────────────────► AC COMMON BUS ◄────────────────┤                   │
+│                │                                                   │                   │
+│                ▼                                                   ▼                   │
+│   ┌─────────────────────────┐                           ┌─────────────────────┐        │
+│   │   5.12 kWh LiFePO4 BESS │◄─────────────────────────►│  Household Demand  │        │
+│   │   (51.2V 100Ah / 15% Fl)│                           │  (Connected Load)   │        │
+│   └─────────────────────────┘                           └─────────────────────┘        │
+│                                                                                        │
+│   * Anti-Islanding Protection: Zero grid draw & zero export during outages             │
+│   * Post-Blackout Peak Suppression: Grid import capped at load during Peak ToU         │
 └────────────────────────────────────────────────────────────────────────────────────────┘
 ```
 
 ---
 
-## ⚠️ The Industrial Energy Problem in Pakistan
+## ⚠️ The Residential Energy Problem in Lahore, Pakistan
 
-Heavy manufacturers connected to LESCO B3 industrial feeders face three compounding economic threats:
-1. **Severe Time-of-Use (ToU) Spread:** Peak hours cost **$60.00\text{ PKR/kWh}$**, compared to **$38.00\text{ PKR/kWh}$** off-peak (a 58% surcharge during a 4-hour seasonal window).
-2. **Punitive Maximum Demand Indicator (MDI) Ratchet:** Exceeding the $500.0\text{ kW}$ sanctioned load threshold triggers a mandatory **$1,200.00\text{ PKR/kW}$ penalty**, billed on the highest single peak recorded during the billing month. Baseline analysis proves unmitigated historical spikes cost the factory **$2,360,353.20\text{ PKR}$**.
-3. **Expensive Diesel Generation During Blackouts:** Lahore feeder load-shedding disconnects the grid (`p_grid = 0 kW`). Unmet factory demand defaults to backup diesel at **$95.00\text{ PKR/kWh}$** ($300\text{ PKR/L}$ fuel cost).
+Urban residential prosumers in Lahore face four compounding operational and financial challenges:
+
+1. **Severe Peak Time-of-Use Surcharge:** LESCO A-1 ToU charges **$46.85\text{ PKR/kWh}$** during the 4-hour evening peak (18:00–22:00 PKT), a **35.7% surcharge** over the off-peak rate of **$34.53\text{ PKR/kWh}$**.
+2. **Asymmetric Net-Metering Arbitrage:** Exporting surplus solar to the grid yields only **$27.00\text{ PKR/kWh}$**, while purchasing power during evening hours costs **$46.85\text{ PKR/kWh}$** (a 73.5% premium to buy back exported energy). Storing midday solar surplus in the battery yields a net arbitrage margin of **$+12.96\text{ PKR/kWh cycled}$** ($0.853 \times 46.85 - 27.00$).
+3. **Frequent Feeder Blackouts & Anti-Islanding:** Unscheduled distribution feeder outages disconnect the grid (`outage_flag == 1`). Inverter anti-islanding mandates $p_{\text{grid}} = 0\text{ kW}$ and $p_{\text{export}} = 0\text{ kW}$. The battery must dynamically manage state-of-charge (SoC) to supply critical domestic loads throughout outages without depleting below the 15% reserve floor.
+4. **GoodWe Stock Firmware Flaw (Peak Grid Recharge Waste):** Empirical telemetry on October 26, 2026 proved that GoodWe's default firmware draws up to **$3.18\text{ kW}$ from the grid** immediately after a blackout during peak hours ($18:25\text{ PKT}$) to top off a 95% full battery at the punitive rate of $46.85\text{ PKR/kWh}$. SolarSense EMS enforces **Post-Blackout Peak Recharge Suppression** ($p_{\text{grid}}[t] \le \text{load}[t]$ when $\text{SoC} \ge 15\%$), saving **27.64% per day** ($517.46\text{ PKR/day}$).
 
 ---
 
@@ -66,13 +73,13 @@ Heavy manufacturers connected to LESCO B3 industrial feeders face three compound
 - **Zero-Copy Arrow Buffers:** Rechunked columnar layout via Polars and Apache Arrow with SIMD vectorization.
 - **Microsecond Slicing:** Pre-computed hash indexing maps timestamps to array offsets, retrieving 24-hour simulation slices in **$35 - 44\ \mu\text{s}$** ($0.035\text{ ms}$).
 - **Immutability Law:** All NumPy vectors inside domain DTOs (`OptimizationHorizonSlice`, `DispatchResultDTO`) are write-locked with `vec.setflags(write=False)`.
-- **Dynamic Tariff Strategy:** Decouples NEPRA/LESCO B3 seasonal peak windows (Winter: 17–21h, Summer: 19–23h, Spring/Autumn: 18–22h) for counterfactual "what-if" simulations.
+- **Dynamic Tariff Strategy:** Encapsulates NEPRA/LESCO A-1 ToU schedules (Peak: 18:00–22:00, Off-Peak: 00:00–18:00 & 22:00–24:00, Net-Metering: 27.00 PKR/kWh) for deterministic financial accounting.
 
 ### 2. Causal Time-Series Machine Learning Suite ([`src/forecast/`](src/forecast/) & [`src/grid_outage/`](src/grid_outage/))
 *Engineered by Abubakar*
 - **Solar PV Forecaster (`train_solar_pv.py`):** LightGBM regressor predicting hourly generation from satellite weather (GHI, DNI, DHI, ambient temp, cyclic hour/month) achieving **$R^2 \ge 0.90$** with hard zero nighttime constraints.
-- **Factory Load Forecaster (`train_factory_load.py`):** Autoregressive model capturing 3 industrial work shifts using strictly causal lags ($t \le t_0$: 24h, 48h, 168h lags and rolling statistics) with mandatory 24-hour purge gaps.
-- **Calibrated Outage Classifier (`predict_outage.py`):** LightGBM classifier with Platt-sigmoid calibration evaluating blackout probability $P(\text{outage}) \in [0.0, 1.0]$ evaluated on PR-AUC and Brier score.
+- **Calibrated Outage Classifier (`predict_outage.py`):** LightGBM classifier with Platt-sigmoid calibration evaluating blackout probability $P(\text{outage}) \in [0.0, 1.0]$, evaluated on PR-AUC and Brier score.
+- **Strict Causality ($t \le t_0$):** All features enforce strict causal boundaries with mandatory 24-hour purge gaps between splits.
 
 ### 3. Mixed-Integer Linear Programming (MILP) Dispatch Solver ([`src/optimizer/milp_solver.py`](src/optimizer/milp_solver.py))
 *Engineered by Abubakar*
@@ -81,31 +88,31 @@ Heavy manufacturers connected to LESCO B3 industrial feeders face three compound
   - **Power Balance with Solar Curtailment Slack ($p_{\text{curtail}} \ge 0$):** Absorbs excess solar during sunny midday blackouts with a full battery.
   - **Mutual Exclusivity:** Enforced with binary variables ($u_{\text{ch}} \in \{0, 1\}$) to eliminate parasitic micro-cycling.
   - **Throughput Wear Penalty ($2.00\text{ PKR/kWh}$):** Minimizes battery degradation.
-  - **Outage MDI Immunity:** Enforces $p_{\text{grid}} = 0$ during blackouts, ensuring load spikes during grid outages do not incur utility demand penalties.
-  - **The Live-Grid Soft Reserve Guard (Anti-Hoarding Physics):** Start-of-hour blackout reserve is strictly gated by $\text{live}[t] > 0.5$. Gating the reserve unlocks battery discharge the instant a blackout occurs, preventing irrational diesel hoarding.
-  - **Post-Blackout Peak Recharge Suppression:** Gating peak grid import ($p_{\text{grid}}[t] \le \text{load}[t]$) during Peak ToU hours (18:00–22:00) when $\text{SoC} \ge 15\%$ prevents grid-to-battery charging at 46.85 PKR/kWh. Solves the stock GoodWe firmware flaw proven on Oct 26, achieving **27.64% daily savings** (PKR 517.46/day net reduction).
+  - **Anti-Islanding Blackout Isolation:** During outages (`outage_flag == 1`), strictly enforces $p_{\text{grid}} = 0\text{ kW}$ and $p_{\text{export}} = 0\text{ kW}$.
+  - **Live-Grid Soft Reserve Guard (Anti-Hoarding Physics):** Start-of-hour blackout reserve is strictly gated by $\text{live}[t] > 0.5$. Gating the reserve unlocks battery discharge the instant a blackout occurs, preventing unserved domestic load.
+  - **Post-Blackout Peak Recharge Suppression:** Capping peak grid import ($p_{\text{grid}}[t] \le \text{load}[t]$) during Peak ToU hours (18:00–22:00) when $\text{SoC} \ge 15\%$ prevents grid-to-battery charging at 46.85 PKR/kWh. Eliminates the GoodWe stock firmware flaw and delivers **27.64% daily savings**.
 
 ### 4. High-Performance FastAPI Compute Gateway ([`src/api/`](src/api/))
 *Engineered by Abubakar*
 - **Singleton Lifespan State:** Pre-warms the HiGHS solver and loads master data once at boot.
 - **Non-Blocking Compute:** Offloads CPU-bound MILP solves to `starlette.concurrency.run_in_threadpool`.
 - **Sub-5ms Endpoints:** `GET /api/window` executes in **$1.37\text{ ms}$**; `POST /api/optimize` executes in **$12.36\text{ ms}$**.
-- **Real-Time SSE Streaming:** `GET /api/backtest/stream` streams multi-day rolling backtest frames to the Next.js frontend via Server-Sent Events at 60 FPS client rate.
+- **Real-Time SSE Streaming:** `GET /api/backtest/stream` streams multi-day rolling backtest frames to the frontend via Server-Sent Events at 60 FPS client rate.
 
 ### 5. Independent Forensic Energy Audit by Argon ([`docs/DATASET_INSPECTION_AND_ARGON_AUDIT_BRIEF.md`](docs/DATASET_INSPECTION_AND_ARGON_AUDIT_BRIEF.md))
 *Audited by Argon (Principal Microgrid Architect & Power Systems Data Auditor)*
-- **16-Month Macroscopic Energy Balance (Pass):** $\sum \text{Load} (16,127.5\text{ kWh}) = \text{PV} (12,135.1) + \text{Purchased} (10,404.2) - \text{Sold} (5,243.2) - \text{Losses} (1,168.6\text{ kWh})$. Physical loss residual of **$2.42\text{ kWh/day}$** ($5.18\%$ of gross input) decomposes exactly into inverter standby tare ($1.56\text{ kWh/day}$), BESS round-trip dissipation ($0.44\text{ kWh/day}$), and DC-AC conversion ($0.42\text{ kWh/day}$).
+- **16-Month Macroscopic Energy Balance (Pass):** $\sum \text{Load} (16,127.5\text{ kWh}) = \text{PV} (12,135.1) + \text{Purchased} (10,404.2) - \text{Sold} (5,243.2) - \text{Losses} (1,168.6\text{ kWh})$. Physical loss residual of **$2.42\text{ kWh/day}$** ($5.18\%$ of gross input) decomposes into inverter tare ($1.56\text{ kWh/day}$), BESS dissipation ($0.44\text{ kWh/day}$), and conversion losses ($0.42\text{ kWh/day}$).
 - **Zero Nocturnal / Phantom Solar (Pass):** Strictly $0.000000\text{ kW}$ across all 5,193 zero-GHI and night hours.
 - **Blackout Feeder Isolation & Islanding (Pass):** Zero grid import or export across all 48 blackout hours.
 - **Physical Storage Bounds (Pass):** 113 confirmed blackout events with 0 breaches of the $5.12\text{ kWh}$ battery capacity ceiling ($\max \le 3.73\text{ kWh}$).
-- **Telemetry Ingestion Sanity (Pass):** 315 valid 5-min station telemetry rows ending cleanly at `2026-10-27 02:10:00` with 100% battery SoC.
+- **Telemetry Ingestion Sanity (Pass):** Continuous 5-minute station telemetry ending cleanly with 100% battery SoC.
 
 ---
 
 ## 🔍 Computer Vision Panel Defect Classification ([`src/vision/`](src/vision/))
 *Engineered by Zaeem*
 
-The computer vision subsystem acts as an optical health monitor for the 500 kWp rooftop solar PV array, diagnosing physical defects, environmental soiling, and degradation to calculate dynamic optical derate coefficients for the EMS feature store.
+The computer vision subsystem acts as an optical health monitor for the solar PV array, diagnosing physical defects, environmental soiling, and degradation to calculate dynamic optical derate coefficients for the EMS feature store.
 
 ```text
 ┌────────────────────────────────────────────────────────────────────────────────────────┐
@@ -154,98 +161,24 @@ The computer vision subsystem acts as an optical health monitor for the 500 kWp 
 ```
 
 ### Key Technical Innovations:
-1. **Protocol 1 Dataset Curation & Deduplication:**
-   - Raw multi-source pool of 4,136 images was audited for byte-level and perceptual duplicates.
-   - **Cross-Dataset Conflict Resolution:** Perceptual 64-bit difference hashing (`dHash` with Hamming distance $\le 2$) resolved critical label conflicts where identical panel photos were labeled "Dusty" in one repository and "Bird-drop" in another.
-   - **Climate Adaptation:** Pruned 262 snow-covered images since Lahore's subtropical semi-arid climate experiences zero snowfall.
-   - **Class Balance Enforcement:** Structured into 5 balanced classes satisfying the strict $\ge 10\%$ representation requirement: `Clean` (210), `Dusty` (210), `Electrical Damage` (78), `Bird Drop` (73), and `Physical Damage` (64).
-2. **Defensive PyTorch DataLoader Architecture ([`src/vision/dataloader.py`](src/vision/dataloader.py)):**
-   - **Orientation Invariance:** In solar panel defect recognition, cell cracks and bird drops appear identical under rotation. The training pipeline applies both `RandomHorizontalFlip` and `RandomVerticalFlip` as label-safe data augmentations.
-   - **Class Index Synchronization Guard:** Automatically asserts `dataset.class_to_idx == loaders["train"].dataset.class_to_idx` across validation and holdout splits, preventing silent label drift if an OS directory traversal orders folders differently.
-3. **Macro-F1 Supervised Training & Checkpointing ([`src/vision/train_classifier.py`](src/vision/train_classifier.py)):**
-   - Because clean and dusty panels naturally outnumber rare severe physical cracks (~3:1 ratio), standard accuracy creates a false sense of security. Training checkpointing strictly monitors **Validation Macro-F1** to ensure equal penalization of false negatives on critical structural defects.
-   - Checkpoints save complete metadata dictionaries: `model_state_dict`, `class_to_idx`, `arch="efficientnet_b2"`, `image_size=260`, `epoch`, `val_metrics`, and `trained_at`.
-4. **Automated Unit Testing ([`tests/test_train_classifier.py`](tests/test_train_classifier.py)):**
-   - Implements a fast synthetic image fixture generating test batches to verify state dictionary saving, class indexing round-trips, logit tensor dimensions `[B, 5]`, metric ratio boundaries, and missing split exception handling.
+1. **Protocol 1 Dataset Curation & Deduplication:** Raw pool of 4,136 images audited for byte-level and perceptual duplicates using 64-bit difference hashing (`dHash` Hamming distance $\le 2$). Pruned 262 snow images (unrealistic for Lahore). Enforced 5 balanced classes ($\ge 10\%$ representation each).
+2. **Defensive PyTorch DataLoader Architecture ([`src/vision/dataloader.py`](src/vision/dataloader.py)):** Orientation-invariant label-safe transforms (`RandomHorizontalFlip`, `RandomVerticalFlip`) with automated cross-split class indexing synchronization assertions.
+3. **Macro-F1 Supervised Training & Checkpointing ([`src/vision/train_classifier.py`](src/vision/train_classifier.py)):** Checkpointing monitors Validation Macro-F1 to equally penalize false negatives on critical structural defects.
+4. **Automated Unit Testing ([`tests/test_train_classifier.py`](tests/test_train_classifier.py)):** Synthetic image fixture verifies state dict saving, class indexing round-trips, and logit tensor shapes `[B, 5]`.
 
 ---
 
-## 📈 Industrial Load Profiling, Shift Analytics & MDI Spike Physics
-*Exploratory Data Analysis by Zaeem ([`notebooks/01_industrial_load_eda.ipynb`](notebooks/01_industrial_load_eda.ipynb))*
-
-To design a mathematically rigorous peak-shaving algorithm, the industrial demand profile of the textile spinning and weaving facility was thoroughly analyzed across all **11,136 hourly observations** (464 days: July 1, 2025 – October 7, 2026).
-
-```text
-┌────────────────────────────────────────────────────────────────────────────────────────┐
-│                        24-HOUR DIURNAL LOAD CURVE & SHIFT STRUCTURE                    │
-│                                                                                        │
-│   Load (kW)                                                                            │
-│     600 ┼                                                                              │
-│         │                                        ╭─╮ ╭─╮  <-- MDI Breaches (> 500 kW)  │
-│     500 ┼───────────────────────────────────────╭╯─╰─╯─╰────── LESCO Sanctioned Ceiling│
-│         │                         ╭─────────────╯                                      │
-│     400 ┼                       ╭─╯                                                    │
-│         │       ╭───────────────╯                                                      │
-│     300 ┼───────╯                                       ╭─────────────╮                │
-│         │                                               │             ╰─────────╮      │
-│     200 ┼                                               │                       ╰────  │
-│         │                                                                              │
-│       0 ┴─────┬─────┬─────┬─────┬─────┬─────┬─────┬─────┬─────┬─────┬─────┬─────┬─────┘      │
-│        00:00 02:00 04:00 06:00 08:00 10:00 12:00 14:00 16:00 18:00 20:00 22:00 24:00      │
-│               [   OFF-SHIFT   ] [        DAY SHIFT        ] [ EVENING SHIFT ] [OFF]    │
-│               (Base Machinery)  (Heavy Spinning & Chilling) (Finishing/Pack)           │
-│                                 ★ 100% of MDI Breaches Occur! ★ ToU Peak (60 PKR/kWh)  │
-└────────────────────────────────────────────────────────────────────────────────────────┘
-```
-
-### Key Quantitative Findings:
-1. **Three-Tier Operational Shift Schedule:**
-   - **Day Shift (Peak Production: 08:00–17:00):** Heavy motorized spinning looms and chillers operate at maximum throughput. Average demand reaches $380 - 450\text{ kW}$, with severe spikes frequently breaching the $500\text{ kW}$ threshold.
-   - **Evening Shift (Finishing & Packaging: 17:00–22:00):** Spinning ramps down; packaging lines run at $280 - 340\text{ kW}$.
-   - **Off-Shift (Base Maintenance: 22:00–08:00):** Continuous base load of $180 - 240\text{ kW}$, with motors ramping up from 06:00.
-   - **Weekend Derates:** Friday production is restricted to 65% load and Sunday to 40% load.
-2. **The 100% Day Shift MDI Vulnerability Law:**
-   - Analysis revealed exactly **169 hours** where grid import exceeded the $500.0\text{ kW}$ sanctioned ceiling.
-   - **Crucial Distribution Insight:** **100.0% of all 169 MDI violations fall strictly inside the Day Shift (08:00–17:00).**
-   - Zero violations occurred during the Evening Shift or Night Shift, and zero occurred on Fridays or Sundays.
-   - **Seasonal Clustering:** 129 out of 169 breaches (76.3%) concentrated in July and August due to high ambient temperatures driving chiller loads.
-   - **Economic Shift Dichotomy:** The Evening Shift (17:00–22:00) coincides with the LESCO Time-of-Use Peak Window ($60\text{ PKR/kWh}$ energy charge), while the Day Shift carries 100% of the MDI Peak Surcharge Risk ($1,200\text{ PKR/kW}$).
-3. **Outage MDI Immunity & Baseline Loss Reconciliation:**
-   - **Physics Proof:** Across 46 blackout hours, internal factory demand exceeded 500 kW. However, because the utility feeder was de-energized (`p_grid = 0.0 kW`), LESCO's boundary meter registered zero draw. Our pipeline correctly charged **0.00 PKR**, completely preventing **603,840.00 PKR in phantom fines**.
-   - **Exact 2.36M PKR Reconciliation:** The historical baseline penalty of **2,360,353.20 PKR** (`demand_penalty_pkr`) was verified to stem 100% from grid-connected hours.
-   - **Statutory Monthly Ratchet vs. Hourly Sum:** Under LESCO's actual monthly billing rule (billed on the single highest peak exceedance per calendar month), the billed fine is ~**239,028 PKR**, demonstrating the magnitude of savings achieved by targeted peak clipping.
-4. **Empirical Battery Sizing for Peak Shaving:**
-   - Shaving net grid import to a safe target of **495 kW** (5 kW safety buffer):
-     - Peak shaving is required on **75 distinct days** across the year.
-     - Total shaving energy required: **2,863.3 kWh**.
-     - Per-day shaving requirement: median **25.5 kWh**, 95th percentile **62.4 kWh**, and worst-case day **106.3 kWh**.
-     - Peak discharge power requirement: **43.0 kW**.
-   - **Engineering Conclusion:** The legacy 5.12 kWh battery is physically incapable of industrial peak shaving. The upgraded **600 kWh / 250 kW LiFePO4 battery** provides ample headroom for both full peak shaving and multi-hour blackout backup.
-5. **Continuous Headless Smoke Testing ([`tests/test_eda_notebook.py`](tests/test_eda_notebook.py)):**
-   - Automatically executes all 17 cells of `notebooks/01_industrial_load_eda.ipynb` on every CI run via `nbformat`, verifying that all 169 breaches, 0 PKR blackout penalty, and the 2.36M PKR baseline assertions pass, exporting [`docs/samples/load_and_mdi_spikes.png`](docs/samples/load_and_mdi_spikes.png).
-
----
-
-## 📊 Measured Latency Benchmarks & Backtest Results
+## 📊 Measured Latency Benchmarks & Performance Matrix
 
 ### Latency Performance Matrix
 | Pipeline Stage / Endpoint | Target Budget | Actual Measured Latency | Library / Acceleration |
 | :--- | :--- | :--- | :--- |
-| **24h Ground-Truth Slice** | $< 1.000\text{ ms}$ | **$0.035 - 0.044\text{ ms}$** ($35 - 44\ \mu\text{s}$) | Polars Arrow Binary Index |
-| **24h ML Inference (3 Models)** | $< 10.000\text{ ms}$ | **$2.550\text{ ms}$** | LightGBM C++ API |
-| **24h Warm DPP HiGHS MILP Solve** | $< 25.000\text{ ms}$ | **$8.850\text{ ms}$** (p95: $9.640\text{ ms}$) | HiGHS C++ Branch-and-Bound |
+| **24h Telemetry Slice Retrieval** | $< 1.000\text{ ms}$ | **$0.035 - 0.044\text{ ms}$** ($35 - 44\ \mu\text{s}$) | Polars Arrow Binary Index |
+| **24h ML Inference (Solar + Outage)** | $< 10.000\text{ ms}$ | **$2.550\text{ ms}$** | LightGBM C++ API |
+| **24h Warm DPP HiGHS MILP Solve** | $< 25.000\text{ ms}$ | **$12.060\text{ ms}$** (p95: $15.200\text{ ms}$) | HiGHS C++ Branch-and-Bound |
 | **`GET /api/window` (HTTP)** | $< 5.000\text{ ms}$ | **$1.372\text{ ms}$** (p95: $1.770\text{ ms}$) | FastAPI + In-Memory Slice |
-| **`POST /api/optimize` (HTTP)** | $< 25.000\text{ ms}$ | **$12.360\text{ ms}$** (p95: $13.210\text{ ms}$) | FastAPI + Threadpool Offload |
+| **`POST /api/optimize` (HTTP)** | $< 25.000\text{ ms}$ | **$12.360\text{ ms}$** (p95: $14.100\text{ ms}$) | FastAPI + Threadpool Offload |
 | **`GET /health`** | $< 1.000\text{ ms}$ | **$0.380\text{ ms}$** | FastAPI Uvicorn |
-
-### 463-Day Continuous Rolling Backtest
-Simulating consecutive day-by-day operations across all 11,136 hours (464 days) in the master dataset:
-- **Mathematical Optimality:** $\mathbf{463 / 463\ (100.0\%)}$ solves reached proven mathematical optimality (`OPTIMAL`). Zero fallback events.
-- **Physical Conservation:** Maximum power balance residual across 11,112 hours is $\mathbf{4.8 \times 10^{-12}\text{ kW}}$.
-- **Total Net Operational Savings:** $\mathbf{3,970,000\text{ PKR}}$ saved:
-  - **MDI Peak Shaving:** $\mathbf{524,000\text{ PKR}}$ saved by clipping gross import spikes below $500\text{ kW}$.
-  - **Diesel Fuel Displacement:** $\mathbf{428,000\text{ PKR}}$ saved by pre-charging prior to outages and discharging during blackouts.
-  - **ToU Arbitrage:** $\mathbf{3,018,000\text{ PKR}}$ saved by shifting consumption from 60 PKR peak hours to 38 PKR off-peak hours and solar.
 
 ---
 
@@ -260,31 +193,34 @@ SolarSense-Ems/
 ├── .github/
 │   └── workflows/
 │       └── daily_report.yml    # Nightly 01:00 AM PKT cloud engineering log cron
+├── archive/
+│   └── legacy_industrial/      # Archived LESCO B3 Industrial Simulation & Notebooks
+│       ├── data/factory_load/
+│       ├── notebooks/01_industrial_load_eda.ipynb
+│       ├── src/data_engineering/build_factory_load.py
+│       ├── src/forecast/train_factory_load.py
+│       └── tests/test_eda_notebook.py
 ├── data/
 │   ├── raw/                    # Raw telemetry and panel images (git ignored)
-│   └── processed/              # Master timeseries (11,136 rows) & hybrid image dataset
+│   └── processed/              # Processed timeseries & hybrid image dataset
 │       ├── master_ems_timeseries.csv
 │       └── panel_images/
 │           ├── solarsense_master_v1/ # Curated 635-image leak-free dataset
 │           └── solarsense_hybrid_v1/ # 5-class stratified train/val/test splits
 ├── docs/                       # Formal Specifications & Audit Records
+│   ├── ARGON_AUDIT_PROMPT.md   # Prompt template for Argon audit sessions
+│   ├── DATASET_INSPECTION_AND_ARGON_AUDIT_BRIEF.md # Argon forensic audit brief
 │   ├── daily_logs/             # Permanent, Git-tracked daily engineering audit logs
 │   ├── samples/                # High-resolution verification charts & sample grids
-│   │   ├── dataset_a_sample_grid.png
-│   │   ├── load_and_mdi_spikes.png
-│   │   ├── master_dataset_grid.png
-│   │   └── solarsense_hybrid_v1_grid.png
 │   ├── dataset_A_panel_images.md     # Protocol 1 image curation audit
-│   ├── system_architecture.md        # Milestone 4 Master Architecture & Data Dictionary
-│   └── week4_implementation_plan_abubakar_zaeem.md
+│   └── system_architecture.md        # Master Architecture & Data Dictionary
 ├── models/                     # Trained GBDT weights and neural network checkpoints
 │   ├── efficientnet_b2_defects.pth   # Best PyTorch model (val macro-F1 selected)
-│   ├── factory_load_lightgbm.joblib
 │   ├── outage_classifier.joblib
 │   └── solar_pv_lightgbm.joblib
-├── notebooks/                  # Reproducible EDA and MDI spike analysis notebooks
-│   └── 01_industrial_load_eda.ipynb  # Comprehensive load profiling & MDI audit (Zaeem)
 ├── scripts/                    # Automation and DevOps utilities
+│   ├── create_argon_audit_bundle.py  # Zero-leakage codebase & telemetry archiver
+│   ├── ingest_sems_agent_data.py     # Live SEMS Portal 5-min telemetry parser
 │   ├── daily_standup.py        # Terminal daily standup & sprint progress tracker
 │   └── generate_daily_report.py# Zero-API deterministic git daily report generator
 ├── src/                        # Production Source Modules
@@ -294,13 +230,12 @@ SolarSense-Ems/
 │   ├── data_engineering/       # High-performance Feature Store (Abubakar)
 │   │   └── feature_store.py    # EMSDataRepository with microsecond slicing
 │   ├── forecast/               # Causal ML Forecasters (Abubakar)
-│   │   ├── train_factory_load.py # Autoregressive industrial load model
 │   │   └── train_solar_pv.py   # Physics-bounded solar PV GBDT
 │   ├── grid_outage/            # Calibrated Outage Risk Predictor (Abubakar)
 │   │   └── predict_outage.py   # Platt-scaled blackout classifier
 │   ├── optimizer/              # HiGHS MILP Solver & Tariff Engine (Abubakar)
 │   │   ├── milp_solver.py      # CVXPY DPP 24h battery optimizer with reserve guard
-│   │   └── tariff_engine.py    # Statutory LESCO B3 tariff calculator
+│   │   └── tariff_engine.py    # Statutory ToU tariff calculator
 │   └── vision/                 # Computer Vision Defect Pipeline (Zaeem)
 │       ├── build_hybrid_dataset.py # SHA256 & dHash deduplication engine
 │       ├── build_master_dataset.py # Raw Kaggle harvester & color normalizer
@@ -308,14 +243,14 @@ SolarSense-Ems/
 │       ├── download_datasets.py# Automated Kaggle dataset ingestion
 │       ├── train_classifier.py # EfficientNet-B2 transfer learning & macro-F1 trainer
 │       └── verify_dataset_a.py # Protocol 1 compliance & leakage test script
-├── tests/                      # Automated Regression & Invariant Test Suite
+├── tests/                      # Automated Regression & Invariant Test Suite (81 Tests)
 │   ├── test_api_gateway.py     # FastAPI integration & SSE stream tests (8 tests)
-│   ├── test_domain_stress_scenarios.py # Argon LESCO B3 stress tests (4 tests)
-│   ├── test_eda_notebook.py    # Headless EDA notebook execution test (1 test - Zaeem)
+│   ├── test_argon_audit_fixes.py # Post-audit residential invariants & latency (6 tests)
+│   ├── test_domain_stress_scenarios.py # Grid outage & ToU stress tests (4 tests)
 │   ├── test_feature_store.py   # Arrow memory & immutability tests (17 tests)
 │   ├── test_forecast_models.py # LightGBM inference & causality tests (9 tests)
-│   ├── test_milp_solver.py     # HiGHS solver & blackout physics tests (25 tests)
-│   └── test_train_classifier.py# PyTorch defect classifier trainer tests (4 tests - Zaeem)
+│   ├── test_milp_solver.py     # HiGHS solver & blackout physics tests (33 tests)
+│   └── test_train_classifier.py# PyTorch defect classifier trainer tests (4 tests)
 ├── pytest.ini                  # Pytest configuration
 └── requirements.txt            # Locked project dependencies
 ```
@@ -338,16 +273,17 @@ pip install -r requirements.txt
 ```
 
 ### 2. Run the Full Test Suite
-Execute the automated regression test suite verifying Arrow memory contiguity, solver latency, blackout physics, and the EDA notebook:
+Execute the automated regression test suite verifying Arrow memory contiguity, solver latency, blackout physics, and post-blackout recharge suppression:
 ```bash
 pytest -v --ignore=tests/test_train_classifier.py
 ```
-*(Expected: **64 passed in ~7 seconds**)*
+*(Expected: **77 passed in ~10 seconds**)*
 
-> Note: `tests/test_train_classifier.py` requires PyTorch and Torchvision installed in your Python environment. To run with PyTorch enabled:
+> Note: `tests/test_train_classifier.py` requires PyTorch and Torchvision installed. To run with PyTorch enabled:
 > ```bash
 > pytest -v tests/test_train_classifier.py
 > ```
+> *(Combined: **81 passed**)*
 
 ### 3. Run the Computer Vision Training & Verification Pipeline
 ```bash
@@ -361,16 +297,7 @@ python3 src/vision/dataloader.py
 python3 src/vision/train_classifier.py
 ```
 
-### 4. Run the Industrial Load & MDI Spike EDA
-```bash
-# Execute the EDA notebook headless smoke test
-pytest -v tests/test_eda_notebook.py
-
-# Or launch Jupyter Lab to inspect interactive visualizations
-jupyter lab notebooks/01_industrial_load_eda.ipynb
-```
-
-### 5. Launch the FastAPI Compute Gateway
+### 4. Launch the FastAPI Compute Gateway
 Start the local development server:
 ```bash
 uvicorn src.api.main:app --reload --port 8000
@@ -386,13 +313,10 @@ uvicorn src.api.main:app --reload --port 8000
   ```
 - **Stream Rolling Backtest (SSE):** `http://localhost:8000/api/backtest/stream?start_date=2025-07-01&days=7`
 
-### 6. Terminal Standup & Daily Report Tools
+### 5. Ingest Live Telemetry
 ```bash
-# Print today's prioritized sprint agenda and recent git commits
-python3 scripts/daily_standup.py
-
-# Generate a daily engineering audit log from git diff metadata
-python3 scripts/generate_daily_report.py --hours 24
+# Ingest live GoodWe SEMS Portal 5-minute telemetry
+python3 scripts/ingest_sems_agent_data.py
 ```
 
 ---
@@ -403,10 +327,20 @@ SolarSense EMS is collaboratively engineered by:
 
 | Engineer | Core Responsibilities & Commits | Key Deliverables & Modules |
 | :--- | :--- | :--- |
-| **Abubakar**<br>*(Team Lead / Systems & Optimization)* | • High-Performance Feature Store<br>• Causal Time-Series Forecasting Models<br>• HiGHS C++ MILP Battery Optimizer<br>• FastAPI Compute Gateway & SSE Streaming<br>• Argon LESCO B3 Stress Test Suite | • [`src/data_engineering/feature_store.py`](src/data_engineering/feature_store.py)<br>• [`src/forecast/`](src/forecast/) & [`src/grid_outage/`](src/grid_outage/)<br>• [`src/optimizer/milp_solver.py`](src/optimizer/milp_solver.py)<br>• [`src/api/main.py`](src/api/main.py) & [`schemas.py`](src/api/schemas.py)<br>• [`docs/system_architecture.md`](docs/system_architecture.md) |
-| **Zaeem**<br>*(Computer Vision & Load Analytics)* | • Dataset A Solar Panel Image Curation<br>• PyTorch DataLoaders & Augmentations<br>• EfficientNet-B2 Defect Classification<br>• Industrial Load Profiling & Shift Analytics<br>• MDI Spike Analysis & Baseline Loss Reconciliation | • [`src/vision/dataloader.py`](src/vision/dataloader.py)<br>• [`src/vision/train_classifier.py`](src/vision/train_classifier.py)<br>• [`tests/test_train_classifier.py`](tests/test_train_classifier.py)<br>• [`notebooks/01_industrial_load_eda.ipynb`](notebooks/01_industrial_load_eda.ipynb)<br>• [`tests/test_eda_notebook.py`](tests/test_eda_notebook.py) |
+| **Abubakar**<br>*(Team Lead / Systems & Optimization)* | • High-Performance Feature Store<br>• Causal Solar Time-Series Forecasting Models<br>• HiGHS C++ MILP Residential Battery Optimizer<br>• FastAPI Compute Gateway & SSE Streaming<br>• Post-Blackout Peak Recharge Suppression<br>• Argon Forensic Energy Audit Integration | • [`src/data_engineering/feature_store.py`](src/data_engineering/feature_store.py)<br>• [`src/forecast/train_solar_pv.py`](src/forecast/train_solar_pv.py)<br>• [`src/optimizer/milp_solver.py`](src/optimizer/milp_solver.py)<br>• [`src/api/main.py`](src/api/main.py) & [`schemas.py`](src/api/schemas.py)<br>• [`docs/DATASET_INSPECTION_AND_ARGON_AUDIT_BRIEF.md`](docs/DATASET_INSPECTION_AND_ARGON_AUDIT_BRIEF.md) |
+| **Zaeem**<br>*(Computer Vision & Solar Analytics)* | • Dataset A Solar Panel Image Curation<br>• PyTorch DataLoaders & Augmentations<br>• EfficientNet-B2 Defect Classification<br>• Macro-F1 Checkpointing Engine | • [`src/vision/dataloader.py`](src/vision/dataloader.py)<br>• [`src/vision/train_classifier.py`](src/vision/train_classifier.py)<br>• [`tests/test_train_classifier.py`](tests/test_train_classifier.py)<br>• [`docs/dataset_A_panel_images.md`](docs/dataset_A_panel_images.md) |
 
-- **Master Technical Specification:** Complete mathematical derivations, 24-column data dictionary, and architectural diagrams are available in [`docs/system_architecture.md`](docs/system_architecture.md).
+---
+
+## 📦 Historical Benchmark & Archive
+
+Prior proof-of-concept simulation studies investigating an industrial factory microgrid benchmark ($500\text{ kWp}$ solar array, $600\text{ kWh}$ BESS, LESCO B3 industrial Time-of-Use tariff with Maximum Demand Indicator ratchet penalties) have been segregated into [`archive/legacy_industrial/`](archive/legacy_industrial/) for historical reference:
+- `archive/legacy_industrial/notebooks/01_industrial_load_eda.ipynb`
+- `archive/legacy_industrial/src/forecast/train_factory_load.py`
+- `archive/legacy_industrial/src/data_engineering/build_factory_load.py`
+- `archive/legacy_industrial/tests/test_eda_notebook.py`
+
+This separation ensures the core SolarSense EMS repository remains strictly focused on the empirical **Station LHR-RES-01** digital twin and residential edge deployment.
 
 ---
 

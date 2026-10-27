@@ -59,7 +59,7 @@ def _pkr(value: float) -> Decimal:
 class BESSConfig:
     """Immutable battery hardware parameters.
     Default: LESCO B3 Industrial microgrid benchmark (600 kWh / 250 kW).
-    Use BESSConfig.station_residential() or BESSConfig.station_904a_residential() for Station LHR-RES-01.
+    Use BESSConfig.station_residential() for Station LHR-RES-01.
     """
     capacity_kwh: float = 600.0
     max_charge_kw: float = 250.0
@@ -88,11 +88,6 @@ class BESSConfig:
             max_soc_pct=1.00,
             degradation_cost_pkr_per_kwh=2.0,
         )
-
-    @classmethod
-    def station_904a_residential(cls) -> BESSConfig:
-        """Alias for station_residential() preserving backwards compatibility."""
-        return cls.station_residential()
 
     @property
     def min_soc_kwh(self) -> float:

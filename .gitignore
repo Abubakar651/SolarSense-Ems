@@ -21,7 +21,9 @@ __pycache__/
 *.py[cod]
 *$py.class
 *.so
+*.pth
 .Python
+
 build/
 develop-eggs/
 dist/

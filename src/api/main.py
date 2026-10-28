@@ -35,6 +35,7 @@ from src.data_engineering.feature_store import (
     TariffPolicy,
 )
 from src.optimizer.milp_solver import (
+    BESSConfig,
     DispatchResultDTO,
     MILPBatteryOptimizer,
 )
@@ -44,11 +45,14 @@ from src.optimizer.milp_solver import (
 async def lifespan(app: FastAPI):
     """
     Singleton Lifespan State Initializer.
-    Loads master dataset into contiguous memory and pre-warms CVXPY DPP parameters
-    once at startup so zero HTTP requests pay compilation or cold-start penalties.
+    Loads master dataset into contiguous memory with Station LHR-RES-01 / 904-A JT
+    residential policy (LESCO A-1 ToU & Net-Metering, 10.0 kW sanctioned load) and
+    pre-warms CVXPY DPP parameters once at startup for 5.12 kWh LiFePO4 BESS.
     """
-    repo = EMSDataRepository()
-    optimizer = MILPBatteryOptimizer()
+    residential_policy = TariffPolicy.lesco_a1_residential()
+    bess_config = BESSConfig.station_904a_residential()
+    repo = EMSDataRepository(policy=residential_policy)
+    optimizer = MILPBatteryOptimizer(bess=bess_config, policy=residential_policy)
     optimizer.warm_up()
 
     app.state.repo = repo
@@ -58,7 +62,7 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(
     title="SolarSense EMS — High-Performance Compute API",
-    description="REST & SSE Compute Gateway for Industrial Battery Energy Management (LESCO B3)",
+    description="REST & SSE Compute Gateway for Residential Hybrid Solar & Battery EMS (Station LHR-RES-01 / LESCO A-1 ToU)",
     version="1.0.0",
     lifespan=lifespan,
 )
@@ -154,8 +158,8 @@ async def optimize_dispatch(request: OptimizationRequest):
     repo: EMSDataRepository = app.state.repo
     optimizer: MILPBatteryOptimizer = app.state.optimizer
 
-    # Optional dynamic tariff override policy
-    policy = None
+    # Optional dynamic tariff override policy (preserving residential sanctioned ceiling & export rate)
+    policy = repo.policy
     if any(
         x is not None
         for x in (
@@ -165,9 +169,24 @@ async def optimize_dispatch(request: OptimizationRequest):
         )
     ):
         policy = TariffPolicy(
-            off_peak_rate_pkr=Decimal(str(request.off_peak_rate_pkr)) if request.off_peak_rate_pkr else Decimal("38.00"),
-            peak_rate_pkr=Decimal(str(request.peak_rate_pkr)) if request.peak_rate_pkr else Decimal("60.00"),
-            diesel_cost_pkr=Decimal(str(request.diesel_cost_pkr)) if request.diesel_cost_pkr else Decimal("95.00"),
+            off_peak_rate_pkr=(
+                Decimal(str(request.off_peak_rate_pkr))
+                if request.off_peak_rate_pkr is not None
+                else repo.policy.off_peak_rate_pkr
+            ),
+            peak_rate_pkr=(
+                Decimal(str(request.peak_rate_pkr))
+                if request.peak_rate_pkr is not None
+                else repo.policy.peak_rate_pkr
+            ),
+            diesel_cost_pkr=(
+                Decimal(str(request.diesel_cost_pkr))
+                if request.diesel_cost_pkr is not None
+                else repo.policy.diesel_cost_pkr
+            ),
+            export_rate_pkr=repo.policy.export_rate_pkr,
+            sanctioned_load_kw=repo.policy.sanctioned_load_kw,
+            mdi_penalty_per_kw_pkr=repo.policy.mdi_penalty_per_kw_pkr,
         )
 
     try:
@@ -189,6 +208,13 @@ async def optimize_dispatch(request: OptimizationRequest):
     else:
         savings_pct = 0.0
 
+    # Net-metering export during grid-connected hours (anti-islanding: 0.0 kW during outages)
+    p_export_list = [
+        float(c) if int(o) == 0 else 0.0
+        for c, o in zip(result.p_curtail_kw, slice_data.actual_outage_mask)
+    ]
+    export_rev_pkr = round(sum(p_export_list) * float(policy.export_rate_pkr), 2)
+
     return OptimizationResponse(
         window_start=result.window_start,
         status=result.status,
@@ -197,6 +223,7 @@ async def optimize_dispatch(request: OptimizationRequest):
         solar_kw=[float(x) for x in slice_data.solar_kw],
         factory_load_kw=[float(x) for x in slice_data.factory_load_kw],
         p_grid_kw=[float(x) for x in result.p_grid_kw],
+        p_export_kw=p_export_list,
         p_diesel_kw=[float(x) for x in result.p_diesel_kw],
         p_ch_kw=[float(x) for x in result.p_ch_kw],
         p_dis_kw=[float(x) for x in result.p_dis_kw],
@@ -211,6 +238,7 @@ async def optimize_dispatch(request: OptimizationRequest):
         baseline_mdi_penalty_pkr=float(result.baseline_mdi_penalty_pkr),
         baseline_total_pkr=float(result.baseline_total_pkr),
         optimized_energy_pkr=float(result.optimized_energy_pkr),
+        export_revenue_pkr=export_rev_pkr,
         optimized_diesel_pkr=float(result.optimized_diesel_pkr),
         optimized_mdi_penalty_pkr=float(result.optimized_mdi_penalty_pkr),
         degradation_cost_pkr=float(result.degradation_cost_pkr),
@@ -252,9 +280,9 @@ async def stream_backtest(
         for day_idx in range(days):
             date_str = curr_dt.strftime("%Y-%m-%d")
 
-            # Monthly MDI ratchet reset on the 1st of each month
+            # Monthly peak demand ratchet reset on the 1st of each month to residential sanctioned ceiling (10.0 kW)
             if curr_dt.day == 1:
-                current_mdi_hw = 500.0
+                current_mdi_hw = repo.policy.sanctioned_load_kw
 
             try:
                 sl = repo.get_optimization_slice(

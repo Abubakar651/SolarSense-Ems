@@ -112,6 +112,41 @@ def test_stream_backtest_sse(client):
     assert frames[0]["day"] == 1
     assert frames[0]["date"] == "2025-07-01"
     assert frames[0]["status"] == "OPTIMAL"
+    assert frames[0]["updated_mdi_high_water_kw"] == pytest.approx(10.0, abs=5.0)
     assert frames[1]["day"] == 2
     assert frames[2]["day"] == 3
     assert frames[3]["status"] == "finished"
+
+
+def test_residential_station_904a_envelope_and_soiling_defaults(client):
+    """Verifies FastAPI residential 5.12 kWh BESS envelope, export vector, and 7.02 kWp soiling calculator."""
+    from src.soiling.loss_calculator import SolarPlantLossCalculator
+    from datetime import datetime
+
+    payload = {
+        "date_str": "2026-09-23",
+        "use_forecasts": False,
+        "initial_soc_kwh": 3.5,
+    }
+    response = client.post("/api/optimize", json=payload)
+    assert response.status_code == 200
+    data = response.json()
+    assert data["status"] in ("OPTIMAL", "OPTIMAL_INACCURATE")
+    assert len(data["p_export_kw"]) == 24
+    assert max(data["soc_kwh"]) <= 5.12 + 1e-6
+    assert min(data["soc_kwh"]) >= 0.768 - 1e-6
+
+    calc = SolarPlantLossCalculator()
+    assert calc.plant_capacity_kw == pytest.approx(7.02)
+    assert calc.panel_rating_w == pytest.approx(585.0)
+    assert calc.num_panels == 12
+    assert calc.wash_cost_pkr == pytest.approx(1500.0)
+    assert calc.tariff_category == "A1_ToU"
+    loss_res = calc.calculate_instantaneous_loss(
+        poa_irradiance_wm2=850.0,
+        ambient_temp_c=32.0,
+        actual_power_kw=3.85,
+        dt=datetime(2026, 10, 7, 12, 30),
+    )
+    assert loss_res["soiling_derate_percentage"] > 0.0
+    assert loss_res["current_tariff_pkr_per_kwh"] == pytest.approx(34.53)

@@ -27,13 +27,13 @@ import warnings
 warnings.filterwarnings("ignore")
 
 # ──────────────────────────────────────────────────────
-# SYSTEM HARDWARE CONSTANTS
+# SYSTEM HARDWARE CONSTANTS (Station LHR-RES-01 / 904-A JT)
 # ──────────────────────────────────────────────────────
 LAT_DEG       = 31.5204          # Lahore latitude
 LON_DEG       = 74.3587          # Lahore longitude
 TILT_DEG      = 30.0             # Panel tilt from horizontal
 AZIMUTH_DEG   = 180.0            # South-facing (0° = North, 180° = South)
-DC_CAPACITY_W = 6600.0           # 12 × 550 Wp
+DC_CAPACITY_W = 7020.0           # 12 × 585 Wp = 7.02 kWp Bifacial PV Array
 TEMP_COEFF    = -0.0035          # -0.35% per °C above STC (25°C)
 BASELINE_PR   = 0.82             # Performance Ratio when clean (calibrated May-Jun data)
 ALBEDO        = 0.20             # Ground reflectance (concrete/urban)
@@ -42,8 +42,10 @@ ALBEDO        = 0.20             # Ground reflectance (concrete/urban)
 WASH_DATE     = "2026-09-23"
 CLEAN_PEAK_DATE = "2026-09-29"   # Post-wash maximum before dust settled
 
-# LESCO B3 Industrial tariff (off-peak, used for financial loss calc)
-LESCO_OFF_PEAK_PKR = 47.5        # PKR/kWh (off-peak base rate)
+# LESCO A-1 Residential Time-of-Use tariff (used for financial loss calc)
+LESCO_OFF_PEAK_PKR = 34.53       # PKR/kWh (LESCO A-1 Residential Off-Peak rate)
+LESCO_PEAK_PKR     = 46.85       # PKR/kWh (LESCO A-1 Residential Peak ToU rate 18:00-22:00)
+PANEL_WASH_COST_PKR = 1500.0     # PKR per residential array cleaning event (lesco-tarrif.json)
 
 # Paths
 BASE = os.path.abspath(os.path.join(os.path.dirname(__file__), "../.."))
@@ -283,7 +285,7 @@ def main():
 
     # ── CUSUM change-point detection for historical wash/rain events ──
     print("\n[5/5] Detecting historical wash and rain events via CUSUM...")
-    pr_series = df["performance_ratio"].fillna(method="ffill").values
+    pr_series = df["performance_ratio"].ffill().values
 
     # Detect upward jumps in daily generation delta
     daily_gen = df["generation_kwh"].values

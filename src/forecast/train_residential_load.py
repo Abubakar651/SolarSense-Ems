@@ -116,7 +116,7 @@ def train_residential_load_model(
 
     splits = repo.get_ml_feature_matrix(task="load", purge_hours=24)
     feature_names = list(splits.feature_names)
-    policy = TariffPolicy()
+    policy = TariffPolicy.lesco_a1_residential()
 
     X_train = splits.train_features.to_numpy().astype(np.float64)
     y_train = splits.train_target.astype(np.float64)
@@ -192,22 +192,50 @@ def train_residential_load_model(
 
     # Evaluate on test set
     y_pred, y_p90 = forecaster.predict_24h(X_test)
+    peak_mask = np.array([
+        int(h) in policy.get_peak_hours_for_month(int(m))
+        for h, m in zip(X_test[:, h_idx], X_test[:, m_idx])
+    ])
+    peak_window_mae = (
+        float(mean_absolute_error(y_test[peak_mask], y_pred[peak_mask]))
+        if np.any(peak_mask)
+        else 0.0
+    )
+
+    # Benchmark 24-hour dual inference latency
+    X_24 = np.ascontiguousarray(X_test[:24, :], dtype=np.float64)
+    for _ in range(5):
+        _ = forecaster.predict_24h(X_24)
+    latencies = []
+    for _ in range(200):
+        t_start = time.perf_counter()
+        _ = forecaster.predict_24h(X_24)
+        latencies.append((time.perf_counter() - t_start) * 1000.0)
+    avg_latency_ms = sum(latencies) / len(latencies)
+
     metrics = {
-        "mae_kw": float(mean_absolute_error(y_test, y_pred)),
-        "rmse_kw": float(root_mean_squared_error(y_test, y_pred)),
-        "r2": float(r2_score(y_test, y_pred)),
-        "p90_coverage": float(np.mean(y_test <= y_p90)),
+        "mae_kw": round(float(mean_absolute_error(y_test, y_pred)), 4),
+        "rmse_kw": round(float(root_mean_squared_error(y_test, y_pred)), 4),
+        "r2": round(float(r2_score(y_test, y_pred)), 4),
+        "peak_window_mae_kw": round(peak_window_mae, 4),
+        "p90_coverage": round(float(np.mean(y_test <= y_p90)), 4),
+        "avg_24h_inference_latency_ms": round(avg_latency_ms, 4),
     }
+    forecaster.metadata["metrics"] = metrics
+    forecaster.save(save_path)
+    forecaster.save(LEGACY_MODEL_PATH)
     return forecaster, metrics
 
 
 if __name__ == "__main__":
-    print("=" * 60)
-    print("SolarSense EMS — Training Residential Load Forecaster")
-    print("=" * 60)
+    print("=" * 70)
+    print("SolarSense EMS — Training LightGBM Residential Load Forecaster")
+    print("=" * 70)
     forecaster, metrics = train_residential_load_model()
-    print(f"  MAE  : {metrics['mae_kw']:.3f} kW")
-    print(f"  RMSE : {metrics['rmse_kw']:.3f} kW")
-    print(f"  R2   : {metrics['r2']:.3f}")
-    print(f"  P90 Coverage: {metrics['p90_coverage']*100:.1f}%")
+    print(f"  Holdout Test R² Score      : {metrics['r2']:.4f}")
+    print(f"  Holdout Test MAE           : {metrics['mae_kw']:.4f} kW")
+    print(f"  Holdout Test RMSE          : {metrics['rmse_kw']:.4f} kW")
+    print(f"  LESCO Peak-Window MAE      : {metrics['peak_window_mae_kw']:.4f} kW")
+    print(f"  P90 Quantile Coverage      : {metrics['p90_coverage']*100:.1f}%")
+    print(f"  24-Hour Inference Latency  : {metrics['avg_24h_inference_latency_ms']:.4f} ms (Budget: < 10.0 ms)")
     print("✅ Residential Load Forecaster trained and saved.")

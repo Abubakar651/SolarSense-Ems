@@ -38,11 +38,13 @@ from src.data_engineering.feature_store import (
 )
 
 DEFAULT_MODEL_PATH = Path("models/solar_pv_lightgbm.joblib")
+RESIDENTIAL_ARRAY_KWP = 7.02  # Station LHR-RES-01: 12 × 585 Wp = 7.02 kWp Bifacial PV
 
 
 class SolarPVForecaster:
     """
-    Production-grade inference and training wrapper for Solar PV generation.
+    Production-grade inference and training wrapper for Solar PV generation
+    (Station LHR-RES-01 7.02 kWp Residential Array).
     """
 
     def __init__(
@@ -50,10 +52,14 @@ class SolarPVForecaster:
         model: Optional[lgb.LGBMRegressor] = None,
         feature_names: Optional[List[str]] = None,
         metadata: Optional[Dict[str, Any]] = None,
+        max_capacity_kw: float = RESIDENTIAL_ARRAY_KWP,
     ) -> None:
         self.model = model
         self.feature_names = feature_names or []
         self.metadata = metadata or {}
+        self.max_capacity_kw = float(
+            self.metadata.get("max_capacity_kw", max_capacity_kw)
+        )
         self._ghi_idx: int = (
             self.feature_names.index("ghi_wm2") if "ghi_wm2" in self.feature_names else 0
         )
@@ -65,22 +71,25 @@ class SolarPVForecaster:
         if not path.exists():
             raise FileNotFoundError(f"Model artifact not found at '{path}'")
         data = joblib.load(path)
+        meta = data.get("metadata", {})
         return cls(
             model=data["model"],
             feature_names=data["feature_names"],
-            metadata=data.get("metadata", {}),
+            metadata=meta,
+            max_capacity_kw=float(meta.get("max_capacity_kw", RESIDENTIAL_ARRAY_KWP)),
         )
 
     def save(self, path: Union[str, Path] = DEFAULT_MODEL_PATH) -> None:
         """Serializes estimator and metadata via joblib."""
         path = Path(path)
         path.parent.mkdir(parents=True, exist_ok=True)
+        self.metadata["max_capacity_kw"] = self.max_capacity_kw
         joblib.dump(
             {
                 "model": self.model,
                 "feature_names": self.feature_names,
                 "metadata": self.metadata,
-                "model_type": "LightGBM Regressor (Solar PV)",
+                "model_type": "LightGBM Regressor (Solar PV - 7.02 kWp Residential)",
             },
             path,
         )
@@ -111,8 +120,8 @@ class SolarPVForecaster:
         else:
             ghi_vec = np.asarray(ghi_24, dtype=np.float64)
 
-        # 3. Physical bounds clipping: [0.0, 600.0] kW and strict 0.0 at night (GHI <= 0)
-        clipped_preds = np.clip(raw_preds, 0.0, 600.0)
+        # 3. Physical bounds clipping: [0.0, max_capacity_kw] (7.02 kWp) and strict 0.0 at night (GHI <= 0)
+        clipped_preds = np.clip(raw_preds, 0.0, self.max_capacity_kw)
         final_preds = np.where(ghi_vec <= 0.0, 0.0, clipped_preds)
 
         return np.ascontiguousarray(final_preds, dtype=np.float64)
@@ -170,14 +179,16 @@ def train_solar_pv_model(
             "train_rows": splits.metadata["train_rows"],
             "val_rows": splits.metadata["val_rows"],
             "test_rows": splits.metadata["test_rows"],
+            "max_capacity_kw": RESIDENTIAL_ARRAY_KWP,
             "trained_at": datetime.now(PKT_TZ).isoformat(),
             "fit_duration_ms": round(fit_duration_ms, 2),
         },
+        max_capacity_kw=RESIDENTIAL_ARRAY_KWP,
     )
 
     # Evaluate on holdout test partition
     raw_test_preds = forecaster.model.predict(X_test, num_threads=1)
-    test_preds = np.clip(raw_test_preds, 0.0, 600.0)
+    test_preds = np.clip(raw_test_preds, 0.0, RESIDENTIAL_ARRAY_KWP)
     test_preds = np.where(X_test[:, ghi_idx] <= 0.0, 0.0, test_preds)
 
     r2 = float(r2_score(y_test, test_preds))
@@ -189,8 +200,8 @@ def train_solar_pv_model(
     baseline_preds = X_test[:, lag_24h_idx]
     baseline_mae = float(mean_absolute_error(y_test, baseline_preds))
 
-    # LESCO seasonal peak window evaluation
-    policy = TariffPolicy()
+    # LESCO A-1 Residential ToU peak window evaluation (18:00 - 22:00)
+    policy = TariffPolicy.lesco_a1_residential()
     h_idx = feature_names.index("hour")
     m_idx = feature_names.index("month")
     peak_mask = np.array([

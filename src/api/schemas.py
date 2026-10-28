@@ -54,6 +54,7 @@ class OptimizationResponse(BaseModel):
     solar_kw: List[float]
     factory_load_kw: List[float]
     p_grid_kw: List[float]
+    p_export_kw: List[float] = Field(default_factory=list)
     p_diesel_kw: List[float]
     p_ch_kw: List[float]
     p_dis_kw: List[float]
@@ -68,6 +69,7 @@ class OptimizationResponse(BaseModel):
     baseline_mdi_penalty_pkr: float
     baseline_total_pkr: float
     optimized_energy_pkr: float
+    export_revenue_pkr: float = 0.0
     optimized_diesel_pkr: float
     optimized_mdi_penalty_pkr: float
     degradation_cost_pkr: float

@@ -7,7 +7,7 @@
 [![ML: LightGBM](https://img.shields.io/badge/ML-LightGBM%20GBDT-success.svg)](https://lightgbm.readthedocs.io/)
 [![CV: PyTorch EfficientNet-B2](https://img.shields.io/badge/CV-PyTorch%20EfficientNet--B2-red.svg)](https://pytorch.org/)
 [![API: FastAPI](https://img.shields.io/badge/API-FastAPI%20REST%20%2B%20SSE-009688.svg)](https://fastapi.tiangolo.com/)
-[![Tests: 81 Passing](https://img.shields.io/badge/Tests-81%2F81%20Passing-brightgreen.svg)](tests/)
+[![Tests: 92 Passing](https://img.shields.io/badge/Tests-92%2F92%20Passing-brightgreen.svg)](tests/)
 [![Auditor: Argon Verified](https://img.shields.io/badge/Auditor-Argon%20Forensic%20Audit%20(100%25%20Pass)-teal.svg)](docs/DATASET_INSPECTION_AND_ARGON_AUDIT_BRIEF.md)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
@@ -243,14 +243,16 @@ SolarSense-Ems/
 │       ├── download_datasets.py# Automated Kaggle dataset ingestion
 │       ├── train_classifier.py # EfficientNet-B2 transfer learning & macro-F1 trainer
 │       └── verify_dataset_a.py # Protocol 1 compliance & leakage test script
-├── tests/                      # Automated Regression & Invariant Test Suite (81 Tests)
-│   ├── test_api_gateway.py     # FastAPI integration & SSE stream tests (8 tests)
-│   ├── test_argon_audit_fixes.py # Post-audit residential invariants & latency (6 tests)
+├── tests/                      # Automated Regression & Invariant Test Suite (92 Tests)
+│   ├── test_api_gateway.py     # FastAPI integration & SSE stream tests (9 tests)
+│   ├── test_argon_audit_fixes.py # Post-audit residential invariants & latency (5 tests)
+│   ├── test_cctv_monitor.py    # CCTV panel monitor & HUD overlay tests (5 tests)
 │   ├── test_domain_stress_scenarios.py # Grid outage & ToU stress tests (4 tests)
 │   ├── test_feature_store.py   # Arrow memory & immutability tests (17 tests)
 │   ├── test_forecast_models.py # LightGBM inference & causality tests (9 tests)
-│   ├── test_milp_solver.py     # HiGHS solver & blackout physics tests (33 tests)
-│   └── test_train_classifier.py# PyTorch defect classifier trainer tests (4 tests)
+│   ├── test_milp_solver.py     # HiGHS solver & blackout physics tests (25 tests)
+│   ├── test_repair_master_dataset.py # Telemetry & daily portal reconstruction tests (13 tests)
+│   └── test_train_classifier.py# PyTorch defect classifier trainer tests (5 tests)
 ├── pytest.ini                  # Pytest configuration
 └── requirements.txt            # Locked project dependencies
 ```
@@ -275,15 +277,15 @@ pip install -r requirements.txt
 ### 2. Run the Full Test Suite
 Execute the automated regression test suite verifying Arrow memory contiguity, solver latency, blackout physics, and post-blackout recharge suppression:
 ```bash
-pytest -v --ignore=tests/test_train_classifier.py
+.venv/bin/pytest --ignore=tests/test_train_classifier.py
 ```
-*(Expected: **77 passed in ~10 seconds**)*
+*(Expected: **87 passed in ~9 seconds**)*
 
-> Note: `tests/test_train_classifier.py` requires PyTorch and Torchvision installed. To run with PyTorch enabled:
+> Note: `tests/test_train_classifier.py` runs end-to-end PyTorch EfficientNet-B2 training fixtures. When included:
 > ```bash
-> pytest -v tests/test_train_classifier.py
+> .venv/bin/pytest tests/test_train_classifier.py
 > ```
-> *(Combined: **81 passed**)*
+> *(Combined: **92 passed**)*
 
 ### 3. Run the Computer Vision Training & Verification Pipeline
 ```bash

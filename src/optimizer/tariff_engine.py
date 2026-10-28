@@ -42,12 +42,29 @@ class LescoTariffEngine:
         else:  # [9, 10, 11]
             return 18 <= hour < 22
 
-    def get_effective_rate_pkr(self, dt: datetime, category: str = "B3", include_taxes: bool = True) -> float:
+    def get_base_rate_pkr(self, dt: datetime, category: str = "A1_ToU") -> float:
+        """
+        Returns the canonical LESCO Time-of-Use energy rate (PKR/kWh):
+          - For A1_ToU (Station LHR-RES-01 Residential): 46.85 PKR/kWh (Peak 18:00-22:00) / 34.53 PKR/kWh (Off-Peak)
+          - For B3/B2 Industrial: base_peak_rate_pkr_per_kwh / base_off_peak_rate_pkr_per_kwh
+        """
+        if category == "A1_ToU":
+            t_info = self.schedule["residential_tariffs"]["A1_ToU"]
+            is_res_peak = 18 <= dt.hour < 22
+            return float(t_info["base_peak_rate_pkr_per_kwh"] if is_res_peak else t_info["base_off_peak_rate_pkr_per_kwh"])
+        elif category in self.schedule["industrial_tariffs"]:
+            t_info = self.schedule["industrial_tariffs"][category]
+            is_peak = self.is_peak_hour(dt)
+            return float(t_info["base_peak_rate_pkr_per_kwh"] if is_peak else t_info["base_off_peak_rate_pkr_per_kwh"])
+        else:
+            raise ValueError(f"Unsupported ToU tariff category: {category}")
+
+    def get_effective_rate_pkr(self, dt: datetime, category: str = "A1_ToU", include_taxes: bool = True) -> float:
         """
         Calculates the exact marginal cost per kWh at a specific timestamp.
         Includes base variable rate + FCA + QTA + FC Surcharge + ED + GST.
         """
-        is_peak = self.is_peak_hour(dt)
+        is_peak = (18 <= dt.hour < 22) if category == "A1_ToU" else self.is_peak_hour(dt)
 
         if category in self.schedule["industrial_tariffs"]:
             t_info = self.schedule["industrial_tariffs"][category]
@@ -75,6 +92,38 @@ class LescoTariffEngine:
         effective_rate = variable_subtotal + duty + gst
 
         return round(effective_rate, 2)
+
+    def calculate_residential_bill(
+        self,
+        peak_kwh: float,
+        off_peak_kwh: float,
+        export_kwh: float = 0.0,
+        sanctioned_kw: float = 10.0,
+    ) -> dict:
+        """
+        Computes a monthly LESCO A-1 Residential Time-of-Use & Net-Metering bill
+        for Station LHR-RES-01 (46.85 PKR/kWh Peak, 34.53 PKR/kWh Off-Peak, 27.00 PKR/kWh Export).
+        """
+        t_info = self.schedule["residential_tariffs"]["A1_ToU"]
+        peak_charge = peak_kwh * t_info["base_peak_rate_pkr_per_kwh"]
+        off_peak_charge = off_peak_kwh * t_info["base_off_peak_rate_pkr_per_kwh"]
+        export_credit = export_kwh * t_info.get("export_rate_pkr_per_kwh", 27.00)
+        total_import_kwh = peak_kwh + off_peak_kwh
+        gross_energy_pkr = peak_charge + off_peak_charge
+        net_bill_pkr = gross_energy_pkr - export_credit
+
+        return {
+            "category": "A1_ToU",
+            "sanctioned_load_kw": round(sanctioned_kw, 2),
+            "peak_import_kwh": round(peak_kwh, 2),
+            "off_peak_import_kwh": round(off_peak_kwh, 2),
+            "export_kwh": round(export_kwh, 2),
+            "peak_energy_charge_pkr": round(peak_charge, 2),
+            "off_peak_energy_charge_pkr": round(off_peak_charge, 2),
+            "net_metering_export_credit_pkr": round(export_credit, 2),
+            "net_payable_pkr": round(net_bill_pkr, 2),
+            "effective_import_rate_pkr_per_kwh": round(gross_energy_pkr / max(total_import_kwh, 1.0), 2),
+        }
 
     def calculate_industrial_bill(
         self,

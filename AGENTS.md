@@ -8,17 +8,17 @@ Welcome to the **SolarSense Energy Management System (Lahore, Pakistan)** reposi
 
 The platform supports two complementary operational profiles:
 
-### A. Station LHR-RES-01 (Empirical Residential Digital Twin)
+### A. Station LHR-RES-01 / 904-A JT (Active Primary System — Empirical Residential Digital Twin)
 * **Location:** Lahore, Pakistan ($31.52^\circ\text{ N}, 74.36^\circ\text{ E}$, Asia/Karachi UTC+05:00).
 * **Hardware:** 
   * $7.02\text{ kWp}$ DC Bifacial PV Array ($12 \times 585\text{ W}$).
   * GoodWe ES / ES-Uniq Low-Voltage Hybrid Inverter (SN: `9010KESC253L0146`, rated up to $10.0\text{ kW}$).
-  * $5.12\text{ kWh}$ LiFePO4 Battery Pack ($51.2\text{ V}, 100\text{ Ah}$, 1C / $5.0\text{ kW}$ charge/discharge).
+  * $5.12\text{ kWh}$ LiFePO4 Battery Pack ($51.2\text{ V}, 100\text{ Ah}$, 1C / $5.0\text{ kW}$ charge/discharge, $15\%$ emergency reserve $= 0.768\text{ kWh}$, $55\%$ nocturnal blackout reserve $= 2.816\text{ kWh}$).
 * **Tariff Framework:** LESCO / NEPRA Residential Tariff A-1 Time-of-Use & Net-Metering:
   * Peak ToU (18:00–22:00): **$46.85\text{ PKR/kWh}$**
   * Off-Peak (00:00–18:00 & 22:00–24:00): **$34.53\text{ PKR/kWh}$**
   * Net-Metering Export: **$27.00\text{ PKR/kWh}$**
-  * Sanctioned Load: **$10.0\text{ kW}$**; Demand Penalty: **$0.00\text{ PKR/kW}$**
+  * Sanctioned Load: **$10.0\text{ kW}$**; Demand Penalty: **$0.00\text{ PKR/kW}$**; Panel Cleaning Cost: **$1,500.0\text{ PKR}$**
 
 ### B. LESCO B3 Industrial Factory Microgrid Benchmark (Archived Benchmark — `archive/legacy_industrial/`)
 * **Status:** Historical simulation benchmark segregated into `archive/legacy_industrial/`.
@@ -59,10 +59,10 @@ vec.setflags(write=False)
 
 ## 4. Hard Latency Budgets (Enforced via Tests)
 
-* **24-hour repository slice retrieval (`get_optimization_slice`):** **< 1.0 ms** (measured: $0.046\text{ ms}$)
-* **24-hour ML feature assembly + inference (`use_forecasts=True`):** **< 10.0 ms** (measured: $2.77\text{ ms}$)
-* **24-hour HiGHS MILP solve:** **< 25.0 ms** (measured: $12.06\text{ ms}$)
-* **FastAPI endpoint round-trip:** **< 50.0 ms**
+* **24-hour repository slice retrieval (`get_optimization_slice`):** **< 1.0 ms** (measured: $0.035\text{ ms}$)
+* **24-hour ML feature assembly + inference (`use_forecasts=True`):** **< 10.0 ms** (measured: $2.72\text{ ms}$)
+* **24-hour HiGHS MILP solve (`BESSConfig.station_904a_residential()`):** **< 25.0 ms** (measured: $10.45\text{ ms}$)
+* **FastAPI endpoint round-trip (`/api/window` & `/api/optimize`):** **< 50.0 ms** (measured: $1.29\text{ ms}$ / $13.26\text{ ms}$)
 
 ---
 

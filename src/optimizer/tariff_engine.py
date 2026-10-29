@@ -9,6 +9,22 @@ import json
 from pathlib import Path
 from datetime import datetime
 
+from src.optimizer.lesco_2026_tariff_and_dispatch import (
+    BillingDemandMode,
+    ConsumerCategory2026,
+    Lesco2026BatteryDispatchOptimizer,
+    Lesco2026ConfigDTO,
+    Lesco2026DispatchResultDTO,
+    LescoCY2026TariffEngine,
+    ProsumerEligibilityDTO,
+    ProsumerMonthlySettlementDTO,
+    ProsumerRegime2026,
+    ResidentialBillBreakdownDTO,
+    SeasonalPeakWindowDTO,
+    SlabBracketDTO,
+    load_lesco_2026_config,
+)
+
 CONFIG_PATH = Path("data/processed/tariffs/lesco_tariff_schedule.json")
 
 

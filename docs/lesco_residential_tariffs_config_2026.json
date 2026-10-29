@@ -1,0 +1,439 @@
+{
+  "metadata": {
+    "document_title": "LESCO Residential Electricity Tariffs, Billing Rules, Prosumer Net-Billing & Metering Configuration Schema",
+    "utility": "Lahore Electric Supply Company (LESCO)",
+    "regulator": "National Electric Power Regulatory Authority (NEPRA)",
+    "jurisdiction": "Lahore, Punjab, Pakistan",
+    "currency": "PKR (Rs)",
+    "as_of_date": "2026-10-29",
+    "tariff_regime": "Calendar Year 2026 (Rebased 2026-01-01, Rationalized 2026-02-12)",
+    "latest_governing_notifications": {
+      "base_tariff_and_fixed_charges": {
+        "sro": "S.R.O. 279(I)/2026",
+        "effective_date": "2026-02-12",
+        "nepra_decision_date": "2026-02-11",
+        "primary_url": "https://nepra.org.pk/tariff/Tariff/Ex-WAPDA%20DISCOS/2026/TRF-100%20XWDISCOS%20AND%20KE%20RATIONALIZATION%20OF%20TARIFF%2011-02-2026%202935-57.pdf",
+        "supersedes": [
+          "S.R.O. 46(I)/2026 dated 2026-01-13 (Initial CY 2026 Uniform SoT)",
+          "S.R.O. 1161(I)/2025 dated 2025-07-01 (FY 2025-26 LESCO SoT)"
+        ]
+      },
+      "terms_and_conditions_annex_v": {
+        "case_no": "NEPRA/TRF-603 & TRF-604",
+        "effective_date": "2026-01-07",
+        "primary_url": "https://nepra.org.pk/tariff/Tariff/Ex-WAPDA%20DISCOS/2026/TRF-603%20&TRF%20604%20LESCO%20FOR%20DETERMINATION%20OF%20TARIFF%20REVISED%20ANNUAL%20REBASING%2007-01-2026%20237-44.PDF"
+      },
+      "cppa_g_ppp_forecast": {
+        "case_no": "NEPRA/TRF-100/CPPAG",
+        "effective_date": "2026-01-07",
+        "primary_url": "https://nepra.org.pk/tariff/Tariff/DISCOs/Rebasing%20Decisions/TRF-100%20CPPAG%20FOR%20APPROVAL%20OF%20POWER%20PURCHASE%20PRICE%20FORECAST%2007-01-2026%20437-76.PDF"
+      },
+      "prosumer_regulations_2026": {
+        "principal_sro": "S.R.O. 251(I)/2026",
+        "effective_date": "2026-02-09",
+        "primary_url": "https://nepra.org.pk/Legislation/3-Reg/3.35%20NEPRA%20%20Prosumer%20Regulations%202026/NEPRA%20Prosumer%20Regulations%20%28SRO%20251%28I%292026%29%2009-02-26.PDF",
+        "amendments": [
+          {
+            "sro": "S.R.O. 547(I)/2026",
+            "date": "2026-04-02",
+            "retroactive_effective_date": "2026-02-09",
+            "effect": "Restores 1:1 unit netting and Rs 25.32/kWh (NAPPP) buyback rate for valid net-metering agreements executed before 2026-02-09 until expiry of their 7-year contract term.",
+            "primary_url": "https://nepra.org.pk/Legislation/3-Reg/3.35%20NEPRA%20%20Prosumer%20Regulations%202026/S.R.O%20547%281%29%202026%20notification%20amendment%20in%20NEPRA%20%28Prosumer%29%20Regulations%2002-04-2026.PDF"
+          },
+          {
+            "sro": "S.R.O. 1330(I)/2026 (also cited in press as S.R.O. 1320(I)/2026)",
+            "date": "2026-08-06",
+            "effective_date": "2026-08-06",
+            "effect": "Exempts distributed generation facilities <= 25 kW from seeking NEPRA concurrence (saving Rs 1,000/kW fee).",
+            "primary_url": "https://nepra.org.pk/Legislation/3-Reg/3.35%20NEPRA%20%20Prosumer%20Regulations%202026/SRO%201330%28I%29-2026%20Dated%2006-08-2026.pdf"
+          }
+        ]
+      }
+    }
+  },
+  "topic_A_residential_slab_tariff_A1a": {
+    "category_code": "A-1(a)",
+    "sanctioned_load_threshold": "Less than 5 kW (< 5 kW)",
+    "meter_phase": "Single-Phase (230V)",
+    "categories": {
+      "lifeline": {
+        "definition": "Single-phase Non-ToU residential consumer with sanctioned load <= 1 kW whose maximum monthly consumption across the last 12 months and current billing month is <= 100 kWh.",
+        "slab_application_mode": "whole_bill_no_slab_benefit",
+        "transition_rule": "Exceeding 100 kWh in any single month disqualifies the consumer from Lifeline status for the next 12 months.",
+        "fixed_charge_rule": "Nil (Rs 0/month). Minimum monthly customer charge of Rs 75/consumer/month (single-phase) applies only when zero monthly energy/fixed charges are billed.",
+        "slabs": [
+          {
+            "slab_id": "lifeline_1_50",
+            "min_kwh": 1,
+            "max_kwh": 50,
+            "gop_applicable_variable_rate_pkr_per_kwh": 3.95,
+            "nepra_determined_cy26_uniform_rate_with_pya": 36.13,
+            "nepra_determined_cy26_uniform_rate_without_pya": 35.43,
+            "nepra_determined_fy25_26_rate": 6.76,
+            "fixed_charge_pkr_per_kw_month": 0.0,
+            "fc_surcharge_pkr_per_kwh": 0.0,
+            "qta_applicable": false,
+            "fca_applicable": false,
+            "gst_rate": 0.18,
+            "effective_date": "2026-02-12",
+            "confidence": "High"
+          },
+          {
+            "slab_id": "lifeline_51_100",
+            "min_kwh": 51,
+            "max_kwh": 100,
+            "gop_applicable_variable_rate_pkr_per_kwh": 7.74,
+            "nepra_determined_cy26_uniform_rate_with_pya": 36.13,
+            "nepra_determined_cy26_uniform_rate_without_pya": 35.37,
+            "nepra_determined_fy25_26_rate": 11.5,
+            "fixed_charge_pkr_per_kw_month": 0.0,
+            "fc_surcharge_pkr_per_kwh": 0.0,
+            "qta_applicable": false,
+            "fca_applicable": false,
+            "gst_rate": 0.18,
+            "effective_date": "2026-02-12",
+            "confidence": "High"
+          }
+        ]
+      },
+      "protected": {
+        "definition": "Non-ToU residential consumer (< 5 kW) consuming <= 200 kWh per month consistently for the past 6 consecutive months.",
+        "slab_application_mode": "incremental_one_previous_slab_benefit",
+        "slab_application_formula": "If consumption <= 100 kWh: all units @ Rs 10.54/kWh + Rs 200/kW/month fixed charge. If consumption is 101-200 kWh: first 100 units @ Rs 10.54/kWh + (units - 100) @ Rs 13.01/kWh + Rs 300/kW/month fixed charge.",
+        "transition_rule": "Consuming >= 201 kWh in any single month (after pro-rata normalization if reading cycle > calendar month days) moves the consumer immediately to Unprotected for that month and breaks the 6-month consistency requirement for the next 6 consecutive months.",
+        "slabs": [
+          {
+            "slab_id": "protected_1_100",
+            "min_kwh": 1,
+            "max_kwh": 100,
+            "gop_applicable_variable_rate_pkr_per_kwh": 10.54,
+            "nepra_determined_cy26_uniform_rate_with_pya": 36.13,
+            "nepra_determined_fy25_26_rate": 28.55,
+            "fixed_charge_pkr_per_kw_month": 200.0,
+            "superseded_fixed_charge_before_2026_02_12": 0.0,
+            "fc_surcharge_pkr_per_kwh": 0.43,
+            "qta_applicable": true,
+            "fca_applicable": true,
+            "gst_rate": 0.18,
+            "effective_date": "2026-02-12",
+            "confidence": "High"
+          },
+          {
+            "slab_id": "protected_101_200",
+            "min_kwh": 101,
+            "max_kwh": 200,
+            "gop_applicable_variable_rate_pkr_per_kwh": 13.01,
+            "nepra_determined_cy26_uniform_rate_with_pya": 36.13,
+            "nepra_determined_fy25_26_rate": 31.43,
+            "fixed_charge_pkr_per_kw_month": 300.0,
+            "superseded_fixed_charge_before_2026_02_12": 0.0,
+            "fc_surcharge_pkr_per_kwh": 0.43,
+            "qta_applicable": true,
+            "fca_applicable": true,
+            "gst_rate": 0.18,
+            "effective_date": "2026-02-12",
+            "confidence": "High"
+          }
+        ]
+      },
+      "unprotected": {
+        "definition": "All Non-ToU residential consumers (< 5 kW) who do not qualify as Lifeline or Protected.",
+        "slab_application_mode": "whole_bill_landing_slab_no_previous_slab_benefit",
+        "slab_application_formula": "Every unit from unit 1 to total monthly kWh is billed at the single variable rate of the highest slab reached in that billing month.",
+        "slabs": [
+          {
+            "slab_id": "unprotected_1_100",
+            "min_kwh": 1,
+            "max_kwh": 100,
+            "gop_applicable_variable_rate_pkr_per_kwh": 22.44,
+            "superseded_gop_variable_rate_before_2026_02_12": 22.44,
+            "nepra_determined_cy26_uniform_rate_with_pya": 36.13,
+            "fixed_charge_pkr_per_kw_month": 275.0,
+            "superseded_fixed_charge_before_2026_02_12_per_conn": 0.0,
+            "fc_surcharge_pkr_per_kwh": 3.23,
+            "effective_date": "2026-02-12",
+            "confidence": "High"
+          },
+          {
+            "slab_id": "unprotected_101_200",
+            "min_kwh": 101,
+            "max_kwh": 200,
+            "gop_applicable_variable_rate_pkr_per_kwh": 28.91,
+            "superseded_gop_variable_rate_before_2026_02_12": 28.91,
+            "nepra_determined_cy26_uniform_rate_with_pya": 36.13,
+            "fixed_charge_pkr_per_kw_month": 300.0,
+            "superseded_fixed_charge_before_2026_02_12_per_conn": 0.0,
+            "fc_surcharge_pkr_per_kwh": 3.23,
+            "effective_date": "2026-02-12",
+            "confidence": "High"
+          },
+          {
+            "slab_id": "unprotected_201_300",
+            "min_kwh": 201,
+            "max_kwh": 300,
+            "gop_applicable_variable_rate_pkr_per_kwh": 33.1,
+            "superseded_gop_variable_rate_before_2026_02_12": 33.1,
+            "nepra_determined_cy26_uniform_rate_with_pya": 36.13,
+            "fixed_charge_pkr_per_kw_month": 350.0,
+            "superseded_fixed_charge_before_2026_02_12_per_conn": 0.0,
+            "fc_surcharge_pkr_per_kwh": 3.23,
+            "effective_date": "2026-02-12",
+            "confidence": "High"
+          },
+          {
+            "slab_id": "unprotected_301_400",
+            "min_kwh": 301,
+            "max_kwh": 400,
+            "gop_applicable_variable_rate_pkr_per_kwh": 36.46,
+            "superseded_gop_variable_rate_before_2026_02_12": 37.99,
+            "nepra_determined_cy26_uniform_rate_with_pya": 35.58,
+            "fixed_charge_pkr_per_kw_month": 400.0,
+            "superseded_fixed_charge_before_2026_02_12_per_conn": 200.0,
+            "fc_surcharge_pkr_per_kwh": 3.23,
+            "effective_date": "2026-02-12",
+            "confidence": "High"
+          },
+          {
+            "slab_id": "unprotected_401_500",
+            "min_kwh": 401,
+            "max_kwh": 500,
+            "gop_applicable_variable_rate_pkr_per_kwh": 38.95,
+            "superseded_gop_variable_rate_before_2026_02_12": 40.2,
+            "nepra_determined_cy26_uniform_rate_with_pya": 35.23,
+            "fixed_charge_pkr_per_kw_month": 500.0,
+            "superseded_fixed_charge_before_2026_02_12_per_conn": 400.0,
+            "fc_surcharge_pkr_per_kwh": 3.23,
+            "effective_date": "2026-02-12",
+            "confidence": "High"
+          },
+          {
+            "slab_id": "unprotected_501_600",
+            "min_kwh": 501,
+            "max_kwh": 600,
+            "gop_applicable_variable_rate_pkr_per_kwh": 40.22,
+            "superseded_gop_variable_rate_before_2026_02_12": 41.62,
+            "nepra_determined_cy26_uniform_rate_with_pya": 34.97,
+            "fixed_charge_pkr_per_kw_month": 675.0,
+            "superseded_fixed_charge_before_2026_02_12_per_conn": 600.0,
+            "fc_surcharge_pkr_per_kwh": 3.23,
+            "effective_date": "2026-02-12",
+            "confidence": "High"
+          },
+          {
+            "slab_id": "unprotected_601_700",
+            "min_kwh": 601,
+            "max_kwh": 700,
+            "gop_applicable_variable_rate_pkr_per_kwh": 41.85,
+            "superseded_gop_variable_rate_before_2026_02_12": 42.76,
+            "nepra_determined_cy26_uniform_rate_with_pya": 34.81,
+            "fixed_charge_pkr_per_kw_month": 675.0,
+            "superseded_fixed_charge_before_2026_02_12_per_conn": 800.0,
+            "fc_surcharge_pkr_per_kwh": 3.23,
+            "effective_date": "2026-02-12",
+            "confidence": "High"
+          },
+          {
+            "slab_id": "unprotected_above_700",
+            "min_kwh": 701,
+            "max_kwh": null,
+            "gop_applicable_variable_rate_pkr_per_kwh": 47.2,
+            "superseded_gop_variable_rate_before_2026_02_12": 47.69,
+            "nepra_determined_cy26_uniform_rate_with_pya": 35.07,
+            "fixed_charge_pkr_per_kw_month": 675.0,
+            "superseded_fixed_charge_before_2026_02_12_per_conn": 1000.0,
+            "fc_surcharge_pkr_per_kwh": 3.23,
+            "effective_date": "2026-02-12",
+            "confidence": "High"
+          }
+        ]
+      }
+    }
+  },
+  "topic_B_time_of_use_residential_tariff_A1b": {
+    "category_code": "A-1(b)",
+    "mandatory_threshold": "Sanctioned load >= 5 kW (3-Phase 400V connection and ToU/AMI meter mandatory)",
+    "optional_eligibility": "Residential consumers with sanctioned load < 5 kW may opt for ToU metering and be billed under A-1(b)",
+    "peak_rate_pkr_per_kwh": 46.85,
+    "off_peak_rate_pkr_per_kwh": 34.53,
+    "superseded_off_peak_rate_before_2026_02_12": 40.53,
+    "base_peak_to_off_peak_spread_pkr_per_kwh": 12.32,
+    "nepra_determined_cy26_uniform_peak_with_pya": 33.0,
+    "nepra_determined_cy26_uniform_off_peak_with_pya": 30.61,
+    "fixed_charge_pkr_per_kw_month": 675.0,
+    "superseded_fixed_charge_before_2026_02_12_per_conn": 1000.0,
+    "billing_demand_discrepancy_note": "Primary NEPRA Annex-V Part-I Clause 4 defines Billing Demand as max(25% of sanctioned load, actual monthly MDI). Secondary portals (eBillPakistan, BijliBills) cite max(50% of sanctioned load, actual MDI) or full integer sanctioned load kW.",
+    "prepaid_residential_tariff_A1c": {
+      "category_code": "A-1(c)",
+      "gop_variable_rate_pkr_per_kwh": 42.12,
+      "superseded_gop_variable_rate_before_2026_02_12": 54.35,
+      "fixed_charge_pkr_per_kw_month": 675.0,
+      "effective_date": "2026-02-12"
+    },
+    "seasonal_peak_windows_pkt": [
+      {
+        "season": "Winter",
+        "months": [
+          "December",
+          "January",
+          "February"
+        ],
+        "peak_start_24h": "17:00",
+        "peak_end_24h": "21:00",
+        "peak_hours_display": "5:00 PM to 9:00 PM"
+      },
+      {
+        "season": "Spring",
+        "months": [
+          "March",
+          "April",
+          "May"
+        ],
+        "peak_start_24h": "18:00",
+        "peak_end_24h": "22:00",
+        "peak_hours_display": "6:00 PM to 10:00 PM"
+      },
+      {
+        "season": "Summer",
+        "months": [
+          "June",
+          "July",
+          "August"
+        ],
+        "peak_start_24h": "19:00",
+        "peak_end_24h": "23:00",
+        "peak_hours_display": "7:00 PM to 11:00 PM"
+      },
+      {
+        "season": "Autumn",
+        "months": [
+          "September",
+          "October",
+          "November"
+        ],
+        "peak_start_24h": "18:00",
+        "peak_end_24h": "22:00",
+        "peak_hours_display": "6:00 PM to 10:00 PM"
+      }
+    ],
+    "differs_from_commercial_or_industrial": false,
+    "statutory_clause": "Part-I, Clause 10 of Annex-V, NEPRA LESCO Rebasing Decision dated 07-01-2026 (Page 21)"
+  },
+  "topic_C_bill_components_and_taxes": {
+    "fuel_price_adjustment_fpa": {
+      "billing_lag_months": 2,
+      "basis": "Billed on units consumed 2 months prior (e.g., Oct 2026 bill charges Aug 2026 FCA on Aug 2026 kWh)",
+      "october_2026_bill_rate_pkr_per_kwh": 1.1086,
+      "october_2026_sro": "S.R.O. 1754(I)/2026 dated 2026-10-07 (for Aug 2026 FCA)",
+      "september_2026_bill_rate_pkr_per_kwh": 2.0581,
+      "august_2026_bill_rate_pkr_per_kwh": 0.7503,
+      "november_2026_requested_rate_pkr_per_kwh": 2.5624,
+      "exempt_categories": [
+        "Lifeline (<=100 units, <=1 kW)",
+        "Prepaid (A-1(c))"
+      ]
+    },
+    "quarterly_tariff_adjustment_qta": {
+      "basis": "Billed on current month imported kWh",
+      "sep_to_nov_2026_rate_pkr_per_kwh": 0.5194,
+      "sep_to_nov_2026_sro": "S.R.O. 1501(I)/2026 dated 2026-09-07 (Q2 CY 2026 QTA)",
+      "jun_to_aug_2026_rate_pkr_per_kwh": -1.9857,
+      "mar_to_may_2026_rate_pkr_per_kwh": 0.3504,
+      "exempt_categories": [
+        "Lifeline (<=100 units, <=1 kW)",
+        "Prepaid (A-1(c))"
+      ]
+    },
+    "financing_cost_fc_surcharge": {
+      "unprotected_and_tou_rate_pkr_per_kwh": 3.23,
+      "protected_rate_pkr_per_kwh": 0.43,
+      "lifeline_rate_pkr_per_kwh": 0.0
+    },
+    "electricity_duty_ed": {
+      "statutory_announcement": "Discontinued via electricity bills effective 2025-07-01 per Federal/Punjab directive",
+      "empirical_2026_bill_discrepancy": "1.5% of (Variable Energy + QTA + FPA) continues to appear on many actual 2026 LESCO bills; EMS software should provide a boolean toggle (0% vs 1.5%)."
+    },
+    "general_sales_tax_gst": {
+      "rate": 0.18,
+      "taxable_base": "Variable Energy + Fixed Charges + QTA + FC Surcharge + Electricity Duty + Meter Rent, plus 18% on (FPA + ED on FPA)"
+    },
+    "tv_license_fee_ptv": {
+      "rate_pkr_per_month": 0.0,
+      "status": "Abolished effective 2025-07-01 (previously Rs 35/month)"
+    },
+    "withholding_income_tax_section_235": {
+      "atl_filer_rate": 0.0,
+      "non_filer_below_25000_pkr_bill": 0.0,
+      "non_filer_25000_pkr_and_above_bill": 0.075
+    }
+  },
+  "topic_D_solar_prosumer_net_billing_rules": {
+    "new_prosumers_on_or_after_2026_02_09": {
+      "regime": "Gross Net Billing (Regulation 14, S.R.O. 251(I)/2026)",
+      "unit_for_unit_1_to_1_netting_allowed": false,
+      "import_billing_rate": "Full applicable consumer-end tariff (Peak/Off-Peak) + FC Surcharge + QTA + FCA + 18% GST",
+      "export_buyback_rate_pkr_per_kwh": 8.13,
+      "export_buyback_rate_basis": "National Average Energy Purchase Price (NAEPP) determined in CPPA-G PPP Decision dated 07-01-2026 (Para 36) and confirmed in S.R.O. 1501(I)/2026 (Para 23)",
+      "discrepancy_explanation": "Feb 2026 news reports cited ~Rs 10-11/kWh (or Rs 11.30/kWh) based on older FY25 pool figures, and consumer-end loss-adjusted energy component is Rs 9.12/kWh, but statutory NAEPP is Rs 8.13/kWh.",
+      "contract_term_years": 5,
+      "settlement_rule": "Net rupee credit rolls over to next monthly bill or is paid quarterly (Reg. 14(2))."
+    },
+    "grandfathered_prosumers_before_2026_02_09": {
+      "governing_sro": "S.R.O. 547(I)/2026 dated 2026-04-02 (retroactive to 2026-02-09)",
+      "cutoff_date": "Valid agreement executed prior to 2026-02-09",
+      "unit_for_unit_1_to_1_netting_allowed": true,
+      "export_buyback_rate_pkr_per_kwh": 25.32,
+      "export_buyback_rate_basis": "National Average Power Purchase Price (NAPPP) for CY 2026 (confirmed in S.R.O. 1501(I)/2026 Para 23)",
+      "contract_term_years": 7,
+      "renewal_or_modification_rule": "Upon expiry of the 7-year term (Reg. 21(3)) or if any substantive modification alters maximum electrical output (Reg. 21(2) proviso), the prosumer transitions to the 5-year Net-Billing regime at NAEPP (Rs 8.13/kWh)."
+    },
+    "technical_and_eligibility_limits": {
+      "eligible_phases": "Three-Phase (400V or 11kV) only (Reg. 2(1)(v)). Single-phase (<5 kW) connections must upgrade to 3-phase to qualify.",
+      "max_system_size_relative_to_sanctioned_load": "100% of Sanctioned Load (1.0x cap under Reg. 3(2); reduced from 1.5x in 2015 rules)",
+      "overall_capacity_bounds": "1 kW to 1 MW",
+      "distribution_transformer_hosting_cap": "80% of transformer rated capacity (Reg. 3(5) second proviso)",
+      "nepra_concurrence_exemption_threshold": "<= 25 kW exempted from NEPRA concurrence and Rs 1,000/kW fee effective 2026-08-06 via S.R.O. 1330(I)/2026",
+      "load_flow_study_threshold": ">= 250 kW (Reg. 3(3))"
+    }
+  },
+  "topic_E_meter_types_in_lahore": {
+    "green_meter_definition": "Colloquial and LESCO administrative term for a 3-phase four-quadrant bidirectional static digital meter installed for solar net metering up to August 2025. Halted in September 2025 in favor of 3-phase bidirectional AMI smart meters.",
+    "smart_meter_rollout_stats": {
+      "lesco_installed_smart_meters": 1150000,
+      "national_installed_smart_meters": 2100000,
+      "source_date": "2026-08-25 (Ministry of Energy reply to Senate of Pakistan)",
+      "single_phase_ami_procurement_sep_2026": 297000,
+      "percentage_share_by_meter_type": "UNVERIFIED (no official census breakdown published by LESCO)"
+    },
+    "meter_requirements": {
+      "tou_billing": "Three-phase static ToU digital meter or three-phase AMI smart meter (mandatory >= 5 kW)",
+      "net_metering_or_net_billing": "Three-phase bidirectional AMI smart meter (mandatory for new prosumers since Sep 2025; legacy prosumers use 3-phase bidirectional green meter; Reg. 12(1) also permits two separate unidirectional meters)"
+    }
+  },
+  "topic_F_12_month_change_and_risk_check": [
+    {
+      "item": "January 2027 Annual Tariff Rebasing (CY 2027)",
+      "effective_window": "2027-01-01 to 2027-01-15",
+      "details": "LESCO filed CY 2027 petition (Sep 2026) seeking Rs 79,274M net distribution margin + Rs 32,782M PYA = Rs 31.71/kWh avg cost-of-service rate. Nationally DISCOs claim Rs 268B PYA; CPPA-G projects CY 2027 PPP at Rs 27.309/kWh."
+    },
+    {
+      "item": "November 2026 FCA Spike",
+      "effective_window": "November 2026 bills",
+      "details": "CPPA-G requested +Rs 2.5624/kWh for Sep 2026 FCA (hearing on 2026-10-29)."
+    },
+    {
+      "item": "IMF-Backed BISP Direct Cash Subsidy Replacement",
+      "effective_window": "January 2027 target",
+      "details": "Federal Govt plans to replace blanket tariff subsidies for Protected (<=200-unit) consumers with direct BISP cash disbursements (National Electricity Plan Strategic Directive 067)."
+    },
+    {
+      "item": "Power Division Proposal to Relax 6-Month Protected Rule",
+      "effective_window": "Pending / Proposal stage (Sep 2026)",
+      "details": "Proposed limiting the Unprotected penalty for exceeding 200 units to the single month exceeded rather than 6 consecutive months; not yet notified."
+    },
+    {
+      "item": "Pending NEPRA Review Motion on Fixed Charges & High Court Petitions on Prosumer Regs",
+      "effective_window": "Ongoing 2026-2027",
+      "details": "March 2026 review motion against Rs 200-675/kW/month residential fixed charges; LHC (Feb 2026) and IHC (Apr 2026) writ petitions challenging Net Billing and Rs 8.13/kWh buyback rate."
+    }
+  ]
+}

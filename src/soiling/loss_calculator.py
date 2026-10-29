@@ -92,15 +92,20 @@ class SolarPlantLossCalculator:
         daily_kwh_lost: float,
         days_until_rain: int = 7,
         category: str = None,
+        tariff_rate_override_pkr_per_kwh: float = None,
     ) -> dict:
         """
         Evaluates the economic wash trigger:
         Trigger Wash if: (Daily kWh Lost * Tariff * Days to Rain) > Total Cleaning Cost
+        Supports dynamic non-hardcoded tariff rate valuation or falls back to standard ToU base rate.
         """
         now = datetime.now()
         active_category = category or self.tariff_category
-        # Daytime solar generation occurs during off-peak hours (34.53 PKR/kWh for A1_ToU)
-        effective_tariff = self.tariff_engine.get_base_rate_pkr(now.replace(hour=12), category=active_category)
+        if tariff_rate_override_pkr_per_kwh is not None:
+            effective_tariff = float(tariff_rate_override_pkr_per_kwh)
+        else:
+            # Daytime solar generation occurs during off-peak hours (34.53 PKR/kWh for A1_ToU)
+            effective_tariff = self.tariff_engine.get_base_rate_pkr(now.replace(hour=12), category=active_category)
 
         daily_revenue_lost_pkr = daily_kwh_lost * effective_tariff
         projected_loss_before_rain_pkr = daily_revenue_lost_pkr * days_until_rain

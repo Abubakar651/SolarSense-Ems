@@ -227,3 +227,127 @@ class HealthResponse(BaseModel):
     date_range_start: str
     date_range_end: str
     solver_warmed_up: bool
+
+
+# =====================================================================
+# CY 2026 LESCO Tariff / Prosumer Dispatch (v2) Contracts
+# =====================================================================
+
+class Lesco2026OptimizeRequest(BaseModel):
+    """24h dispatch request under CY 2026 LESCO rules (default: grandfathered net-metering)."""
+    model_config = ConfigDict(frozen=True)
+
+    date_str: str = Field(..., description="Target date YYYY-MM-DD", examples=["2025-07-17"])
+    regime: str = Field(
+        default="GRANDFATHERED_NET_METERING",
+        description="NET_BILLING_2026 | GRANDFATHERED_NET_METERING | SINGLE_PHASE_SLAB_ZERO_EXPORT",
+    )
+    use_forecasts: bool = False
+    initial_soc_kwh: Optional[float] = Field(default=None, ge=0.0)
+    prior_month_to_date_import_kwh: float = Field(default=0.0, ge=0.0)
+    is_protected_consumer: bool = True
+    protected_guardrail_kwh: float = Field(default=195.0, gt=0.0)
+    include_electricity_duty: bool = False
+
+
+class Lesco2026OptimizeResponse(BaseModel):
+    model_config = ConfigDict(frozen=True)
+
+    regime: str
+    season: str
+    status: str
+    solve_time_ms: float
+    timestamps: List[str]
+    solar_kw: List[float]
+    load_kw: List[float]
+    outage_flags: List[int]
+    is_peak: List[int]
+    p_grid_import_kw: List[float]
+    p_grid_export_kw: List[float]
+    p_ch_kw: List[float]
+    p_dis_kw: List[float]
+    p_curtail_kw: List[float]
+    p_backup_kw: List[float]
+    soc_kwh: List[float]
+    initial_soc_kwh: float
+    terminal_soc_kwh: float
+    projected_month_to_date_import_kwh: float
+    slab_ceiling_target_kwh: Optional[float]
+    protected_200_guardrail_intact: bool
+    import_energy_cost_pkr: str
+    export_revenue_credit_pkr: str
+    slab_cliff_penalty_pkr: str
+    battery_wear_cost_pkr: str
+    net_horizon_cost_pkr: str
+    export_rate_used_pkr_per_kwh: str = "0.00"
+    baseline_no_battery_cost_pkr: str = "0.00"
+    net_savings_pkr: str = "0.00"
+
+
+class BillEstimateRequest(BaseModel):
+    model_config = ConfigDict(frozen=True)
+
+    category: str = Field(..., description="LIFELINE | PROTECTED | UNPROTECTED | TOU_A1B | PREPAID_A1C")
+    sanctioned_load_kw: float = Field(..., gt=0.0)
+    current_kwh: float = Field(default=0.0, ge=0.0)
+    peak_kwh: float = Field(default=0.0, ge=0.0)
+    off_peak_kwh: float = Field(default=0.0, ge=0.0)
+    fpa_reference_2m_prior_kwh: float = Field(default=0.0, ge=0.0)
+    include_electricity_duty: bool = False
+    is_atl_filer: bool = True
+
+
+class BillEstimateResponse(BaseModel):
+    model_config = ConfigDict(frozen=True)
+
+    category: str
+    slab_id: str
+    current_total_kwh: str
+    line_items: Dict[str, str]
+    total_payable_pkr: str
+    total_payable_rounded_rupee_pkr: str
+    effective_all_in_rate_pkr_per_kwh: str
+
+
+class PeakWindowResponse(BaseModel):
+    model_config = ConfigDict(frozen=True)
+
+    month: int
+    season: str
+    peak_start_hour: int
+    peak_end_hour: int
+    peak_hours: List[int]
+
+
+class ProsumerCompareRequest(BaseModel):
+    model_config = ConfigDict(frozen=True)
+
+    sanctioned_load_kw: float = Field(default=10.0, gt=0.0)
+    gross_peak_import_kwh: float = Field(..., ge=0.0)
+    gross_off_peak_import_kwh: float = Field(..., ge=0.0)
+    gross_export_kwh: float = Field(..., ge=0.0)
+    fpa_reference_2m_prior_kwh: float = Field(default=0.0, ge=0.0)
+    include_electricity_duty: bool = False
+    is_atl_filer: bool = True
+
+
+class ProsumerSettlementItem(BaseModel):
+    model_config = ConfigDict(frozen=True)
+
+    regime: str
+    net_billed_peak_import_kwh: str
+    net_billed_off_peak_import_kwh: str
+    net_surplus_export_kwh: str
+    export_credit_rate_pkr_per_kwh: str
+    gross_retail_import_bill_pkr: str
+    export_credit_pkr: str
+    net_payable_after_credits_pkr: str
+    closing_credit_carryforward_pkr: str
+
+
+class ProsumerCompareResponse(BaseModel):
+    model_config = ConfigDict(frozen=True)
+
+    grandfathered: ProsumerSettlementItem
+    net_billing_2026: ProsumerSettlementItem
+    grandfathered_advantage_pkr: str

@@ -32,11 +32,19 @@ from starlette.concurrency import run_in_threadpool
 from src.api.schemas import (
     AgentAdvisoryRequest,
     AgentAdvisoryResponse,
+    BillEstimateRequest,
+    BillEstimateResponse,
     DateBoundsResponse,
     HealthResponse,
+    Lesco2026OptimizeRequest,
+    Lesco2026OptimizeResponse,
     OptimizationRequest,
     OptimizationResponse,
+    PeakWindowResponse,
     PresetDateItem,
+    ProsumerCompareRequest,
+    ProsumerCompareResponse,
+    ProsumerSettlementItem,
     SimulationWindowResponse,
     SoilingStatusResponse,
     VisionInspectRequest,
@@ -53,6 +61,14 @@ from src.optimizer.milp_solver import (
     DispatchResultDTO,
     MILPBatteryOptimizer,
 )
+from src.optimizer.lesco_2026_tariff_and_dispatch import (
+    ConsumerCategory2026,
+    Lesco2026BatteryDispatchOptimizer,
+    LescoCY2026TariffEngine,
+    ProsumerRegime2026,
+)
+from src.optimizer.station_profile import StationProfile, load_station_profile
+from src.data_engineering.month_to_date import compute_month_to_date_flows, trailing_export_share
 from src.soiling.loss_calculator import SolarPlantLossCalculator
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
@@ -85,6 +101,18 @@ async def lifespan(app: FastAPI):
 
     app.state.repo = repo
     app.state.optimizer = optimizer
+    # CY 2026 LESCO tariff engine + customer station profile + cached-DPP dispatch optimizer
+    station_profile = load_station_profile()
+    app.state.station_profile = station_profile
+    lesco_engine = LescoCY2026TariffEngine()
+    lesco_opt = Lesco2026BatteryDispatchOptimizer(
+        tariff_engine=lesco_engine,
+        bess=bess_config,
+        pv_capacity_kw=station_profile.pv_capacity_kw,
+    )
+    lesco_opt._get_dpp_bundle(24)
+    app.state.lesco_engine = lesco_engine
+    app.state.lesco_optimizer = lesco_opt
     app.state.loss_calculator = SolarPlantLossCalculator()
     app.state.soiling_map = _load_soiling_lookup(SOILING_CSV_PATH)
     app.state.vision_monitor = None
@@ -390,9 +418,33 @@ def _compute_soiling_status(
     days_since_wash = int(float(days_since_wash_raw)) if days_since_wash_raw is not None else None
 
     event_type = str(row.get("event_type") or "normal")
+
+    # Dynamic valuation of lost soiling generation (blending avoided import cost vs export credit)
+    profile: Optional[StationProfile] = getattr(app_state, "station_profile", None)
+    engine: Optional[LescoCY2026TariffEngine] = getattr(app_state, "lesco_engine", None)
+    tariff_override = None
+    if profile is not None and engine is not None:
+        try:
+            df = app_state.repo._df
+            exp_share = trailing_export_share(df, date_str, days=30)
+            _, off_all_in = engine.get_all_in_tou_marginal_rates_pkr(
+                include_electricity_duty=profile.include_electricity_duty,
+                include_fpa_marginal=True,
+            )
+            exp_val = engine.marginal_value_of_exported_kwh(
+                profile.regime,
+                export_rate_override_pkr_per_kwh=profile.export_rate_override_pkr_per_kwh,
+                include_electricity_duty=profile.include_electricity_duty,
+            )
+            blended_val = (1.0 - exp_share) * float(off_all_in) + exp_share * float(exp_val)
+            tariff_override = round(blended_val, 2)
+        except Exception:
+            tariff_override = None
+
     roi = calc.evaluate_daily_cleaning_decision(
         daily_kwh_lost=loss_kwh,
         days_until_rain=days_until_rain,
+        tariff_rate_override_pkr_per_kwh=tariff_override,
     )
 
     return SoilingStatusResponse(
@@ -664,11 +716,33 @@ async def generate_agent_advisory(request: AgentAdvisoryRequest):
         for c, o in zip(result.p_curtail_kw, slice_data.actual_outage_mask)
     ]
     total_export_kwh = round(sum(p_export_list), 2)
-    export_rev_pkr = round(total_export_kwh * float(repo.policy.export_rate_pkr), 2)
 
-    # Peak window (18:00-22:00) metrics
-    peak_dis_kwh = float(sum(result.p_dis_kw[18:22]))
-    peak_grid_kwh = float(sum(result.p_grid_kw[18:22]))
+    engine: Optional[LescoCY2026TariffEngine] = getattr(app.state, "lesco_engine", None)
+    profile: Optional[StationProfile] = getattr(app.state, "station_profile", None)
+
+    # Dynamic export valuation from station profile or regulatory regime
+    if profile is not None and profile.export_rate_override_pkr_per_kwh is not None:
+        export_rate = profile.export_rate_override_pkr_per_kwh
+    elif engine is not None and profile is not None:
+        export_rate = float(
+            engine.config.nappp_grandfathered_rate_pkr_per_kwh
+            if profile.regime == ProsumerRegime2026.GRANDFATHERED_NET_METERING
+            else engine.config.naepp_export_rate_pkr_per_kwh
+        )
+    else:
+        export_rate = float(repo.policy.export_rate_pkr)
+    export_rev_pkr = round(total_export_kwh * export_rate, 2)
+
+    # Seasonal Peak window metrics (PKT)
+    if engine is not None:
+        month = int(request.date_str[5:7])
+        win = engine.get_seasonal_window(month)
+        p_start, p_end = win.peak_start_hour, win.peak_end_hour
+    else:
+        p_start, p_end = 18, 22
+    peak_window_str = f"{p_start:02d}:00–{p_end:02d}:00"
+    peak_dis_kwh = float(sum(result.p_dis_kw[p_start:p_end]))
+    peak_grid_kwh = float(sum(result.p_grid_kw[p_start:p_end]))
 
     headline = (
         f"Station LHR-RES-01 Executive Brief ({request.date_str}): "
@@ -679,7 +753,7 @@ async def generate_agent_advisory(request: AgentAdvisoryRequest):
     dispatch_brief = (
         f"Across the 24-hour horizon on {request.date_str}, the 7.02 kWp bifacial array generated "
         f"{total_solar_kwh:.1f} kWh against a household demand of {total_load_kwh:.1f} kWh. "
-        f"During the LESCO A-1 Peak ToU window (18:00–22:00 @ 46.85 PKR/kWh), the HiGHS MILP solver "
+        f"During the LESCO A-1 Peak ToU window ({peak_window_str} @ 46.85 PKR/kWh), the HiGHS MILP solver "
         f"discharged {peak_dis_kwh:.2f} kWh from the 5.12 kWh LiFePO4 pack while suppressing peak grid "
         f"recharging (peak import limited to {peak_grid_kwh:.2f} kWh). Surplus daytime generation exported "
         f"{total_export_kwh:.2f} kWh via net-metering (+PKR {export_rev_pkr:,.1f}), reducing total daily "
@@ -716,8 +790,8 @@ async def generate_agent_advisory(request: AgentAdvisoryRequest):
     )
 
     actions = [
-        f"Maintain GoodWe ES-Uniq ToU schedule: charge from solar 09:00–16:00, discharge {peak_dis_kwh:.2f} kWh across 18:00–22:00 Peak window.",
-        f"Enforce Post-Blackout Peak Recharge Suppression (cap grid import at household load during 18:00–22:00 @ 46.85 PKR/kWh).",
+        f"Maintain GoodWe ES-Uniq ToU schedule: charge from solar 09:00–16:00, discharge {peak_dis_kwh:.2f} kWh across {peak_window_str} Peak window.",
+        f"Enforce Post-Blackout Peak Recharge Suppression (cap grid import at household load during {peak_window_str} @ 46.85 PKR/kWh).",
         f"Soiling & Wash Action: {soiling_status.decision} (Projected {request.days_until_rain}-day loss: PKR {soiling_status.projected_loss_before_rain_pkr:,.0f} vs. PKR 1,500 wash).",
     ]
     if request.defect_condition in {"bird_drop", "electrical_damage", "physical_damage"}:
@@ -748,4 +822,192 @@ async def generate_agent_advisory(request: AgentAdvisoryRequest):
         },
         generation_mode="deterministic_physics_synthesizer",
         latency_ms=round(elapsed_ms, 2),
+    )
+
+
+# =====================================================================
+# CY 2026 LESCO v2 Endpoints (additive; legacy /api/optimize unchanged)
+# =====================================================================
+
+_PKR_LINE_FIELDS = (
+    "peak_energy_charges_pkr", "off_peak_energy_charges_pkr", "variable_energy_charges_pkr",
+    "fixed_charges_pkr", "qta_pkr", "fc_surcharge_pkr", "electricity_duty_current_pkr",
+    "current_pre_gst_subtotal_pkr", "gst_on_current_bill_pkr", "fpa_base_pkr",
+    "ed_and_gst_on_fpa_pkr", "ptv_fee_pkr", "subtotal_before_income_tax_pkr",
+    "section_235_income_tax_pkr",
+)
+
+
+def _parse_regime(name: str) -> ProsumerRegime2026:
+    try:
+        return ProsumerRegime2026(name)
+    except ValueError:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=f"Unknown regime '{name}'. Use one of {[r.value for r in ProsumerRegime2026 if r != ProsumerRegime2026.NONE]}.",
+        )
+
+
+@app.post("/api/v2/optimize", response_model=Lesco2026OptimizeResponse, tags=["LESCO 2026"])
+async def optimize_dispatch_v2(request: Lesco2026OptimizeRequest):
+    """24h battery dispatch under CY 2026 LESCO rules (seasonal peaks, regime-aware export value)."""
+    repo: EMSDataRepository = app.state.repo
+    opt: Lesco2026BatteryDispatchOptimizer = app.state.lesco_optimizer
+    regime = _parse_regime(request.regime)
+    try:
+        sl = repo.get_optimization_slice(
+            origin_ts=request.date_str,
+            use_forecasts=request.use_forecasts,
+        )
+        month = int(request.date_str[5:7])
+    except (ValueError, IndexError) as e:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+
+    mtd_import = request.prior_month_to_date_import_kwh
+    netting_headroom = None
+    profile: Optional[StationProfile] = getattr(app.state, "station_profile", None)
+    if mtd_import <= 0.0:
+        try:
+            flows = compute_month_to_date_flows(repo._df, request.date_str, opt.tariff_engine)
+            mtd_import = flows.import_kwh
+            netting_headroom = flows.netting_headroom_kwh
+        except Exception:
+            mtd_import = 0.0
+
+    export_rate_override = profile.export_rate_override_pkr_per_kwh if profile else None
+
+    res = await run_in_threadpool(
+        lambda: opt.optimize_24h(
+            load_kw=sl.factory_load_kw,
+            solar_kw=sl.solar_kw,
+            month=month,
+            regime=regime,
+            outage_mask=sl.actual_outage_mask,
+            initial_soc_kwh=request.initial_soc_kwh,
+            prior_month_to_date_import_kwh=mtd_import,
+            is_protected_consumer=request.is_protected_consumer,
+            protected_guardrail_kwh=request.protected_guardrail_kwh,
+            include_electricity_duty=request.include_electricity_duty,
+            export_rate_override_pkr_per_kwh=export_rate_override,
+            netting_headroom_kwh=netting_headroom,
+        )
+    )
+    return Lesco2026OptimizeResponse(
+        regime=res.regime.value,
+        season=res.season,
+        status=res.status,
+        solve_time_ms=res.solve_time_ms,
+        timestamps=list(sl.timestamps_iso),
+        solar_kw=[float(x) for x in sl.solar_kw],
+        load_kw=[float(x) for x in sl.factory_load_kw],
+        outage_flags=[int(x) for x in sl.actual_outage_mask],
+        is_peak=[int(x) for x in res.is_peak_mask],
+        p_grid_import_kw=res.p_grid_import_kw.tolist(),
+        p_grid_export_kw=res.p_grid_export_kw.tolist(),
+        p_ch_kw=res.p_ch_kw.tolist(),
+        p_dis_kw=res.p_dis_kw.tolist(),
+        p_curtail_kw=res.p_curtail_kw.tolist(),
+        p_backup_kw=res.p_backup_kw.tolist(),
+        soc_kwh=res.soc_kwh.tolist(),
+        initial_soc_kwh=res.initial_soc_kwh,
+        terminal_soc_kwh=res.terminal_soc_kwh,
+        projected_month_to_date_import_kwh=res.projected_month_to_date_import_kwh,
+        slab_ceiling_target_kwh=res.slab_ceiling_target_kwh,
+        protected_200_guardrail_intact=res.protected_200_guardrail_intact,
+        import_energy_cost_pkr=str(res.import_energy_cost_pkr),
+        export_revenue_credit_pkr=str(res.export_revenue_credit_pkr),
+        slab_cliff_penalty_pkr=str(res.slab_cliff_penalty_pkr),
+        battery_wear_cost_pkr=str(res.battery_wear_cost_pkr),
+        net_horizon_cost_pkr=str(res.net_horizon_cost_pkr),
+        export_rate_used_pkr_per_kwh=str(res.export_rate_used_pkr_per_kwh),
+        baseline_no_battery_cost_pkr=str(res.baseline_no_battery_cost_pkr),
+        net_savings_pkr=str(res.net_savings_pkr),
+    )
+
+
+@app.post("/api/v2/bill/estimate", response_model=BillEstimateResponse, tags=["LESCO 2026"])
+async def estimate_bill_v2(request: BillEstimateRequest):
+    """Exact-paisa CY 2026 LESCO monthly bill (Decimal, ROUND_HALF_EVEN)."""
+    engine: LescoCY2026TariffEngine = app.state.lesco_engine
+    try:
+        cat = ConsumerCategory2026(request.category)
+    except ValueError:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=f"Unknown category '{request.category}'.",
+        )
+    b = engine.calculate_monthly_bill(
+        category=cat,
+        sanctioned_load_kw=request.sanctioned_load_kw,
+        current_kwh=request.current_kwh,
+        peak_kwh=request.peak_kwh,
+        off_peak_kwh=request.off_peak_kwh,
+        fpa_reference_2m_prior_kwh=request.fpa_reference_2m_prior_kwh,
+        include_electricity_duty=request.include_electricity_duty,
+        is_atl_filer=request.is_atl_filer,
+    )
+    return BillEstimateResponse(
+        category=b.category.value,
+        slab_id=b.slab_id,
+        current_total_kwh=str(b.current_total_kwh),
+        line_items={f: str(getattr(b, f)) for f in _PKR_LINE_FIELDS},
+        total_payable_pkr=str(b.total_payable_pkr),
+        total_payable_rounded_rupee_pkr=str(b.total_payable_rounded_rupee_pkr),
+        effective_all_in_rate_pkr_per_kwh=str(b.effective_all_in_rate_pkr_per_kwh),
+    )
+
+
+@app.get("/api/v2/tariff/peak-window", response_model=PeakWindowResponse, tags=["LESCO 2026"])
+async def get_peak_window_v2(month: int = Query(..., ge=1, le=12)):
+    """Seasonal ToU peak window for a calendar month."""
+    engine: LescoCY2026TariffEngine = app.state.lesco_engine
+    w = engine.get_seasonal_window(month)
+    return PeakWindowResponse(
+        month=month,
+        season=w.season,
+        peak_start_hour=w.peak_start_hour,
+        peak_end_hour=w.peak_end_hour,
+        peak_hours=list(range(w.peak_start_hour, w.peak_end_hour)),
+    )
+
+
+@app.post("/api/v2/prosumer/compare", response_model=ProsumerCompareResponse, tags=["LESCO 2026"])
+async def compare_prosumer_v2(request: ProsumerCompareRequest):
+    """Same month settled under grandfathered 1:1 netting vs. 2026 gross net-billing."""
+    engine: LescoCY2026TariffEngine = app.state.lesco_engine
+
+    def _settle(regime: ProsumerRegime2026):
+        return engine.calculate_prosumer_settlement(
+            regime=regime,
+            sanctioned_load_kw=request.sanctioned_load_kw,
+            gross_peak_import_kwh=request.gross_peak_import_kwh,
+            gross_off_peak_import_kwh=request.gross_off_peak_import_kwh,
+            gross_export_kwh=request.gross_export_kwh,
+            fpa_reference_2m_prior_kwh=request.fpa_reference_2m_prior_kwh,
+            include_electricity_duty=request.include_electricity_duty,
+            is_atl_filer=request.is_atl_filer,
+        )
+
+    def _item(s) -> ProsumerSettlementItem:
+        return ProsumerSettlementItem(
+            regime=s.regime.value,
+            net_billed_peak_import_kwh=str(s.net_billed_peak_import_kwh),
+            net_billed_off_peak_import_kwh=str(s.net_billed_off_peak_import_kwh),
+            net_surplus_export_kwh=str(s.net_surplus_export_kwh),
+            export_credit_rate_pkr_per_kwh=str(s.export_credit_rate_pkr_per_kwh),
+            gross_retail_import_bill_pkr=str(s.gross_retail_import_bill_pkr),
+            export_credit_pkr=str(s.export_credit_pkr),
+            net_payable_after_credits_pkr=str(s.net_payable_after_credits_pkr),
+            closing_credit_carryforward_pkr=str(s.closing_credit_carryforward_pkr),
+        )
+
+    gf = _settle(ProsumerRegime2026.GRANDFATHERED_NET_METERING)
+    nb = _settle(ProsumerRegime2026.NET_BILLING_2026)
+    adv = (nb.net_payable_after_credits_pkr - gf.net_payable_after_credits_pkr) + (
+        gf.closing_credit_carryforward_pkr - nb.closing_credit_carryforward_pkr
+    )
+    return ProsumerCompareResponse(
+        grandfathered=_item(gf),
+        net_billing_2026=_item(nb),
+        grandfathered_advantage_pkr=str(adv),
     )

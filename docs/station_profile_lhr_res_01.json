@@ -1,0 +1,12 @@
+{
+  "station_id": "LHR-RES-01 / 904-A JT",
+  "regime": "GRANDFATHERED_NET_METERING",
+  "sanctioned_load_kw": 10.0,
+  "pv_capacity_kw": 7.02,
+  "is_atl_filer": true,
+  "include_electricity_duty": false,
+  "is_protected_consumer": false,
+  "protected_guardrail_kwh": 195.0,
+  "export_rate_override_pkr_per_kwh": null,
+  "notes": "Per-customer settings. export_rate_override_pkr_per_kwh=null means: use the regulation value from docs/lesco_residential_tariffs_config_2026.json (NAPPP / NAEPP / off-peak netting). Set a number only if the customer's own agreement or portal proves a different rate."
+}

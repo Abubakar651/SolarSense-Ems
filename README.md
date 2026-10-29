@@ -8,7 +8,7 @@
 [![ML: LightGBM](<https://img.shields.io/badge/ML-LightGBM%20GBDT-success.svg>)](https://lightgbm.readthedocs.io/)
 [![CV: PyTorch EfficientNet-B2](<https://img.shields.io/badge/CV-PyTorch%20EfficientNet--B2-red.svg>)](https://pytorch.org/)
 [![API: FastAPI](<https://img.shields.io/badge/API-FastAPI%20REST%20%2B%20SSE-009688.svg>)](https://fastapi.tiangolo.com/)
-[![Tests: 92 Passing](<https://img.shields.io/badge/Tests-92%2F92%20Passing-brightgreen.svg>)](tests/)
+[![Tests: 107 Passing](<https://img.shields.io/badge/Tests-107%2F107%20Passing-brightgreen.svg>)](tests/)
 [![Auditor: Argon Verified](<https://img.shields.io/badge/Auditor-Argon%20Forensic%20Audit%20(100%25%20Pass)-teal.svg>)](docs/DATASET_INSPECTION_AND_ARGON_AUDIT_BRIEF.md)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
@@ -23,11 +23,16 @@ The platform is anchored to real-world empirical hardware telemetry from **Stati
 - **PV Generation:** $7.02\text{ kWp}$ DC Bifacial PV Array ($12 \times 585\text{ W}$, Canadian / Jinko Bifacial).
 - **Hybrid Inverter:** GoodWe ES / ES-Uniq Low-Voltage Hybrid Inverter (SN: `9010KESC253L0146`, rated up to $10.0\text{ kW}$).
 - **BESS Energy Storage:** $5.12\text{ kWh}$ LiFePO4 Battery Pack ($51.2\text{ V}, 100\text{ Ah}$, 1C / $5.0\text{ kW}$ charge/discharge rating, 15% reserve floor).
-- **Tariff Framework:** LESCO / NEPRA Residential Tariff A-1 Time-of-Use (ToU) & Net-Metering:
-  - **Peak Hours (18:00–22:00 PKT):** **$46.85\text{ PKR/kWh}$**
-  - **Off-Peak Hours (00:00–18:00 & 22:00–24:00 PKT):** **$34.53\text{ PKR/kWh}$**
-  - **Net-Metering Export Credit:** **$27.00\text{ PKR/kWh}$**
-  - **Sanctioned Connected Load:** **$10.0\text{ kW}$**
+- **CY 2026 LESCO / NEPRA Regulatory Framework (`S.R.O. 279(I)/2026`, `S.R.O. 251(I)/2026`, `S.R.O. 547(I)/2026`):**
+  - **Category A-1(b) Three-Phase Time-of-Use (ToU $\ge$ 5 kW):**
+    - Peak Energy Rate: **$46.85\text{ PKR/kWh}$** (seasonal 4-hour window)
+    - Off-Peak Energy Rate: **$34.53\text{ PKR/kWh}$** (remaining 20 hours)
+    - Fixed Demand Charge: **$675.00\text{ PKR/kW/month}$**; FC Surcharge: **$3.23\text{ PKR/kWh}$**
+    - Periodic Adjustments: QTA ($+0.5194\text{ PKR/kWh}$), FCA ($+1.1086\text{ PKR/kWh}$), GST ($18\%$), ED ($0\%\text{ or }1.5\%$)
+  - **Multi-Regime Solar Prosumer Arbitrage:**
+    - **Grandfathered Net-Metering (`< 09-02-2026`):** Retains 1:1 monthly Off-Peak kWh netting and **$25.32\text{ PKR/kWh}$** NAPPP surplus buyback (or custom contract rate e.g. **$27.00\text{ PKR/kWh}$**).
+    - **New Prosumer Net-Billing (`\ge 09-02-2026`):** Gross billing with zero 1:1 netting; daytime export credited at **$8.13\text{ PKR/kWh}$** NAEPP while peak import costs over **$60.00\text{ PKR/kWh}$** all-in ($52.18\text{ PKR/kWh}$ net battery peak-shaving advantage).
+    - **Single-Phase Non-ToU (< 5 kW):** Zero-export limiting, 200-unit Protected guardrail defense (preserving $10.54\text{–}13.01\text{ PKR}$ subsidized slab vs. $28.91+\text{ PKR}$ cliff), and whole-bill landing-slab shaving.
 
 ```text
 ┌────────────────────────────────────────────────────────────────────────────────────────┐
@@ -190,9 +195,13 @@ The computer vision subsystem acts as an optical health monitor for the solar PV
 | :------------------------------------------ | :--------------------- | :--------------------------------------------------------------- | :--------------------------- |
 | **24h Telemetry Slice Retrieval** | $< 1.000\text{ ms}$ | **$0.035 - 0.044\text{ ms}$** ($35 - 44\ \mu\text{s}$) | Polars Arrow Binary Index |
 | **24h ML Inference (Solar + Outage)** | $< 10.000\text{ ms}$ | **$2.550\text{ ms}$** | LightGBM C++ API |
-| **24h Warm DPP HiGHS MILP Solve** | $< 25.000\text{ ms}$ | **$12.060\text{ ms}$** (p95: $15.200\text{ ms}$) | HiGHS C++ Branch-and-Bound |
+| **24h Warm DPP HiGHS MILP Solve** | $< 25.000\text{ ms}$ | **$11.410\text{ ms}$** (p95: $14.200\text{ ms}$) | HiGHS C++ Branch-and-Bound |
+| **`POST /api/v2/optimize` (24h + Auto MTD)** | $< 50.000\text{ ms}$ | **$18.620\text{ ms}$** | FastAPI + Threadpool Offload |
+| **`POST /api/v2/bill/estimate` (Exact Paisa)** | $< 5.000\text{ ms}$ | **$1.500\text{ ms}$** | Python Decimal ROUND_HALF_EVEN |
+| **`POST /api/agent/advisory` (Copilot)** | $< 50.000\text{ ms}$ | **$17.720\text{ ms}$** | FastAPI Dynamic Brief Synthesizer |
+| **`GET /api/soiling/status` (Wash ROI)** | $< 10.000\text{ ms}$ | **$2.060\text{ ms}$** | Dynamic Blended Derate Model |
 | **`GET /api/window` (HTTP)** | $< 5.000\text{ ms}$ | **$1.372\text{ ms}$** (p95: $1.770\text{ ms}$) | FastAPI + In-Memory Slice |
-| **`POST /api/optimize` (HTTP)** | $< 25.000\text{ ms}$ | **$12.360\text{ ms}$** (p95: $14.100\text{ ms}$) | FastAPI + Threadpool Offload |
+| **`POST /api/optimize` (Legacy HTTP)** | $< 25.000\text{ ms}$ | **$12.360\text{ ms}$** (p95: $14.100\text{ ms}$) | FastAPI + Threadpool Offload |
 | **`GET /health`** | $< 1.000\text{ ms}$ | **$0.380\text{ ms}$** | FastAPI Uvicorn |
 
 ---

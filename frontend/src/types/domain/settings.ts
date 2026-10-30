@@ -1,5 +1,11 @@
 export type PriorityMode = 'comfort' | 'balanced' | 'savings';
 
+/** A daily window, as 24-hour "HH:MM", when the user knows the grid will be off. `end` may be earlier than `start` (crosses midnight). */
+export interface BlackoutWindow {
+  start: string;
+  end: string;
+}
+
 export interface SettingsData {
   profile: { name: string; initials: string; phone: string; email: string };
   site: {
@@ -22,6 +28,7 @@ export interface SettingsData {
     chargeFrom: string;
     chargeTo: string;
   };
+  blackouts: BlackoutWindow[];
   tariff: {
     plan: string;
     peakStart: string;

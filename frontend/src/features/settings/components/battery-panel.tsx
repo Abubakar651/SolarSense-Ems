@@ -1,7 +1,8 @@
 import { ChoiceGroup, type ChoiceOption } from '@/components/ui/choice-group';
 import { SettingRow } from '@/components/ui/setting-row';
-import type { PriorityMode } from '@/types/domain/settings';
+import type { BlackoutWindow, PriorityMode } from '@/types/domain/settings';
 import { reserveHint } from '../view-model';
+import { BlackoutCard } from './blackout-card';
 import { SettingsSwitch, SettingsText } from './settings-fields';
 import { useTextSetting } from './settings-form';
 
@@ -42,7 +43,13 @@ const PRIORITY_OPTIONS: ChoiceOption<PriorityMode>[] = [
   },
 ];
 
-export function BatteryPanel({ capacityKwh }: { capacityKwh: number }) {
+interface BatteryPanelProps {
+  capacityKwh: number;
+  blackouts: readonly BlackoutWindow[];
+  onBlackoutsChange: (blackouts: BlackoutWindow[]) => void;
+}
+
+export function BatteryPanel({ capacityKwh, blackouts, onBlackoutsChange }: BatteryPanelProps) {
   const [reserve, setReserve] = useTextSetting('reserve');
   const [priority, setPriority] = useTextSetting('prio');
 
@@ -88,6 +95,7 @@ export function BatteryPanel({ capacityKwh }: { capacityKwh: number }) {
           </p>
         </div>
       </div>
+      <BlackoutCard blackouts={blackouts} onChange={onBlackoutsChange} />
       <div className="card">
         <h2 style={{ marginBottom: 'var(--sp-3)' }}>Priority</h2>
         <ChoiceGroup

@@ -32,6 +32,7 @@ const SAMPLE_SETTINGS: SettingsData = {
     chargeFrom: '23:00',
     chargeTo: '05:00',
   },
+  blackouts: [],
   tariff: {
     plan: 'Time-of-use (peak / off-peak)',
     peakStart: `${pad(TARIFF.peakStartHour)}:00`,

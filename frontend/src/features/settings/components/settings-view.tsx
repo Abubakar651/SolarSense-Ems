@@ -6,7 +6,7 @@ import { PageHeader } from '@/components/ui/page-header';
 import { Tabs } from '@/components/ui/tabs';
 import { useToast } from '@/providers/toast-provider';
 import type { SettingsData } from '@/types/domain/settings';
-import { isDirty, toFormValues, type SettingsValue } from '../view-model';
+import { blackoutsEqual, isDirty, toFormValues, type SettingsValue } from '../view-model';
 import { BatteryPanel } from './battery-panel';
 import { DeleteAccountDialog } from './delete-account-dialog';
 import { NotificationsPanel } from './notifications-panel';
@@ -22,6 +22,8 @@ export function SettingsView({ data }: { data: SettingsData }) {
   const toast = useToast();
   const [saved, setSaved] = useState(() => toFormValues(data));
   const [values, setValues] = useState(saved);
+  const [savedBlackouts, setSavedBlackouts] = useState(data.blackouts);
+  const [blackouts, setBlackouts] = useState(savedBlackouts);
   const [deleting, setDeleting] = useState(false);
 
   const set = useCallback(
@@ -39,7 +41,13 @@ export function SettingsView({ data }: { data: SettingsData }) {
     {
       key: 'battery',
       label: 'Battery control',
-      content: <BatteryPanel capacityKwh={data.battery.capacityKwh} />,
+      content: (
+        <BatteryPanel
+          capacityKwh={data.battery.capacityKwh}
+          blackouts={blackouts}
+          onBlackoutsChange={setBlackouts}
+        />
+      ),
     },
     { key: 'tariff', label: 'Tariff', content: <TariffPanel /> },
     {
@@ -59,10 +67,14 @@ export function SettingsView({ data }: { data: SettingsData }) {
         <Tabs id="setTabs" panelsId="setPanels" ariaLabel="Settings sections" tabs={tabs} />
       </SettingsFormProvider>
       <SaveBar
-        dirty={isDirty(values, saved)}
-        onSave={() => setSaved(values)}
+        dirty={isDirty(values, saved) || !blackoutsEqual(blackouts, savedBlackouts)}
+        onSave={() => {
+          setSaved(values);
+          setSavedBlackouts(blackouts);
+        }}
         onDiscard={() => {
           setValues(saved);
+          setBlackouts(savedBlackouts);
           toast('Changes discarded');
         }}
       />

@@ -1,4 +1,4 @@
-import type { SettingsData } from '@/types/domain/settings';
+import type { BlackoutWindow, SettingsData } from '@/types/domain/settings';
 
 export type SettingsValue = string | boolean;
 /** Every editable setting, keyed by the id (or name) of its input. */
@@ -47,4 +47,41 @@ export function isDirty(values: SettingsValues, saved: SettingsValues): boolean 
 export function reserveHint(reservePct: number, capacityKwh: number): string {
   const hours = (capacityKwh * reservePct) / 100 / 0.9;
   return `About ${hours.toFixed(1)} hours of typical overnight backup, held back from daily savings.`;
+}
+
+const MINUTES_PER_DAY = 24 * 60;
+
+function minutesOfDay(time: string): number {
+  const [hours = 0, minutes = 0] = time.split(':').map(Number);
+  return hours * 60 + minutes;
+}
+
+/** Why a blackout window can't be added, or null when it can. */
+export function blackoutError(
+  start: string,
+  end: string,
+  existing: readonly BlackoutWindow[],
+): string | null {
+  if (!start || !end) return 'Choose a start and an end time.';
+  if (start === end) return 'Start and end must be different times.';
+  if (existing.some((window) => window.start === start && window.end === end)) {
+    return 'That blackout is already listed.';
+  }
+  return null;
+}
+
+/** Length of a window such as "1 h 30 min"; a window ending before it starts runs past midnight. */
+export function blackoutLength(start: string, end: string): string {
+  const total = (minutesOfDay(end) - minutesOfDay(start) + MINUTES_PER_DAY) % MINUTES_PER_DAY;
+  const hours = Math.floor(total / 60);
+  const minutes = total % 60;
+  return [hours > 0 && `${hours} h`, minutes > 0 && `${minutes} min`].filter(Boolean).join(' ');
+}
+
+/** True when both lists hold the same windows in the same order. */
+export function blackoutsEqual(
+  a: readonly BlackoutWindow[],
+  b: readonly BlackoutWindow[],
+): boolean {
+  return a.length === b.length && a.every((w, i) => w.start === b[i]?.start && w.end === b[i]?.end);
 }

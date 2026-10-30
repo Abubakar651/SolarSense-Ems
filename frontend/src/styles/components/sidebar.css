@@ -1,0 +1,59 @@
+/* ---------- Sidebar: its own dark surface so navigation reads apart from the page ---------- */
+:root {
+  --side: var(--primary);
+}
+.sidebar {
+  background: var(--side);
+  border-right: 0;
+  color: #fff;
+  scrollbar-color: rgba(255, 255, 255, 0.35) transparent;
+}
+.sidebar .nav {
+  scrollbar-color: rgba(255, 255, 255, 0.25) transparent;
+}
+.sidebar .brand {
+  color: #fff;
+}
+.sidebar .mark {
+  color: #fff;
+  --mark-ink: var(--side);
+}
+.sidebar .wm span {
+  color: #fff;
+}
+.sidebar .nav a {
+  color: #fff;
+}
+.sidebar .nav a:hover {
+  background: var(--ov-lo);
+  color: #fff;
+}
+.sidebar .nav a[aria-current='page'] {
+  background: var(--ov);
+  color: #fff;
+}
+.sidebar .nav a:focus-visible,
+.sidebar .brand:focus-visible {
+  outline: none;
+  box-shadow:
+    0 0 0 2px var(--side),
+    0 0 0 4px #fff;
+}
+.sidebar .nav-ind {
+  background: #fff;
+}
+.sidebar .nav-sep {
+  color: #fff;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+.sidebar .nav .b-bad {
+  background: #fff;
+  color: var(--bad);
+}
+.nav a .i {
+  transition: transform var(--ease);
+}
+.nav a:hover .i {
+  transform: translateX(2px);
+}

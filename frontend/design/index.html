@@ -1,0 +1,1814 @@
+<!doctype html>
+<html lang="en" data-theme="blue">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SolarSense Dashboard Design</title>
+<meta name="description" content="Design preview of the SolarSense end-user dashboard. All figures are sample data.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2032%2032'%3E%3Crect%20x='1'%20y='1'%20width='30'%20height='30'%20rx='8'%20fill='%230D1836'/%3E%3Cg%20fill='white'%20stroke='white'%3E%3Cpath%20d='M9%2019a7%207%200%200%201%2014%200z'%20stroke='none'/%3E%3Cpath%20d='M16%205.5v3M9.3%209.3l2.1%202.1M22.7%209.3l-2.1%202.1'%20fill='none'%20stroke-width='2'%20stroke-linecap='round'/%3E%3Cpath%20d='M6%2025.5h5l2.5-3%203.5%205.5%202.5-2.5H26'%20fill='none'%20stroke-width='2'%20stroke-linecap='round'%20stroke-linejoin='round'/%3E%3C/g%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* ---------- Tokens: quiet neutrals, one solid primary ---------- */
+:root{
+  --font:"Inter",system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;
+  --canvas:#F1F5F9;--text:#0F172A;--muted:#475569;--faint:#586577;--line:#DCE3EB;--line-strong:#C3CDD9;--subtle:#E8EDF3;--well:#F8FAFC;
+  --ease:150ms cubic-bezier(0.16,1,0.3,1);--ring:0 0 0 2px var(--canvas),0 0 0 4px var(--primary);
+  --ok:#166534;--ok-soft:#ECFDF3;--warn:#92400E;--warn-soft:#FEF6E7;--bad:#B91C1C;--bad-soft:#FEF2F2;
+  --r:10px;--r-sm:8px;
+  --sp-1:4px;--sp-2:8px;--sp-3:12px;--sp-4:16px;--sp-5:24px;--sp-6:32px;--sp-7:48px;--sp-8:80px;
+  --sidebar:248px;
+}
+[data-theme="blue"]{--primary:#0D1836;--hover:#070E22;--accent:#F59E0B;--ov:rgba(255,255,255,.12);--ov-lo:rgba(255,255,255,.07)}
+[data-theme="amber"]{--primary:#B45309;--hover:#92400E;--accent:#2563EB;--ov:rgba(0,0,0,.24);--ov-lo:rgba(0,0,0,.14)}
+[data-theme="emerald"]{--primary:#047857;--hover:#065F46;--accent:#F59E0B;--ov:rgba(0,0,0,.24);--ov-lo:rgba(0,0,0,.14)}
+[data-theme="teal"]{--primary:#0F766E;--hover:#115E59;--accent:#F59E0B;--ov:rgba(0,0,0,.24);--ov-lo:rgba(0,0,0,.14)}
+:root{
+  --tint:color-mix(in srgb,var(--primary) 8%,#fff);
+  --tint-2:color-mix(in srgb,var(--primary) 16%,#fff);
+  --tint-3:color-mix(in srgb,var(--primary) 32%,#fff);
+  /* names used by the screen markup */
+  --bg:#fff;--surface:#fff;--border:var(--line);--border-strong:var(--line-strong);
+  --primary-soft:var(--tint);--primary-line:var(--tint-3);--primary-hover:var(--hover);
+  --c-solar:var(--primary);--c-usage:var(--text);--t1:var(--tint);--t2:var(--tint-2);--t3:var(--tint-3);--rule:var(--line);
+}
+
+/* Brand colour for actions and data; a warm accent marks solar generation */
+:root{--c-solar:var(--accent)}
+
+*{box-sizing:border-box;scrollbar-width:thin;scrollbar-color:var(--line-strong) transparent}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--canvas);color:var(--text);font:400 16px/1.6 var(--font);font-variant-numeric:tabular-nums;-webkit-font-smoothing:antialiased;accent-color:var(--primary);caret-color:var(--primary)}
+::selection{background:var(--tint-3)}
+h1,h2,h3,h4{margin:0;line-height:1.2;letter-spacing:-.02em;font-weight:600;text-wrap:balance}
+h1{font-size:1.75rem} h2{font-size:1.0625rem} h3{font-size:1rem}
+p{margin:0}
+a{color:var(--primary);text-underline-offset:3px}
+a:not([class]):hover{color:var(--hover)}
+button,input,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--primary);outline-offset:2px;border-radius:4px}
+.btn:focus-visible,.icon-btn:focus-visible,.chip:focus-visible,.tabs button:focus-visible,.seg button:focus-visible,.nav a:focus-visible,.land-links a:focus-visible,.land-drawer a:focus-visible,.menu a:focus-visible,.menu button:focus-visible,.faq summary:focus-visible,.themes button:focus-visible{outline:none;box-shadow:var(--ring)}
+[hidden]{display:none!important}
+.muted,.faint{color:var(--muted)} .small{font-size:.875rem} .xs{font-size:.8125rem}
+.num{font-variant-numeric:tabular-nums}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.skip{position:absolute;left:12px;top:-60px;background:var(--primary);color:#fff;padding:10px 16px;border-radius:8px;z-index:200;text-decoration:none}
+.skip:focus{top:12px}
+.i{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.75;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.i.lg{width:24px;height:24px}
+.mark{width:28px;height:28px;color:var(--primary);flex:none}
+
+/* ---------- Buttons & inputs ---------- */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:0 18px;border-radius:var(--r-sm);border:1px solid transparent;font-weight:500;font-size:.9375rem;cursor:pointer;text-decoration:none;transition:all var(--ease);touch-action:manipulation;white-space:nowrap}
+.btn:active:not([disabled]),.icon-btn:active,.chip:active{transform:scale(.98)}
+.btn-primary{background:var(--primary);color:#fff}.btn-primary:hover{background:var(--hover);color:#fff}
+.btn-secondary{background:#fff;color:var(--text);border-color:var(--line-strong)}.btn-secondary:hover{background:var(--subtle);color:var(--text)}
+.btn-ghost{background:transparent;color:var(--primary)}.btn-ghost:hover{background:var(--tint)}
+.btn-danger{background:var(--bad);color:#fff}.btn-danger:hover{background:#991B1B;color:#fff}
+.btn-outline-danger{background:#fff;color:var(--bad);border-color:#FCA5A5}.btn-outline-danger:hover{background:var(--bad-soft)}
+.btn[disabled],.btn[aria-disabled="true"]{opacity:.5;cursor:not-allowed;pointer-events:none}
+.btn-secondary{border-color:var(--line)}.btn-secondary:hover{border-color:var(--line-strong)}
+.btn-sm{min-height:36px;padding:0 12px;font-size:.875rem}
+.btn-lg{min-height:52px;padding:0 26px;font-size:1rem}
+.btn-block{width:100%}
+.icon-btn{display:inline-grid;place-items:center;width:44px;height:44px;border-radius:var(--r-sm);border:1px solid transparent;background:transparent;cursor:pointer;color:var(--muted);text-decoration:none;transition:all var(--ease)}
+.icon-btn:hover{background:var(--subtle);color:var(--text)}
+.field{display:grid;gap:6px;margin-bottom:var(--sp-4)}
+.field label,.label{font-weight:500;font-size:.875rem}
+.req{color:var(--bad)}
+.input,select.input,textarea.input{width:100%;min-height:44px;padding:9px 12px;border:1px solid var(--line-strong);border-radius:var(--r-sm);background:#fff;color:var(--text)}
+.input::placeholder{color:#6B7280}
+.input:hover{border-color:#9CA3AF}
+.input:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 3px var(--tint-2)}
+.input[aria-invalid="true"]{border-color:var(--bad);box-shadow:0 0 0 3px var(--bad-soft)}
+.input[readonly]{background:var(--subtle);color:var(--muted)}
+.hint{font-size:.8125rem;color:var(--faint)}
+.err{font-size:.8125rem;color:var(--bad);display:flex;gap:6px;align-items:flex-start}
+.pw{position:relative}.pw .input{padding-right:48px}
+.pw button{position:absolute;right:2px;top:0;height:44px;width:44px;border:0;background:none;color:var(--muted);cursor:pointer;display:grid;place-items:center;border-radius:var(--r-sm)}
+.errsum{border:1px solid #FCA5A5;background:var(--bad-soft);color:#7F1D1D;border-radius:var(--r-sm);padding:12px 14px;margin-bottom:var(--sp-4);font-size:.875rem}
+.errsum ul{margin:6px 0 0;padding-left:18px}.errsum a{color:#7F1D1D;font-weight:600}
+.note{border:1px solid var(--line);background:var(--subtle);border-radius:var(--r-sm);padding:12px 14px;font-size:.9375rem;margin-bottom:var(--sp-4)}
+.note.wash{background:var(--tint);border-color:var(--tint-3)}
+.note.wait{background:var(--warn-soft);border-color:#F6D9A7;color:var(--warn)}
+.check{display:flex;gap:10px;align-items:flex-start;font-size:.9375rem;cursor:pointer;min-height:24px}
+.check input{width:18px;height:18px;margin:3px 0 0;flex:none}
+.row{display:flex;gap:var(--sp-3);align-items:center;flex-wrap:wrap}
+.row.between{justify-content:space-between}
+.stack{display:grid;gap:var(--sp-4)}
+.two{display:grid;grid-template-columns:1fr;gap:0 var(--sp-4)}
+@media(min-width:640px){.two{grid-template-columns:1fr 1fr}}
+input[type=range]{width:100%;height:28px}
+input[type=time]{min-width:0}
+.switch{position:relative;display:inline-flex;flex:none}
+.switch input{position:absolute;inset:0;width:100%;height:100%;opacity:0;margin:0;cursor:pointer}
+.switch span{width:44px;height:26px;border-radius:99px;background:#CBD5E1;transition:background-color .15s;position:relative;display:block}
+.switch span::after{content:"";position:absolute;left:3px;top:3px;width:20px;height:20px;border-radius:50%;background:#fff;transition:transform .15s,width .15s;box-shadow:0 1px 2px rgba(0,0,0,.2)}
+.switch input:checked+span{background:var(--primary)} .switch input:checked+span::after{transform:translateX(18px)}
+.switch input:focus-visible+span{outline:2px solid var(--primary);outline-offset:2px}
+.switch input:active+span::after{width:24px}.switch input:checked:active+span::after{transform:translateX(14px)}
+.switch input:disabled{cursor:not-allowed}.switch input:disabled+span{opacity:.5}
+.setting{display:flex;justify-content:space-between;gap:var(--sp-4);align-items:center;padding:16px 0;border-bottom:1px solid var(--line)}
+.setting:last-child{border-bottom:0}
+.setting .t{font-weight:500}
+.seg{display:inline-flex;border:1px solid var(--line-strong);border-radius:var(--r-sm);padding:3px;background:var(--subtle);gap:2px;flex-wrap:wrap}
+.seg button{border:0;background:transparent;min-height:34px;padding:0 14px;border-radius:6px;font-weight:500;font-size:.875rem;cursor:pointer;color:var(--muted)}
+.seg button[aria-pressed="true"]{background:#fff;color:var(--text);box-shadow:0 1px 2px rgba(0,0,0,.08)}
+.choice{display:grid;gap:10px}
+.choice label{display:flex;gap:12px;align-items:flex-start;border:1px solid var(--line-strong);border-radius:var(--r);padding:14px;cursor:pointer}
+.choice input{margin-top:3px;width:18px;height:18px;flex:none}
+.choice label:has(input:checked){border-color:var(--primary);background:var(--tint)}
+.choice label:has(input:disabled){opacity:.6;cursor:not-allowed}
+.choice b{display:block;font-weight:500}
+
+/* ---------- Cards, badges, data ---------- */
+.card{background:#fff;border:1px solid var(--line);border-radius:12px;padding:var(--sp-5)}
+.plate{background:#fff;border:1px solid var(--line);border-radius:12px;padding:var(--sp-5)}
+.card,.plate{box-shadow:0 1px 0 rgba(15,23,42,.04)}
+a.card,.plan-card,.list-card{transition:all var(--ease)}
+a.card:hover{border-color:var(--line-strong);box-shadow:0 1px 3px rgba(15,23,42,.04),0 4px 12px rgba(15,23,42,.03)}
+.plate-h{display:flex;justify-content:space-between;align-items:center;gap:var(--sp-3);flex-wrap:wrap;margin-bottom:var(--sp-4)}
+.card-h{display:flex;justify-content:space-between;align-items:flex-start;gap:var(--sp-3);margin-bottom:var(--sp-4);flex-wrap:wrap}
+.card-h p{font-size:.875rem;color:var(--muted);margin-top:2px}
+.badge{display:inline-flex;align-items:center;gap:6px;padding:2px 10px;border-radius:99px;font-size:.75rem;font-weight:500;line-height:20px;white-space:nowrap}
+.b-ok{background:var(--ok-soft);color:var(--ok)}.b-warn{background:var(--warn-soft);color:var(--warn)}.b-bad{background:var(--bad-soft);color:#7F1D1D}.b-info{background:var(--tint);color:var(--text)}.b-neutral{background:#F3F4F6;color:var(--muted)}.b-primary{background:var(--tint);color:var(--primary)}
+/* Amber's brand colour on its own 8% tint is just under 4.5:1; the darker shade keeps text at AA. */
+[data-theme="amber"] .b-primary{color:var(--hover)}[data-theme="amber"] .chart .em.pri{fill:var(--hover)}
+.dot{width:7px;height:7px;border-radius:50%;background:currentColor;display:inline-block}
+.grid{display:grid;gap:var(--sp-4);grid-template-columns:minmax(0,1fr)}
+.grid>*{min-width:0}
+.g-kpi{grid-template-columns:repeat(auto-fit,minmax(min(200px,100%),1fr));gap:0;border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.g-kpi>.card{border:0;border-radius:0;box-shadow:-1px -1px 0 0 var(--line);padding:20px 22px}
+@media(min-width:1024px){.g-2{grid-template-columns:repeat(2,minmax(0,1fr))}.g-21{grid-template-columns:minmax(0,2fr) minmax(0,1fr)}.g-12{grid-template-columns:minmax(0,1fr) minmax(0,2fr)}}
+.g-3{grid-template-columns:repeat(auto-fit,minmax(min(260px,100%),1fr))}
+.kpi .label{color:var(--muted);font-size:.875rem;display:flex;align-items:center;gap:8px}
+.kpi .val{font-size:2rem;font-weight:600;letter-spacing:-.03em;margin-top:6px;line-height:1.1;font-variant-numeric:tabular-nums}
+.kpi .val small{font-size:.9375rem;font-weight:500;color:var(--muted);margin-left:4px;letter-spacing:0}
+.kpi .sub{font-size:.8125rem;color:var(--muted);margin-top:6px}
+.kpi .ic{width:28px;height:28px;border-radius:8px;background:var(--tint);color:var(--primary);display:grid;place-items:center}
+.kpi .ic .i{width:16px;height:16px}
+.bar{height:6px;border-radius:99px;background:#EEF0F3;overflow:hidden}
+.bar>i{display:block;height:100%;background:var(--primary);border-radius:99px}
+.legend{display:flex;gap:var(--sp-4);flex-wrap:wrap;font-size:.8125rem;color:var(--muted)}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.sw{width:10px;height:10px;border-radius:3px;display:inline-block;background:var(--primary)}
+.sw.line{height:2px;width:16px;border-radius:0;background:var(--text)}
+.sw.soft{background:color-mix(in srgb,var(--c-solar) 45%,#fff)}
+.sw.hatch,.sw.ghost{background:var(--tint-2)}
+.readout{font-size:.875rem;color:var(--muted);margin-top:var(--sp-3);min-height:22px;font-variant-numeric:tabular-nums}
+.readout b{color:var(--text);font-weight:600}
+.chart{position:relative;width:100%;touch-action:pan-y}
+.chart svg{display:block;width:100%;height:auto;overflow:visible}
+.chart text{font-family:var(--font);font-size:12px;font-weight:400;fill:var(--faint);font-variant-numeric:tabular-nums}
+.chart .val{fill:var(--text);font-weight:500}
+.chart .em{fill:var(--text);font-weight:600}.chart .em.pri{fill:var(--primary)}.chart .lbl{fill:var(--muted);font-weight:500}
+.chart .bar-r{transition:fill var(--ease)}.chart .bar-r.on{fill:var(--hover)}
+.chart .halo{stroke:#fff}
+.tip{position:absolute;left:0;top:0;z-index:5;pointer-events:none;background:var(--text);color:#fff;border-radius:8px;padding:8px 10px;font-size:.75rem;line-height:1.5;box-shadow:0 4px 16px rgba(15,23,42,.18);min-width:132px;white-space:nowrap;opacity:0;transition:opacity 100ms ease-in-out}
+.tip .th{font-weight:600;margin-bottom:2px}
+.tip .tr{display:flex;justify-content:space-between;align-items:center;gap:16px}
+.tip .tr span{display:inline-flex;align-items:center;gap:6px;color:#CBD5E1}
+.tip .tr i{width:8px;height:8px;border-radius:2px;display:inline-block}
+.tip .tr b{font-weight:600;font-variant-numeric:tabular-nums}
+.chart [tabindex]:focus-visible{outline:2px solid var(--primary);outline-offset:3px}
+.gridline{stroke:var(--line);stroke-width:1;stroke-dasharray:2 4}
+.tbl-wrap{overflow-x:auto}
+table.tbl{width:100%;border-collapse:collapse;font-size:.9375rem}
+.tbl th{position:relative;background:var(--well);text-align:left;font-size:.8125rem;color:var(--muted);font-weight:500;padding:10px 12px;border-bottom:1px solid var(--line);white-space:nowrap}
+.tbl td{padding:13px 12px;border-bottom:1px solid var(--line);white-space:nowrap}
+.tbl tr:last-child td{border-bottom:0}
+.tbl .r{text-align:right}
+details.alt{margin-top:var(--sp-3);font-size:.875rem}
+details.alt summary{cursor:pointer;color:var(--primary);font-weight:500;min-height:24px}
+
+/* ---------- App shell ---------- */
+#app{min-height:100dvh;display:grid;grid-template-columns:var(--sidebar) 1fr}
+.sidebar{position:sticky;top:0;height:100dvh;border-right:1px solid var(--line);background:var(--canvas);display:flex;flex-direction:column;padding:20px 12px;z-index:60}
+.brand{display:flex;align-items:center;gap:10px;font-weight:600;font-size:1.125rem;letter-spacing:-.02em;text-decoration:none;color:var(--text);padding:0 8px}
+.wm{font-weight:700;letter-spacing:-.035em}.wm span{font-weight:500;color:var(--primary)}.auth-brand .wm span{color:#fff}
+.brand{min-height:44px}
+.brand:hover{color:var(--text)}
+.nav{display:grid;gap:2px;margin:24px 0;overflow:auto;position:relative}
+.nav-ind{position:absolute;left:0;top:0;width:3px;border-radius:0 3px 3px 0;background:var(--primary);transition:transform .25s cubic-bezier(.16,1,.3,1),height .25s cubic-bezier(.16,1,.3,1)}
+.nav a{display:flex;align-items:center;gap:12px;padding:0 12px;min-height:40px;border-radius:var(--r-sm);color:var(--muted);text-decoration:none;font-weight:500;font-size:.9375rem;position:relative;transition:all var(--ease)}
+.nav a:hover{background:var(--subtle);color:var(--text)}
+.nav a:active{transform:scale(.98)}
+.nav a[aria-current="page"]{background:var(--tint);color:var(--primary)}
+.nav .count{margin-left:auto}
+.nav-sep{font-size:.75rem;color:var(--faint);font-weight:500;padding:16px 12px 6px}
+.site-card{margin-top:auto;border:1px solid var(--line);border-radius:var(--r);padding:12px;font-size:.875rem}
+.main-col{min-width:0;display:flex;flex-direction:column}
+.topbar{position:sticky;top:0;z-index:50;background:rgba(241,245,249,.85);backdrop-filter:blur(12px);border-bottom:1px solid var(--line);display:flex;align-items:center;gap:var(--sp-3);padding:10px var(--sp-5);min-height:60px}
+.topbar h2{font-size:1rem;margin-right:auto;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#menuBtn{display:none}
+.overlay{position:fixed;inset:0;background:rgba(17,24,39,.4);z-index:55}
+main{padding:var(--sp-6) var(--sp-5);max-width:1200px;width:100%;margin:0 auto;outline:none}
+.page-h{margin-bottom:var(--sp-5)}
+.page-h p{color:var(--muted);margin-top:6px}
+h1[tabindex="-1"]:focus{outline:none}
+@media(max-width:1023px){
+  #app{grid-template-columns:1fr}
+  .sidebar{position:fixed;left:0;top:0;width:min(300px,86vw);transform:translateX(-102%);visibility:hidden;transition:transform .2s,visibility 0s .2s}
+  .sidebar.open{transform:none;visibility:visible;transition:transform .2s;box-shadow:0 10px 30px rgba(0,0,0,.15)}
+  #menuBtn{display:inline-grid}
+  .topbar{padding:8px var(--sp-4)}
+  main{padding:var(--sp-5) var(--sp-4)}
+}
+@media(max-width:560px){ .hide-xs{display:none!important} h1{font-size:1.5rem} body .jump{display:none} }
+.themes{display:inline-flex;align-items:center;gap:6px;padding:5px 8px;border:1px solid var(--line);border-radius:99px;background:#fff}
+.themes button{width:20px;height:20px;border-radius:50%;border:0;cursor:pointer;padding:0;position:relative}
+.themes button::after{content:"";position:absolute;inset:-12px -3px}
+.themes button[aria-checked="true"]{box-shadow:0 0 0 2px #fff,0 0 0 3.5px var(--text)}
+.themes .lbl{font-size:.75rem;color:var(--muted);padding:0 4px 0 2px}
+.avatar{width:34px;height:34px;border-radius:50%;background:var(--primary);color:#fff;display:grid;place-items:center;font-weight:600;font-size:.8125rem;flex:none}
+.menu-wrap{position:relative}
+.menu{position:absolute;right:0;top:calc(100% + 6px);min-width:220px;background:#fff;border:1px solid var(--line);border-radius:var(--r);box-shadow:0 1px 3px rgba(15,23,42,.04),0 4px 12px rgba(15,23,42,.03);padding:6px;z-index:80}
+.menu a,.menu button{display:flex;align-items:center;gap:10px;width:100%;min-height:42px;padding:0 12px;border-radius:var(--r-sm);border:0;background:none;text-align:left;color:var(--text);text-decoration:none;cursor:pointer;font-size:.9375rem}
+.menu a:hover,.menu button:hover{background:var(--subtle);color:var(--text)}
+.menu hr{border:0;border-top:1px solid var(--line);margin:6px 0}
+
+/* ---------- Auth ---------- */
+body[data-layout="app"] .authbar,body[data-layout="landing"] .authbar{display:none}
+body:not([data-layout="app"]) .sidebar,body:not([data-layout="app"]) .topbar{display:none}
+body:not([data-layout="app"]) #app{grid-template-columns:1fr}
+body:not([data-layout="app"]) main{padding:0;max-width:none}
+.authbar{display:flex;justify-content:space-between;align-items:center;padding:14px var(--sp-5);position:absolute;top:0;left:0;right:0;z-index:5}
+@media(min-width:960px){body[data-layout="auth"] .authbar .brand{display:none}.authbar{justify-content:flex-end}}
+.auth-wrap{min-height:100dvh;display:grid;grid-template-columns:1fr}
+@media(min-width:960px){.auth-wrap{grid-template-columns:minmax(380px,5fr) 6fr}}
+.auth-brand{background:var(--primary);color:#fff;padding:40px 56px;display:none;flex-direction:column;gap:28px}
+@media(min-width:960px){.auth-brand{display:flex;justify-content:space-between}}
+.auth-brand h2{font-size:2.25rem;line-height:1.15;font-weight:600;letter-spacing:-.03em;max-width:16ch}
+.auth-brand ul{list-style:none;padding:0;margin:0;display:grid;gap:14px}
+.auth-brand li{display:flex;gap:12px;align-items:flex-start;color:#fff;font-size:1rem}
+.auth-brand li .i{margin-top:3px}
+.auth-brand .brand,.auth-brand .mark{color:#fff}.auth-brand .mark{--mark-ink:var(--primary)}
+.auth-brand .stat{border-top:1px solid rgba(255,255,255,.4);padding-top:16px;max-width:360px}
+.auth-brand .stat b{font-size:1.75rem;display:block;font-weight:600;letter-spacing:-.02em}
+.auth-plate{display:none}
+.auth-form{display:grid;place-items:center;padding:88px var(--sp-4) 40px}
+.auth-card{width:100%;max-width:400px}
+.auth-card h1{margin-bottom:6px}
+.auth-card .lead{color:var(--muted);margin-bottom:var(--sp-5)}
+.auth-foot{text-align:center;margin-top:var(--sp-5);color:var(--muted);font-size:.9375rem}
+.strength{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;margin-top:6px}
+.strength i{height:4px;border-radius:2px;background:#E5E7EB}
+.strength[data-s="1"] i:nth-child(-n+1),.strength[data-s="2"] i:nth-child(-n+2),.strength[data-s="3"] i:nth-child(-n+3),.strength[data-s="4"] i{background:var(--primary)}
+.mail-ic{width:48px;height:48px;border-radius:50%;background:var(--tint);color:var(--primary);display:grid;place-items:center;margin-bottom:var(--sp-4)}
+.stepper{display:flex;gap:8px;margin-bottom:var(--sp-5);list-style:none;padding:0}
+.stepper li{flex:1;font-size:.8125rem;color:var(--faint);border-top:3px solid var(--line);padding-top:8px;font-weight:500}
+.stepper li[data-state="done"]{border-color:var(--primary);color:var(--text)}
+.stepper li[aria-current="step"]{border-color:var(--primary);color:var(--primary);font-weight:600}
+.onb{max-width:640px;margin:0 auto;padding:88px var(--sp-4) 48px}
+
+/* ---------- Flow diagram ---------- */
+.flow svg{width:100%;max-width:440px;margin:0 auto;display:block}
+.flow text{font-family:var(--font)}
+.flow .nl{font-size:12px;fill:var(--muted)}.flow .nv{font-size:14px;font-weight:600;fill:var(--text);font-variant-numeric:tabular-nums}
+.flow .node{fill:#fff;stroke:var(--line-strong);stroke-width:1.5;rx:14}
+.flow .node.on{fill:var(--tint);stroke:var(--primary)}
+.flow .ic{stroke:var(--muted);fill:none;stroke-width:1.75;stroke-linecap:round;stroke-linejoin:round}
+.flow .node.on+.ic{stroke:var(--primary)}
+.flow .ln{stroke:var(--line-strong);stroke-width:1.5;fill:none;stroke-dasharray:3 5}
+.flow .ln.on{stroke:var(--primary);stroke-width:2.5;stroke-dasharray:7 7;animation:dash 1s linear infinite}
+.flow .ln.on.rev{animation-direction:reverse}
+@keyframes dash{to{stroke-dashoffset:-14}}
+@media(prefers-reduced-motion:reduce){.flow .ln.on{animation:none}*{transition-duration:.01ms!important}}
+
+/* ---------- Lists, chips, tabs, chat, misc ---------- */
+.list{list-style:none;margin:0;padding:0}
+.list li{display:flex;gap:14px;align-items:flex-start;padding:16px 0;border-bottom:1px solid var(--line)}
+.list li:first-child{padding-top:4px}.list li:last-child{border-bottom:0;padding-bottom:0}
+.ico-chip{width:32px;height:32px;border-radius:8px;display:grid;place-items:center;flex:none;background:var(--tint);color:var(--primary)}
+.ico-chip.crit{background:var(--bad-soft);color:var(--bad)}.ico-chip.warn{background:var(--warn-soft);color:var(--warn)}.ico-chip.info{background:var(--tint);color:var(--primary)}.ico-chip.ok{background:var(--ok-soft);color:var(--ok)}
+.chips{display:flex;gap:8px;flex-wrap:wrap}
+.chip{min-height:36px;padding:0 14px;border-radius:99px;border:1px solid var(--line-strong);background:#fff;font-size:.875rem;font-weight:500;cursor:pointer;color:var(--text)}
+.chip:hover{background:var(--subtle)}
+.chip[aria-pressed="true"]{background:var(--primary);border-color:var(--primary);color:#fff}
+.tabs{display:flex;gap:4px;border-bottom:1px solid var(--line);margin-bottom:var(--sp-5);overflow-x:auto;overflow-y:hidden;scrollbar-width:none}
+.tabs::-webkit-scrollbar{display:none}
+.tabs button{border:0;background:none;min-height:44px;padding:0 14px;font-weight:500;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;white-space:nowrap}
+.tabs button:hover{color:var(--text)}
+.tabs button[aria-selected="true"]{color:var(--primary);border-color:var(--primary);font-weight:600}
+.savebar:not([hidden]){animation:slideup .2s ease-out}
+@keyframes slideup{from{opacity:0;transform:translateY(12px)}}
+.savebar{position:sticky;bottom:12px;margin-top:var(--sp-5);background:var(--text);color:#fff;border-radius:var(--r);padding:12px 16px;display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap;box-shadow:0 10px 30px rgba(17,24,39,.25);z-index:20}
+.savebar .btn-secondary{background:transparent;color:#fff;border-color:#6B7280}.savebar .btn-secondary:hover{background:#1F2937}
+.chat{display:flex;flex-direction:column;height:min(640px,calc(100dvh - 260px));min-height:420px}
+.msgs{flex:1;overflow:auto;display:flex;flex-direction:column;gap:14px;padding:4px 2px 12px}
+.msg{max-width:min(620px,92%);padding:12px 14px;border-radius:14px;font-size:.9375rem}
+.msg.u{align-self:flex-end;background:var(--primary);color:#fff;border-bottom-right-radius:4px}
+.msg.a{align-self:flex-start;background:var(--subtle);border:1px solid var(--line);border-bottom-left-radius:4px}
+.msg .src{display:block;margin-top:8px;font-size:.75rem;color:var(--faint)}
+.typing{display:inline-flex;gap:4px}.typing i{width:6px;height:6px;border-radius:50%;background:var(--faint);animation:blink 1.2s infinite}.typing i:nth-child(2){animation-delay:.2s}.typing i:nth-child(3){animation-delay:.4s}
+@keyframes blink{0%,80%,100%{opacity:.25}40%{opacity:1}}
+.compose{display:flex;gap:8px;border-top:1px solid var(--line);padding-top:12px}
+.compose .input{flex:1}
+.drop{border:1px dashed var(--line-strong);border-radius:var(--r);padding:24px;text-align:center;background:var(--subtle)}
+.drop img{max-width:100%;max-height:220px;border-radius:8px;margin:0 auto 12px;display:block}
+.plan-card{border:1px solid var(--line);border-radius:12px;padding:var(--sp-5)}
+.plan-card.cur{border-color:var(--primary);box-shadow:0 0 0 1px var(--primary)}
+.price{font-size:1.75rem;font-weight:600;letter-spacing:-.02em}.price small{font-size:.875rem;font-weight:500;color:var(--muted)}
+.ticks{list-style:none;padding:0;margin:14px 0;display:grid;gap:8px;font-size:.9375rem}
+.ticks li{display:flex;gap:8px;align-items:flex-start}.ticks .i{color:var(--primary);margin-top:3px;width:16px;height:16px}
+.toast-wrap{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);z-index:300;display:grid;gap:8px;width:min(92vw,420px)}
+.toast{background:var(--text);color:#fff;border-radius:10px;padding:12px 16px;display:flex;gap:10px;align-items:center;box-shadow:0 10px 30px rgba(17,24,39,.25);font-size:.9375rem}
+dialog{border:0;border-radius:14px;padding:0;max-width:min(92vw,460px);width:100%;box-shadow:0 20px 60px rgba(17,24,39,.3)}
+dialog::backdrop{background:rgba(17,24,39,.5)}
+dialog .d-in{padding:var(--sp-5)}
+.jump{position:fixed;right:12px;bottom:12px;z-index:150;background:#fff;border:1px solid var(--line-strong);border-radius:10px;padding:2px 8px;box-shadow:0 1px 3px rgba(0,0,0,.08);font-size:.75rem;display:flex;gap:6px;align-items:center}
+.jump select{border:0;background:none;min-height:32px;font-size:.8125rem;max-width:150px}
+@media(min-width:1024px){body[data-layout="app"] .jump{left:14px;right:auto;bottom:100px;width:216px;justify-content:space-between}}
+@media(max-width:1023px){body[data-layout="app"] .jump{display:none}}
+.report-sheet{border:1px solid var(--line);border-radius:12px;padding:var(--sp-5);background:#fff}
+.empty{text-align:center;padding:40px 16px;color:var(--muted)}
+.empty .mail-ic{margin:0 auto 12px}
+.big{font-size:2.5rem;font-weight:600;letter-spacing:-.03em;line-height:1.05;font-variant-numeric:tabular-nums}
+.k-low,.k-med,.k-high{display:inline-block;width:10px;height:10px;border-radius:3px;background:var(--primary)}
+.k-low{opacity:.3}.k-med{opacity:.62}
+
+/* ---------- Colour usage ---------- */
+.hl{color:var(--primary);font-style:normal}
+.kpi .val.pri{color:var(--primary)}
+@media(max-width:1023px){.topbar .themes .lbl{display:none}}
+
+/* ---------- Landing ---------- */
+.wrap{max-width:1160px;margin:0 auto;padding:0 var(--sp-4)}
+@media(min-width:768px){.wrap{padding:0 var(--sp-5)}}
+.land-nav{position:sticky;top:0;z-index:50;background:rgba(241,245,249,.85);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-bottom:1px solid var(--line)}
+.land-nav .wrap{display:flex;align-items:center;gap:var(--sp-4);min-height:64px}
+.land-links{display:none;gap:4px;margin-left:var(--sp-5)}
+.land-links a{color:var(--muted);text-decoration:none;font-weight:500;font-size:.9375rem;padding:0 12px;min-height:40px;display:inline-flex;align-items:center;border-radius:8px;position:relative;transition:all var(--ease)}
+.land-links a:hover{color:var(--text);background:var(--subtle)}
+.land-links a:active{transform:scale(.98)}
+.land-links a[aria-current="true"]{color:var(--text)}
+@media(min-width:1024px){.land-links{display:flex}#landMenuBtn{display:none}}
+@media(max-width:1023px){.land-nav [data-theme-switcher]{display:none}}
+a.small{display:inline-flex;align-items:center;min-height:44px}
+.land-nav .brand,.land-drawer .brand{min-height:44px}
+.land-nav .push{margin-left:auto;flex-wrap:nowrap;gap:8px}
+@media(max-width:480px){.land-nav .wrap{gap:6px}.land-nav .btn-sm{padding:0 10px;font-size:.8125rem}.land-nav .brand{font-size:1rem;gap:6px}.land-nav .push{gap:6px}}
+.land-drawer{position:fixed;inset:0 0 0 auto;width:min(320px,88vw);background:var(--canvas);border-left:1px solid var(--line);z-index:70;padding:16px;display:flex;flex-direction:column;gap:4px;transform:translateX(102%);visibility:hidden;transition:transform .2s ease-in-out,visibility 0s .2s}
+.land-drawer.open{transform:none;visibility:visible;transition:transform .2s ease-in-out}
+.land-drawer a:not(.btn){display:flex;align-items:center;min-height:48px;padding:0 12px;border-radius:var(--r-sm);color:var(--text);font-weight:500;text-decoration:none;transition:all var(--ease)}
+.land-drawer a:not(.btn):hover{background:var(--subtle)}
+.land-drawer .head{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.land-drawer .foot{margin-top:auto;display:grid;gap:8px}
+.land-scrim{position:fixed;inset:0;background:rgba(15,23,42,.4);z-index:65}
+
+.eyebrow{display:inline-flex;align-items:center;gap:8px;font-size:.8125rem;font-weight:500;color:var(--muted);border:1px solid var(--line);background:#fff;border-radius:99px;padding:4px 12px 4px 8px;margin-bottom:var(--sp-5)}
+.eyebrow .dot{color:var(--primary)}
+.hero{padding:48px 0 var(--sp-8)}
+.hero-grid{display:grid;gap:var(--sp-7);align-items:center}
+@media(min-width:1024px){.hero{padding:96px 0}.hero-grid{grid-template-columns:minmax(0,5fr) minmax(0,6fr);gap:var(--sp-7)}}
+.hero h1{font-size:clamp(2.25rem,5.4vw,3.5rem);line-height:1.05;letter-spacing:-.035em;font-weight:700;max-width:16ch}
+.hero .lead{font-size:1.125rem;color:var(--muted);max-width:46ch;margin:var(--sp-4) 0 var(--sp-5)}
+.hero .cta{display:flex;gap:12px;flex-wrap:wrap}
+.hero .small{margin-top:var(--sp-4);color:var(--faint)}
+@media(max-width:480px){.hero .cta .btn,.cta-panel .row .btn{width:100%}}
+.hero .plate{padding:var(--sp-4);border-radius:16px;box-shadow:0 1px 2px rgba(15,23,42,.04);background:linear-gradient(180deg,color-mix(in srgb,var(--primary) 6%,#fff),#fff 45%)}
+.hero .plate-h{margin-bottom:var(--sp-3)}
+.preview-bar{display:flex;justify-content:flex-end;padding-bottom:var(--sp-3);margin-bottom:var(--sp-3);border-bottom:1px solid var(--line)}
+
+.strip{border-block:1px solid var(--line);background:#fff}
+.strip .wrap{display:flex;flex-wrap:wrap;gap:var(--sp-3) var(--sp-5);align-items:center;padding-block:var(--sp-4)}
+.strip .t{font-size:.8125rem;color:var(--faint);font-weight:500;margin-right:var(--sp-2)}
+.strip li{list-style:none;display:flex;align-items:center;gap:8px;color:var(--muted);font-weight:500;font-size:.9375rem}
+.strip ul{display:contents;margin:0;padding:0}
+.strip .i{color:var(--muted);width:18px;height:18px}
+
+.sect{padding:var(--sp-8) 0;scroll-margin-top:64px}.sect:focus{outline:none}
+@media(max-width:767px){.sect{padding:64px 0}}
+.sect.tint{background:#fff;border-block:1px solid var(--line)}
+.sect-h{max-width:600px;margin-bottom:var(--sp-6)}
+.sect-h h2{font-size:clamp(1.5rem,3.4vw,2.25rem);letter-spacing:-.03em;margin-bottom:8px;font-weight:600}
+.sect-h p{color:var(--muted);font-size:1.0625rem}
+
+/* Bento: 2-col wide cards mixed with 1-col tall cards */
+.bento{display:grid;gap:var(--sp-4);grid-template-columns:minmax(0,1fr)}
+@media(min-width:768px){.bento{grid-template-columns:repeat(3,minmax(0,1fr));gap:var(--sp-5)}.bento .w2{grid-column:span 2}.bento .tall{grid-row:span 2}}
+.cell{background:#fff;border:1px solid var(--line);border-radius:16px;padding:var(--sp-5);display:flex;flex-direction:column;gap:var(--sp-4);transition:all var(--ease);box-shadow:0 1px 2px rgba(15,23,42,.03)}
+.cell:hover{border-color:color-mix(in srgb,var(--primary) 30%,var(--line-strong));box-shadow:0 1px 3px rgba(15,23,42,.04),0 4px 12px rgba(15,23,42,.03)}
+.cell .ico-chip{margin-bottom:var(--sp-3);transition:transform var(--ease)}
+.cell:hover .ico-chip{transform:translateY(-2px)}
+.cell h3{font-size:1.0625rem;margin-bottom:4px}
+.cell p{color:var(--muted);font-size:.9375rem}
+.cell .mini{margin-top:auto;border:1px solid var(--line);border-radius:12px;background:var(--well);padding:var(--sp-4)}
+.mini-h{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:var(--sp-3);font-size:.8125rem;color:var(--muted)}
+.hours{display:grid;grid-template-columns:repeat(24,1fr);gap:3px;align-items:end;height:56px}
+.hours i{display:block;border-radius:3px 3px 0 0;background:var(--tint-3)}
+.hours i.pk{background:var(--primary)}
+.hours-ax{display:flex;justify-content:space-between;font-size:.75rem;color:var(--faint);margin-top:6px}
+.risk-row{display:grid;grid-template-columns:44px 1fr 36px;gap:10px;align-items:center;font-size:.8125rem;color:var(--muted);margin-top:8px}
+.risk-row:first-of-type{margin-top:0}
+.verdict{display:flex;align-items:center;gap:12px}
+.verdict b{display:block;font-size:.9375rem}
+.q{border-radius:12px;padding:10px 12px;font-size:.875rem;max-width:92%}
+.q.u{align-self:flex-end;background:var(--primary);color:#fff;border-bottom-right-radius:4px}
+.q.a{background:#fff;border:1px solid var(--line);border-bottom-left-radius:4px;color:var(--muted)}
+.chatmini{display:grid;gap:8px}
+.kv{display:grid;grid-template-columns:1fr auto;gap:8px 12px;font-size:.875rem;margin:0}
+.kv dt{color:var(--muted)}.kv dd{margin:0;font-weight:600;text-align:right}
+.tag-sample{font-size:.6875rem;font-weight:500;color:var(--faint);letter-spacing:.02em}
+
+.steps{list-style:none;padding:0;margin:0;display:grid;gap:var(--sp-5);grid-template-columns:minmax(0,1fr)}
+@media(min-width:768px){.steps{grid-template-columns:repeat(3,minmax(0,1fr));gap:0}.steps li{padding:0 var(--sp-5);border-left:1px solid var(--line)}.steps li:first-child{padding-left:0;border-left:0}}
+.steps .n{display:grid;place-items:center;width:32px;height:32px;border-radius:50%;border:1px solid var(--line-strong);background:#fff;font-size:.875rem;font-weight:600;color:var(--primary);margin-bottom:var(--sp-3)}
+.steps h3{margin-bottom:6px}.steps p{color:var(--muted);font-size:.9375rem}
+
+.cta-band{padding:0 0 var(--sp-8)}
+.sect.tint+.cta-band,.sect+.cta-band{padding-top:0}
+.cta-panel{background:var(--primary);color:#fff;border-radius:20px;text-align:center;padding:64px var(--sp-4)}
+.cta-panel h2{font-size:clamp(1.75rem,4vw,2.5rem);letter-spacing:-.03em;margin-bottom:8px;font-weight:700}
+.cta-panel p{opacity:.92;margin-bottom:var(--sp-5)}
+.cta-panel .btn-primary{background:#fff;color:var(--primary)}.cta-panel .btn-primary:hover{background:var(--tint);color:var(--hover)}
+.cta-panel .btn-secondary{background:transparent;color:#fff;border-color:rgba(255,255,255,.6)}.cta-panel .btn-secondary:hover{background:rgba(255,255,255,.12);color:#fff}
+.cta-panel .btn:focus-visible{box-shadow:0 0 0 2px var(--primary),0 0 0 4px #fff}
+.price-grid{display:grid;gap:var(--sp-4);grid-template-columns:minmax(0,1fr);align-items:stretch}
+@media(min-width:768px){.price-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:var(--sp-5)}}
+.price-grid .plan-card{display:flex;flex-direction:column;background:#fff;border-radius:16px;transition:all var(--ease)}
+.price-grid .plan-card:hover{border-color:var(--line-strong);transform:translateY(-2px);box-shadow:0 1px 3px rgba(15,23,42,.04),0 4px 12px rgba(15,23,42,.03)}
+.price-grid .plan-card.feat{border-color:var(--primary);box-shadow:0 0 0 1px var(--primary)}
+.price-grid .plan-card h3{font-size:1.0625rem}
+.price-grid .plan-card .blurb{color:var(--muted);font-size:.9375rem;margin:4px 0 var(--sp-4);min-height:3em}
+.price-grid .ticks{flex:1;margin-bottom:var(--sp-5)}
+.price-grid .ticks .badge{margin-left:4px}
+.price-note{margin-top:var(--sp-5);font-size:.875rem;color:var(--faint)}
+.sect .rv{opacity:0;transform:translateY(8px);transition:opacity .5s ease-out var(--d,0ms),transform .5s ease-out var(--d,0ms),border-color 150ms,box-shadow 150ms}
+.sect .rv.in{opacity:1;transform:none}
+.land-nav,.topbar{border-bottom-color:transparent;transition:border-color var(--ease)}
+.land-nav.scrolled,.topbar.scrolled{border-bottom-color:var(--line)}
+.dot.live{position:relative}
+.dot.live::after{content:"";position:absolute;inset:0;border-radius:50%;background:currentColor;animation:pulse 2.4s ease-out infinite}
+@keyframes pulse{0%{transform:scale(1);opacity:.5}70%,100%{transform:scale(2.6);opacity:0}}
+[data-route]:not([hidden]){animation:routein .18s ease-out}
+@keyframes routein{from{opacity:0}}
+.loading :is(.kpi .val,.kpi .sub,.readout){color:transparent!important;background:linear-gradient(90deg,var(--subtle) 25%,var(--well) 50%,var(--subtle) 75%) 0 0/200% 100%;animation:shimmer 1.1s linear infinite;border-radius:8px;user-select:none}
+.loading :is(.kpi .val,.kpi .sub,.readout) *{visibility:hidden}
+@keyframes shimmer{to{background-position:-200% 0}}
+.chart.first .draw{stroke-dasharray:1;animation:draw .8s ease-out both}
+@keyframes draw{from{stroke-dashoffset:1}to{stroke-dashoffset:0}}
+.chart.first .fade{animation:fadein .9s ease-out .15s backwards}
+@keyframes fadein{from{opacity:0}}
+.chart.first .bar-r{transform-box:fill-box;transform-origin:50% 100%;animation:grow .6s cubic-bezier(.16,1,.3,1) calc(var(--i,0)*14ms) backwards}
+@keyframes grow{from{transform:scaleY(0)}}
+
+/* ---------- Sidebar: its own dark surface so navigation reads apart from the page ---------- */
+:root{--side:var(--primary)}
+.sidebar{background:var(--side);border-right:0;color:#fff;scrollbar-color:rgba(255,255,255,.35) transparent}
+.sidebar .nav{scrollbar-color:rgba(255,255,255,.25) transparent}
+.sidebar .brand{color:#fff}
+.sidebar .mark{color:#fff;--mark-ink:var(--side)}
+.sidebar .wm span{color:#fff}
+.sidebar .nav a{color:#fff}
+.sidebar .nav a:hover{background:var(--ov-lo);color:#fff}
+.sidebar .nav a[aria-current="page"]{background:var(--ov);color:#fff}
+.sidebar .nav a:focus-visible,.sidebar .brand:focus-visible{outline:none;box-shadow:0 0 0 2px var(--side),0 0 0 4px #fff}
+.sidebar .nav-ind{background:#fff}
+.sidebar .nav-sep{color:#fff;font-weight:600;letter-spacing:.02em}
+.sidebar .nav .b-bad{background:#fff;color:var(--bad)}
+.nav a .i{transition:transform var(--ease)}.nav a:hover .i{transform:translateX(2px)}
+.site-card{background:var(--ov-lo);border-color:rgba(255,255,255,.22);color:#fff}
+.site-card .muted{color:#fff}
+.site-card .b-ok{background:var(--ov);color:#fff}
+
+/* ---------- Illustrations ---------- */
+.ill{display:block;width:100%;height:auto}
+.step-ill{background:var(--well);border:1px solid var(--line);border-radius:12px;padding:var(--sp-3) var(--sp-4);margin-bottom:var(--sp-4);max-width:280px}
+.ill-empty{display:block;width:96px;height:72px;margin:0 auto 12px}
+.spin{transform-box:fill-box;transform-origin:center;animation:spin 30s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.fl{stroke-dasharray:3 4;animation:dash 1s linear infinite}
+.blink{animation:bars 2.4s ease-in-out infinite}.blink.b2{animation-delay:.3s}.blink.b3{animation-delay:.6s}
+@keyframes bars{0%,100%{opacity:.25}50%{opacity:1}}
+.bob{animation:bob 3s ease-in-out infinite}
+@keyframes bob{50%{transform:translateY(-3px)}}
+.auth-ill{margin-top:auto;width:100%;max-width:480px;align-self:center;height:auto;opacity:.95}
+.auth-ill .sunrays{animation:raypulse 4s ease-in-out infinite}
+@keyframes raypulse{50%{opacity:.35}}
+.cta-panel{position:relative;overflow:hidden}
+.cta-panel>*:not(.cta-ill){position:relative;z-index:1}
+.cta-ill{position:absolute;left:50%;bottom:-4px;transform:translateX(-50%);width:min(900px,150%);height:auto;pointer-events:none}
+.cta-ill circle{fill:none;stroke:#fff;stroke-opacity:.14;stroke-width:2;transform-box:fill-box;transform-origin:center;animation:ripple 6s ease-in-out infinite}
+.cta-ill circle:nth-child(2){animation-delay:.6s}.cta-ill circle:nth-child(3){animation-delay:1.2s}.cta-ill circle:nth-child(4){animation-delay:1.8s}
+@keyframes ripple{50%{transform:scale(1.05);stroke-opacity:.06}}
+
+/* ---------- More motion ---------- */
+@keyframes rise{from{opacity:0;transform:translateY(12px)}}
+.hero .eyebrow,.hero h1,.hero .lead,.hero .cta,.hero .small{animation:rise .6s cubic-bezier(.16,1,.3,1) backwards}
+.hero h1{animation-delay:.06s}.hero .lead{animation-delay:.12s}.hero .cta{animation-delay:.18s}.hero .small{animation-delay:.24s}
+.hero .plate{animation:rise .8s cubic-bezier(.16,1,.3,1) .15s backwards}
+[data-route]:not([hidden]):not([data-route="landing"]) :is(.card,.plate,.plan-card,.report-sheet){animation:rise .45s cubic-bezier(.16,1,.3,1) calc(var(--s,0)*45ms) backwards}
+.bar>i{transform-origin:left;animation:barin .9s cubic-bezier(.16,1,.3,1) .1s backwards}
+@keyframes barin{from{transform:scaleX(0)}}
+.brand .mark{transition:transform .3s cubic-bezier(.16,1,.3,1)}.brand:hover .mark{transform:rotate(-6deg) scale(1.05)}
+.btn .btn-arrow{transition:transform var(--ease)}.btn:hover .btn-arrow{transform:translateX(3px)}
+.land-links a::after{content:"";position:absolute;left:12px;right:12px;bottom:4px;height:2px;border-radius:2px;background:var(--primary);transform:scaleX(0);transition:transform .25s cubic-bezier(.16,1,.3,1)}
+.land-links a:hover::after{transform:scaleX(.35)}
+.land-links a[aria-current="true"]::after{transform:scaleX(1)}
+.tabs{position:relative}
+.tabs button[aria-selected="true"]{border-color:transparent}
+.tab-ind{position:absolute;left:0;bottom:0;height:2px;border-radius:2px;background:var(--primary);transition:transform .25s cubic-bezier(.16,1,.3,1),width .25s cubic-bezier(.16,1,.3,1)}
+.toast{animation:toastin .3s cubic-bezier(.16,1,.3,1)}
+@keyframes toastin{from{opacity:0;transform:translateY(10px) scale(.98)}}
+.toast.out{opacity:0;transform:translateY(8px);transition:opacity .3s,transform .3s}
+.menu:not([hidden]){animation:pop .16s ease-out;transform-origin:top right}
+@keyframes pop{from{opacity:0;transform:scale(.97) translateY(-4px)}}
+dialog[open]{animation:pop .2s ease-out}
+dialog[open]::backdrop{animation:fadein .2s ease-out}
+.flow .node.on{animation:nodebreath 3s ease-in-out infinite}
+@keyframes nodebreath{50%{fill:var(--tint-2)}}
+.chart .nowring{fill:var(--text);transform-box:fill-box;transform-origin:center;animation:pulse 2.4s ease-out infinite}
+html.theming *,html.theming *::before,html.theming *::after{transition:background-color .3s ease,color .3s ease,border-color .3s ease,fill .3s ease,stroke .3s ease!important}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}.dot.live::after{display:none}}
+.faq{max-width:720px}
+.faq details{border-bottom:1px solid var(--line);padding:2px 0}
+.faq summary{cursor:pointer;font-weight:500;min-height:52px;display:flex;align-items:center;justify-content:space-between;gap:12px;list-style:none;transition:color var(--ease)}
+.faq summary:hover{color:var(--primary)}
+.faq summary::-webkit-details-marker{display:none}
+:root{interpolate-size:allow-keywords}
+.faq details::details-content{block-size:0;overflow:clip;transition:block-size .25s ease,content-visibility .25s allow-discrete}
+.faq details[open]::details-content{block-size:auto}
+.faq summary::after{content:"";width:14px;height:14px;flex:none;background:linear-gradient(var(--faint),var(--faint)) center/100% 1.5px no-repeat,linear-gradient(var(--faint),var(--faint)) center/1.5px 100% no-repeat;transition:background-size .2s ease}
+.faq details[open] summary::after{background-size:100% 1.5px,1.5px 0}
+.faq p{color:var(--muted);padding:0 0 16px;max-width:60ch}
+.land-foot{padding:var(--sp-6) 0;border-top:1px solid var(--line);color:var(--faint);font-size:.875rem}
+.land-foot .wrap{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;align-items:center}
+.land-foot a{display:inline-flex;align-items:center;min-height:44px;color:var(--muted);text-decoration:none;transition:color var(--ease)}.land-foot a:hover{color:var(--primary)}
+</style>
+</head>
+<body data-layout="landing">
+<a class="skip" href="#main">Skip to main content</a>
+
+<!-- Icon sprite (stroke icons, 24px grid) -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+<defs><pattern id="hatch" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="1.8" height="6" style="fill:var(--t3)"/></pattern></defs>
+<symbol id="i-mark" viewBox="0 0 32 32"><rect x="1" y="1" width="30" height="30" rx="8" fill="currentColor"/><g style="fill:var(--mark-ink,#fff);stroke:var(--mark-ink,#fff)"><path d="M9 19a7 7 0 0 1 14 0z" stroke="none"/><path d="M16 5.5v3M9.3 9.3l2.1 2.1M22.7 9.3l-2.1 2.1" fill="none" stroke-width="2" stroke-linecap="round"/><path d="M6 25.5h5l2.5-3 3.5 5.5 2.5-2.5H26" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></g></symbol>
+<symbol id="i-arrow" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></symbol>
+<symbol id="i-home" viewBox="0 0 24 24"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/><path d="M10 21v-6h4v6"/></symbol>
+<symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></symbol>
+<symbol id="i-trend" viewBox="0 0 24 24"><path d="M3 17l6-6 4 4 8-8"/><path d="M15 7h6v6"/></symbol>
+<symbol id="i-zap" viewBox="0 0 24 24"><path d="M13 2 4 14h7l-1 8 9-12h-7z"/></symbol>
+<symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></symbol>
+<symbol id="i-bell" viewBox="0 0 24 24"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></symbol>
+<symbol id="i-chat" viewBox="0 0 24 24"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/></symbol>
+<symbol id="i-file" viewBox="0 0 24 24"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6M8 13h8M8 17h5"/></symbol>
+<symbol id="i-sliders" viewBox="0 0 24 24"><path d="M4 6h8M18 6h2M4 12h2M12 12h8M4 18h10M20 18h0"/><circle cx="15" cy="6" r="2"/><circle cx="9" cy="12" r="2"/><circle cx="17" cy="18" r="2"/></symbol>
+<symbol id="i-card" viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></symbol>
+<symbol id="i-menu" viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/></symbol>
+<symbol id="i-x" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></symbol>
+<symbol id="i-eye" viewBox="0 0 24 24"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></symbol>
+<symbol id="i-eyeoff" viewBox="0 0 24 24"><path d="M3 3l18 18"/><path d="M10.6 6.1A10 10 0 0 1 12 5c6.5 0 10 7 10 7a17 17 0 0 1-3.2 4.2M6.6 6.7A17 17 0 0 0 2 12s3.5 7 10 7a9.7 9.7 0 0 0 4-.9"/></symbol>
+<symbol id="i-check" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7"/></symbol>
+<symbol id="i-alert" viewBox="0 0 24 24"><path d="M12 3 2 20h20z"/><path d="M12 10v4M12 17.5v.5"/></symbol>
+<symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8v.5"/></symbol>
+<symbol id="i-battery" viewBox="0 0 24 24"><rect x="2" y="7" width="17" height="10" rx="2"/><path d="M22 11v2M6 10v4M10 10v4"/></symbol>
+<symbol id="i-grid" viewBox="0 0 24 24"><path d="M12 2v20M7 7h10M5 12h14M8 22l4-20 4 20"/></symbol>
+<symbol id="i-download" viewBox="0 0 24 24"><path d="M12 3v12M7 10l5 5 5-5M4 20h16"/></symbol>
+<symbol id="i-upload" viewBox="0 0 24 24"><path d="M12 15V3M7 8l5-5 5 5M4 20h16"/></symbol>
+<symbol id="i-send" viewBox="0 0 24 24"><path d="M22 2 11 13M22 2l-7 20-4-9-9-4z"/></symbol>
+<symbol id="i-logout" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></symbol>
+<symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 3 4 6v6c0 5 3.5 8 8 9 4.5-1 8-4 8-9V6z"/></symbol>
+<symbol id="i-user" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></symbol>
+<symbol id="i-trash" viewBox="0 0 24 24"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/></symbol>
+<symbol id="i-mail" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></symbol>
+<symbol id="i-rain" viewBox="0 0 24 24"><path d="M7 16a4 4 0 1 1 .9-7.9A5.5 5.5 0 0 1 18.5 9 3.5 3.5 0 0 1 18 16"/><path d="M8 19l-1 2M12 19l-1 2M16 19l-1 2"/></symbol>
+<symbol id="i-camera" viewBox="0 0 24 24"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></symbol>
+<symbol id="i-wallet" viewBox="0 0 24 24"><path d="M3 7a2 2 0 0 1 2-2h13v4"/><path d="M3 7v11a2 2 0 0 0 2 2h15V9H5a2 2 0 0 1-2-2z"/><circle cx="16.5" cy="14.5" r="1"/></symbol>
+</svg>
+
+<div class="authbar" aria-label="Appearance">
+  <a class="brand" href="#/landing" style="color:var(--text)"><svg class="mark" aria-hidden="true" viewBox="0 0 32 32"><use href="#i-mark"/></svg><span class="hide-xs wm">Solar<span>Sense</span></span></a>
+  <div data-theme-switcher></div>
+</div>
+
+<div id="app">
+  <aside class="sidebar" id="sidebar" aria-label="Sidebar">
+    <a class="brand" href="#/dashboard"><svg class="mark" aria-hidden="true" viewBox="0 0 32 32"><use href="#i-mark"/></svg><span class="wm">Solar<span>Sense</span></span></a>
+    <nav class="nav" id="nav" aria-label="Main"></nav>
+    <div class="site-card">
+      <div class="row between"><b>My Site</b><span class="badge b-ok"><span class="dot live"></span>Online</span></div>
+      <p class="muted xs" style="margin-top:4px">Inverter synced 2 min ago</p>
+    </div>
+  </aside>
+  <div class="overlay" id="overlay" hidden></div>
+
+  <div class="main-col">
+    <header class="topbar">
+      <button class="icon-btn" id="menuBtn" aria-label="Open menu" aria-expanded="false" aria-controls="sidebar"><svg class="i"><use href="#i-menu"/></svg></button>
+      <h2 id="topTitle">Dashboard</h2>
+      <span class="badge b-warn hide-xs" title="Every figure in this design is illustrative"><svg class="i" style="width:14px;height:14px"><use href="#i-info"/></svg>Sample data</span>
+      <div data-theme-switcher class="hide-xs"></div>
+      <a class="icon-btn" href="#/alerts" aria-label="Alerts, 3 unread" style="position:relative"><svg class="i"><use href="#i-bell"/></svg><span style="position:absolute;top:6px;right:6px;background:var(--bad);color:#fff;border-radius:99px;font-size:.6875rem;min-width:18px;height:18px;display:grid;place-items:center;font-weight:700">3</span></a>
+      <div class="menu-wrap">
+        <button class="icon-btn" id="userBtn" aria-haspopup="true" aria-expanded="false" aria-label="Account menu" style="width:auto;padding:0 4px"><span class="avatar" aria-hidden="true">AK</span></button>
+        <div class="menu" id="userMenu" hidden>
+          <div style="padding:8px 12px"><b>Ayesha Khan</b><p class="xs muted">ayesha@example.com</p></div><hr>
+          <a href="#/settings"><svg class="i"><use href="#i-user"/></svg>Profile &amp; settings</a>
+          <a href="#/billing"><svg class="i"><use href="#i-card"/></svg>Billing</a><hr>
+          <a href="#/login"><svg class="i"><use href="#i-logout"/></svg>Log out</a>
+        </div>
+      </div>
+    </header>
+
+    <main id="main" tabindex="-1">
+
+<!-- ============ LANDING ============ -->
+<section data-route="landing" hidden>
+  <header class="land-nav"><div class="wrap">
+    <a class="brand" href="#/landing" style="padding:0"><svg class="mark" aria-hidden="true" viewBox="0 0 32 32"><use href="#i-mark"/></svg><span class="wm">Solar<span>Sense</span></span></a>
+    <nav class="land-links" id="landLinks" aria-label="Page sections"><a href="#/landing" data-scroll="features">Features</a><a href="#/landing" data-scroll="how">How it works</a><a href="#/landing" data-scroll="pricing">Pricing</a><a href="#/landing" data-scroll="faq">FAQ</a></nav>
+    <div class="push row"><div data-theme-switcher class="hide-xs"></div><a class="btn btn-secondary btn-sm hide-xs" href="#/login">Log in</a><a class="btn btn-primary btn-sm" href="#/signup">Get started</a>
+      <button class="icon-btn" id="landMenuBtn" type="button" aria-label="Open menu" aria-expanded="false" aria-controls="landDrawer"><svg class="i"><use href="#i-menu"/></svg></button></div>
+  </div></header>
+  <div class="land-scrim" id="landScrim" hidden></div>
+  <aside class="land-drawer" id="landDrawer" role="dialog" aria-modal="true" aria-label="Menu">
+    <div class="head"><a class="brand" href="#/landing" style="padding:0"><svg class="mark" aria-hidden="true" viewBox="0 0 32 32"><use href="#i-mark"/></svg><span class="wm">Solar<span>Sense</span></span></a><button class="icon-btn" id="landCloseBtn" type="button" aria-label="Close menu"><svg class="i"><use href="#i-x"/></svg></button></div>
+    <a href="#/landing" data-scroll="features">Features</a><a href="#/landing" data-scroll="how">How it works</a><a href="#/landing" data-scroll="pricing">Pricing</a><a href="#/landing" data-scroll="faq">FAQ</a>
+    <div class="foot"><div data-theme-switcher></div><a class="btn btn-secondary btn-block" href="#/login">Log in</a><a class="btn btn-primary btn-block" href="#/signup">Get started</a></div>
+  </aside>
+
+  <section class="hero" aria-label="Introduction"><div class="wrap"><div class="hero-grid">
+    <div>
+      <span class="eyebrow"><span class="dot live"></span>Make the most of every sunny hour</span>
+      <h1 tabindex="-1">Use <em class="hl">every unit</em> your panels generate.</h1>
+      <p class="lead">SolarSense stores surplus solar for the hours you need it, so less is wasted or exported cheaply and more of your own generation powers your site. It also tells you when washing the panels pays off, and shows what you saved.</p>
+      <div class="cta"><a class="btn btn-primary btn-lg" href="#/signup">Create your account<svg class="i btn-arrow" aria-hidden="true"><use href="#i-arrow"/></svg></a><a class="btn btn-secondary btn-lg" href="#/login">Log in</a></div>
+      <p class="small">For homes and commercial buildings with solar and a battery. Works with GoodWe inverters today.</p>
+    </div>
+    <div class="plate">
+      <div class="preview-bar"><span class="badge b-warn">Sample data</span></div>
+      <div class="plate-h"><h2>A day of solar</h2><div class="legend" aria-hidden="true"><span><i class="sw soft"></i>Solar</span><span><i class="sw line"></i>Usage</span><span><i class="sw"></i>Battery</span></div></div>
+      <div class="chart" id="chart-land"></div>
+      <p class="readout" id="land-readout" aria-live="off"></p>
+    </div>
+  </div></div></section>
+
+  <section class="strip" aria-label="Compatibility"><div class="wrap">
+    <span class="t">Built around</span>
+    <ul>
+      <li><svg class="i"><use href="#i-zap"/></svg>GoodWe hybrid inverters</li>
+      <li><svg class="i"><use href="#i-clock"/></svg>Time-of-use tariffs</li>
+      <li><svg class="i"><use href="#i-grid"/></svg>Net-metering export credit</li>
+      <li><svg class="i"><use href="#i-sun"/></svg>Rooftop solar and battery</li>
+    </ul>
+  </div></section>
+
+  <section class="sect" id="features" aria-labelledby="features-h"><div class="wrap">
+    <div class="sect-h"><h2 id="features-h">Built for how power works in Pakistan</h2><p>Peak tariffs, outages and dust all change what your system should do. SolarSense plans for them.</p></div>
+    <div class="bento">
+      <article class="cell w2">
+        <div><span class="ico-chip" aria-hidden="true"><svg class="i"><use href="#i-clock"/></svg></span><h3>Lower bills at peak hours</h3><p>The battery is held for the expensive evening hours, and is never charged from the grid at peak rates.</p></div>
+        <div class="mini"><div class="mini-h"><span>Typical usage by hour · peak highlighted</span><span class="tag-sample">Sample data</span></div>
+          <div class="hours" data-hours role="img" aria-label="Bar chart of hourly usage. Evening hours from 18:00 to 22:00 are the highest and are highlighted as peak."></div>
+          <div class="hours-ax" aria-hidden="true"><span>00:00</span><span>06:00</span><span>12:00</span><span>18:00</span><span>23:00</span></div></div>
+      </article>
+      <article class="cell tall">
+        <div><span class="ico-chip" aria-hidden="true"><svg class="i"><use href="#i-zap"/></svg></span><h3>Ready for load-shedding</h3><p>See the chance of an outage hour by hour and keep a backup reserve you choose.</p></div>
+        <div class="mini"><div class="mini-h"><span>Outage risk tonight</span><span class="tag-sample">Sample data</span></div>
+          <div class="risk-row"><span class="num">13:00</span><div class="bar"><i style="width:17%;opacity:.4"></i></div><span class="num">17%</span></div>
+          <div class="risk-row"><span class="num">19:00</span><div class="bar"><i style="width:38%"></i></div><span class="num">38%</span></div>
+          <div class="risk-row"><span class="num">23:00</span><div class="bar"><i style="width:8%;opacity:.4"></i></div><span class="num">8%</span></div>
+          <div class="row between" style="margin-top:var(--sp-4);font-size:.8125rem;color:var(--muted)"><span>Backup reserve</span><b class="num" style="color:var(--text)">30%</b></div></div>
+      </article>
+      <article class="cell">
+        <div><span class="ico-chip" aria-hidden="true"><svg class="i"><use href="#i-sun"/></svg></span><h3>Know when to wash the panels</h3><p>We weigh the cost of dust against the cost of cleaning and the next rain, then say wash or wait.</p></div>
+        <div class="mini"><div class="verdict"><span class="ico-chip warn"><svg class="i"><use href="#i-sun"/></svg></span><div><b>Wash in the next 2 days</b><span class="small muted">Dust is costing more than cleaning.</span></div></div></div>
+      </article>
+      <article class="cell">
+        <div><span class="ico-chip" aria-hidden="true"><svg class="i"><use href="#i-chat"/></svg></span><h3>Ask in plain language</h3><p>"Why was my bill higher last week?" Get an answer you can act on.</p></div>
+        <div class="mini chatmini"><div class="q u">Why was my bill higher last week?</div><div class="q a">Evening usage was higher on 3 of 7 days. <span class="tag-sample">Sample</span></div></div>
+      </article>
+      <article class="cell">
+        <div><span class="ico-chip" aria-hidden="true"><svg class="i"><use href="#i-file"/></svg></span><h3>Monthly reports</h3><p>Generation, grid use and savings, ready to download or email.</p></div>
+        <div class="mini"><dl class="kv"><dt>Saved</dt><dd class="num">PKR 14,820</dd><dt>Solar</dt><dd class="num">612 kWh</dd><dt>Grid import</dt><dd class="num">284 kWh</dd></dl><p class="tag-sample" style="margin-top:8px">Sample data</p></div>
+      </article>
+      <article class="cell w2">
+        <div><span class="ico-chip" aria-hidden="true"><svg class="i"><use href="#i-sliders"/></svg></span><h3>Your tariff, your rules</h3><p>Enter your own rates and peak hours, and choose how cautious the battery should be.</p></div>
+        <div class="mini"><div class="mini-h"><span>Tariff from your bill</span><span class="tag-sample">Sample data</span></div>
+          <dl class="kv"><dt>Peak · 18:00–22:00</dt><dd class="num">PKR 48.00 / kWh</dd><dt>Off-peak</dt><dd class="num">PKR 35.00 / kWh</dd><dt>Export credit</dt><dd class="num">PKR 27.00 / kWh</dd></dl></div>
+      </article>
+    </div>
+  </div></section>
+
+  <section class="sect tint" id="how" aria-labelledby="how-h"><div class="wrap">
+    <div class="sect-h"><h2 id="how-h">Up and running in three steps</h2></div>
+    <ol class="steps">
+      <li><div class="step-ill"><svg class="ill" viewBox="0 0 120 80" aria-hidden="true" fill="none" stroke-linecap="round" stroke-linejoin="round">
+<circle cx="98" cy="18" r="6.5" fill="var(--accent)"/><g class="spin" stroke="var(--accent)" stroke-width="2"><path d="M98 6v3M98 27v3M86 18h3M107 18h3M89.5 9.5l2 2M104.5 24.5l2 2M89.5 26.5l2-2M104.5 11.5l2-2"/></g>
+<path d="M10 70h100" stroke="var(--line-strong)" stroke-width="2"/>
+<path d="M24 70V42L50 24l26 18v28z" fill="#fff" stroke="var(--primary)" stroke-width="2"/>
+<g transform="rotate(35 63 33)"><rect x="52" y="29" width="22" height="8" rx="1.5" fill="var(--primary)" stroke="none"/><path d="M59.3 29v8M66.7 29v8M52 33h22" stroke="#fff" stroke-width=".8" opacity=".7"/></g>
+<rect x="37" y="54" width="9" height="16" rx="1.5" fill="var(--tint)" stroke="var(--primary)" stroke-width="1.5"/><rect x="56" y="50" width="12" height="10" rx="1.5" fill="var(--tint)" stroke="var(--primary)" stroke-width="1.5"/>
+<path class="fl" d="M76 62h12" stroke="var(--primary)" stroke-width="2"/>
+<rect x="88" y="46" width="18" height="24" rx="3.5" fill="#fff" stroke="var(--primary)" stroke-width="2"/><rect x="94" y="42" width="6" height="4" rx="1" fill="var(--primary)" stroke="none"/>
+<rect class="blink b3" x="92" y="52" width="10" height="4" rx="1" fill="var(--primary)" stroke="none"/><rect class="blink b2" x="92" y="58" width="10" height="4" rx="1" fill="var(--primary)" stroke="none"/><rect class="blink b1" x="92" y="64" width="10" height="3" rx="1" fill="var(--primary)" stroke="none"/>
+</svg></div><span class="n">1</span><h3>Set up your site</h3><p>Tell us your solar and battery size and your tariff. About three minutes.</p></li>
+      <li><div class="step-ill"><svg class="ill" viewBox="0 0 120 80" aria-hidden="true" fill="none" stroke-linecap="round" stroke-linejoin="round">
+<path d="M10 70h100" stroke="var(--line-strong)" stroke-width="2"/>
+<rect x="6" y="40" width="18" height="16" rx="2" fill="var(--tint)" stroke="var(--primary)" stroke-width="2"/><path d="M12 40v16M18 40v16M6 48h18" stroke="var(--primary)" stroke-width="1" opacity=".5"/>
+<path class="fl" d="M24 48h18" stroke="var(--primary)" stroke-width="2"/><path class="fl" d="M78 48h20" stroke="var(--primary)" stroke-width="2"/>
+<rect x="42" y="34" width="36" height="28" rx="6" fill="#fff" stroke="var(--primary)" stroke-width="2"/><path d="M50 44h20M50 50h11" stroke="var(--tint-3)" stroke-width="2"/><circle class="blink b1" cx="70" cy="54" r="2.5" fill="var(--primary)" stroke="none"/>
+<circle cx="60" cy="27" r="2" fill="var(--primary)" stroke="none"/><path class="blink b1" d="M55.5 23.5a6.4 6.4 0 0 1 9 0" stroke="var(--primary)" stroke-width="2"/><path class="blink b2" d="M51.5 19.5a12 12 0 0 1 17 0" stroke="var(--primary)" stroke-width="2"/><path class="blink b3" d="M47.5 15.5a17.7 17.7 0 0 1 25 0" stroke="var(--primary)" stroke-width="2"/>
+<rect x="98" y="38" width="16" height="20" rx="3.5" fill="#fff" stroke="var(--primary)" stroke-width="2"/><rect x="103" y="35" width="6" height="3" rx="1" fill="var(--primary)" stroke="none"/><path d="M102 46h8M102 51h8" stroke="var(--tint-3)" stroke-width="2"/>
+</svg></div><span class="n">2</span><h3>Connect your inverter</h3><p>We read your system's data and build a 24-hour plan for the battery.</p></li>
+      <li><div class="step-ill"><svg class="ill" viewBox="0 0 120 80" aria-hidden="true" fill="none" stroke-linecap="round" stroke-linejoin="round">
+<path d="M10 70h100" stroke="var(--line-strong)" stroke-width="2"/>
+<rect x="18" y="56" width="13" height="14" rx="3" fill="var(--tint-3)"/><rect x="36" y="46" width="13" height="24" rx="3" fill="var(--tint-3)"/><rect x="54" y="36" width="13" height="34" rx="3" fill="var(--tint-3)"/><rect x="72" y="24" width="13" height="46" rx="3" fill="var(--primary)"/>
+<path d="M20 50l18-9 18-8 22-14" stroke="var(--primary)" stroke-width="2" stroke-dasharray="3 4" class="fl"/>
+<g class="bob"><circle cx="98" cy="20" r="11" fill="var(--accent)"/><circle cx="98" cy="20" r="7.5" stroke="#fff" stroke-width="1.5" opacity=".7"/><text x="98" y="24" text-anchor="middle" font-size="10" font-weight="700" fill="#fff" stroke="none" style="font-family:var(--font)">Rs</text></g>
+</svg></div><span class="n">3</span><h3>See what you saved</h3><p>Track savings, outages and panel health from one dashboard.</p></li>
+    </ol>
+  </div></section>
+
+  <section class="sect" id="pricing" aria-labelledby="pricing-h"><div class="wrap">
+    <div class="sect-h"><h2 id="pricing-h">Simple plans for every site</h2><p>Start with the essentials, then add outage prediction, panel health and automatic control as you need them.</p></div>
+    <div class="price-grid">
+      <article class="plan-card"><h3>Essential</h3><p class="blurb">See what your system is doing and what it saved.</p><div class="price num">PKR 1,500<small>/month</small></div>
+        <ul class="ticks"><li><svg class="i"><use href="#i-check"/></svg>Live dashboard and savings</li><li><svg class="i"><use href="#i-check"/></svg>Daily battery plan</li><li><svg class="i"><use href="#i-check"/></svg>Email alerts</li></ul><a class="btn btn-secondary btn-block" href="#/signup">Get started</a></article>
+      <article class="plan-card feat"><div class="row between"><h3>Plus</h3><span class="badge b-primary">Recommended</span></div><p class="blurb">Plan ahead for outages and keep panels earning.</p><div class="price num">PKR 3,500<small>/month</small></div>
+        <ul class="ticks"><li><svg class="i"><use href="#i-check"/></svg>Everything in Essential</li><li><svg class="i"><use href="#i-check"/></svg>Outage prediction and reserve</li><li><svg class="i"><use href="#i-check"/></svg>Panel health and cleaning advice</li><li><svg class="i"><use href="#i-check"/></svg>Assistant and reports</li></ul><a class="btn btn-primary btn-block" href="#/signup">Get started</a></article>
+      <article class="plan-card"><h3>Pro</h3><p class="blurb">Let the plan run your system for you.</p><div class="price num">PKR 8,000<small>/month</small></div>
+        <ul class="ticks"><li><svg class="i"><use href="#i-check"/></svg>Everything in Plus</li><li><svg class="i"><use href="#i-check"/></svg>Automatic inverter control <span class="badge b-neutral">Coming soon</span></li><li><svg class="i"><use href="#i-check"/></svg>Priority support</li></ul><a class="btn btn-secondary btn-block" href="#/signup">Get started</a></article>
+    </div>
+    <p class="price-note">Sample pricing for this design, in PKR per site. Final plans and prices are to be confirmed.</p>
+  </div></section>
+
+  <section class="sect tint" id="faq" aria-labelledby="faq-h"><div class="wrap">
+    <div class="sect-h"><h2 id="faq-h">Questions</h2></div>
+    <div class="faq">
+      <details><summary>Which inverters work with SolarSense?</summary><p>GoodWe hybrid inverters connect today. If you use another brand, tell us during setup and we will add it to the list.</p></details>
+      <details><summary>Does SolarSense control my inverter?</summary><p>For now it advises: it shows you the plan and you apply it on your inverter app. Automatic control is coming and you will always be able to override it.</p></details>
+      <details><summary>Do I need to know my tariff?</summary><p>It helps. You enter your peak and off-peak rates and export credit from your bill, and you can change them any time in Settings.</p></details>
+      <details><summary>Is it for homes only?</summary><p>No. The same dashboard works for homes and commercial buildings that have solar and a battery.</p></details>
+    </div>
+  </div></section>
+
+  <section class="cta-band" aria-label="Get started"><div class="wrap"><div class="cta-panel"><svg class="cta-ill" viewBox="0 0 900 300" aria-hidden="true"><circle cx="450" cy="300" r="90"/><circle cx="450" cy="300" r="160"/><circle cx="450" cy="300" r="230"/><circle cx="450" cy="300" r="300"/></svg>
+    <h2>See your first plan today</h2><p>Create an account, connect your inverter and start saving at peak hours.</p>
+    <div class="row" style="justify-content:center"><a class="btn btn-primary btn-lg" href="#/signup">Create your account<svg class="i btn-arrow" aria-hidden="true"><use href="#i-arrow"/></svg></a><a class="btn btn-secondary btn-lg" href="#/login">Log in</a></div>
+  </div></div></section>
+
+  <footer class="land-foot"><div class="wrap"><span>© 2026 SolarSense. Design preview: every figure shown is sample data.</span><span class="row" style="gap:16px"><a href="#/login">Log in</a><a href="#/signup">Create account</a></span></div></footer>
+</section>
+
+<!-- ============ AUTH: LOG IN ============ -->
+<section data-route="login" class="auth-wrap" hidden>
+  <div class="auth-brand">
+    <a class="brand" href="#/landing"><svg class="mark" aria-hidden="true" viewBox="0 0 32 32"><use href="#i-mark"/></svg><span class="wm">Solar<span>Sense</span></span></a>
+    <h2>Know what your solar and battery are doing, and what to do next.</h2>
+    <ul>
+      <li><svg class="i"><use href="#i-check"/></svg>Lower bills by avoiding expensive peak-hour grid power</li>
+      <li><svg class="i"><use href="#i-check"/></svg>Battery planned ahead of load-shedding</li>
+      <li><svg class="i"><use href="#i-check"/></svg>Know exactly when washing the panels pays off</li>
+    </ul>
+    <div class="stat"><b class="num">PKR 14,820</b><span>sample monthly saving shown in this design</span></div>
+  </div>
+  <div class="auth-form"><div class="auth-card">
+    <h1>Welcome back</h1>
+    <p class="lead">Log in to see how your system is performing.</p>
+    <form novalidate data-validate data-next="#/dashboard" data-toast="Logged in (design preview)">
+      <div class="errsum" role="alert" tabindex="-1" hidden></div>
+      <div data-field="login-email|Email address|email|email|you@example.com|required,email"></div>
+      <div data-field="login-password|Password|password|current-password||required"></div>
+      <div class="row between" style="margin:-4px 0 var(--sp-5)">
+        <label class="check"><input type="checkbox" name="remember"> Keep me logged in</label>
+        <a href="#/forgot" class="small">Forgot password?</a>
+      </div>
+      <button class="btn btn-primary btn-block" type="submit">Log in</button>
+    </form>
+    <p class="auth-foot">New to SolarSense? <a href="#/signup">Create an account</a></p>
+  </div></div>
+</section>
+
+<!-- ============ AUTH: SIGN UP ============ -->
+<section data-route="signup" class="auth-wrap" hidden>
+  <div class="auth-brand">
+    <a class="brand" href="#/landing"><svg class="mark" aria-hidden="true" viewBox="0 0 32 32"><use href="#i-mark"/></svg><span class="wm">Solar<span>Sense</span></span></a>
+    <h2>Set up in minutes. See savings the same day.</h2>
+    <ul>
+      <li><svg class="i"><use href="#i-check"/></svg>Create your account</li>
+      <li><svg class="i"><use href="#i-check"/></svg>Tell us about your panels and battery</li>
+      <li><svg class="i"><use href="#i-check"/></svg>Connect your inverter and get your first plan</li>
+    </ul>
+  </div>
+  <div class="auth-form"><div class="auth-card">
+    <h1>Create your account</h1>
+    <p class="lead">For homes and buildings with solar and a battery.</p>
+    <form novalidate data-validate data-next="#/verify">
+      <div class="errsum" role="alert" tabindex="-1" hidden></div>
+      <div data-field="su-name|Full name|text|name|Ayesha Khan|required"></div>
+      <div data-field="su-email|Email address|email|email|you@example.com|required,email"></div>
+      <div data-field="su-password|Password|password|new-password||required,min:8|At least 8 characters. Password managers and paste are welcome."></div>
+      <div class="strength" id="strength" data-s="0" aria-hidden="true" style="margin:-8px 0 var(--sp-4)"><i></i><i></i><i></i><i></i></div>
+      <div class="field">
+        <label class="check"><input type="checkbox" id="su-terms" name="terms" data-rules="checked" aria-describedby="su-terms-err"> <span>I agree to the <a href="#/signup">Terms of Service</a> and <a href="#/signup">Privacy Policy</a></span></label>
+        <p class="err" id="su-terms-err" hidden></p>
+      </div>
+      <button class="btn btn-primary btn-block" type="submit">Create account</button>
+    </form>
+    <p class="auth-foot">Already have an account? <a href="#/login">Log in</a></p>
+  </div></div>
+</section>
+
+<!-- ============ AUTH: VERIFY EMAIL ============ -->
+<section data-route="verify" class="auth-wrap" hidden>
+  <div class="auth-brand"><a class="brand" href="#/landing"><svg class="mark" aria-hidden="true" viewBox="0 0 32 32"><use href="#i-mark"/></svg><span class="wm">Solar<span>Sense</span></span></a><h2>One quick check before we start.</h2></div>
+  <div class="auth-form"><div class="auth-card">
+    <div class="mail-ic"><svg class="i lg"><use href="#i-mail"/></svg></div>
+    <h1>Check your email</h1>
+    <p class="lead">We sent a verification link to <b>ayesha@example.com</b>. Open it to activate your account.</p>
+    <a class="btn btn-primary btn-block" href="#/onboarding">I've verified my email</a>
+    <div class="row between" style="margin-top:var(--sp-4)">
+      <button class="btn btn-ghost btn-sm" id="resendBtn" type="button">Resend email</button>
+      <a class="small" href="#/signup">Use a different email</a>
+    </div>
+    <p class="hint" id="resendHint" style="margin-top:8px" aria-live="polite"></p>
+  </div></div>
+</section>
+
+<!-- ============ AUTH: FORGOT ============ -->
+<section data-route="forgot" class="auth-wrap" hidden>
+  <div class="auth-brand"><a class="brand" href="#/landing"><svg class="mark" aria-hidden="true" viewBox="0 0 32 32"><use href="#i-mark"/></svg><span class="wm">Solar<span>Sense</span></span></a><h2>Locked out? It happens. We'll get you back in.</h2></div>
+  <div class="auth-form"><div class="auth-card">
+    <h1>Reset your password</h1>
+    <p class="lead">Enter the email you signed up with and we'll send a reset link.</p>
+    <form novalidate data-validate data-next="#/forgot-sent">
+      <div class="errsum" role="alert" tabindex="-1" hidden></div>
+      <div data-field="fg-email|Email address|email|email|you@example.com|required,email"></div>
+      <button class="btn btn-primary btn-block" type="submit">Send reset link</button>
+    </form>
+    <p class="auth-foot"><a href="#/login">Back to log in</a></p>
+  </div></div>
+</section>
+
+<section data-route="forgot-sent" class="auth-wrap" hidden>
+  <div class="auth-brand"><a class="brand" href="#/landing"><svg class="mark" aria-hidden="true" viewBox="0 0 32 32"><use href="#i-mark"/></svg><span class="wm">Solar<span>Sense</span></span></a><h2>Reset link on its way.</h2></div>
+  <div class="auth-form"><div class="auth-card">
+    <div class="mail-ic"><svg class="i lg"><use href="#i-mail"/></svg></div>
+    <h1>Reset link sent</h1>
+    <p class="lead">If an account exists for that email, you'll receive a link within a few minutes. It expires in 30 minutes.</p>
+    <a class="btn btn-primary btn-block" href="#/reset">Open reset link (preview)</a>
+    <p class="auth-foot"><a href="#/login">Back to log in</a></p>
+  </div></div>
+</section>
+
+<section data-route="reset" class="auth-wrap" hidden>
+  <div class="auth-brand"><a class="brand" href="#/landing"><svg class="mark" aria-hidden="true" viewBox="0 0 32 32"><use href="#i-mark"/></svg><span class="wm">Solar<span>Sense</span></span></a><h2>Choose a new password.</h2></div>
+  <div class="auth-form"><div class="auth-card">
+    <h1>Set a new password</h1>
+    <p class="lead">Use at least 8 characters.</p>
+    <form novalidate data-validate data-next="#/login" data-toast="Password updated. Please log in.">
+      <div class="errsum" role="alert" tabindex="-1" hidden></div>
+      <div data-field="rs-password|New password|password|new-password||required,min:8"></div>
+      <div data-field="rs-confirm|Confirm new password|password|new-password||required,match:rs-password"></div>
+      <button class="btn btn-primary btn-block" type="submit">Update password</button>
+    </form>
+  </div></div>
+</section>
+
+<!-- ============ ONBOARDING ============ -->
+<section data-route="onboarding" hidden>
+  <div class="onb">
+    <h1 tabindex="-1">Set up your site</h1>
+    <p class="muted" style="margin:4px 0 var(--sp-5)">This takes about 3 minutes. You can change everything later in Settings.</p>
+    <ol class="stepper" id="stepper" aria-label="Setup progress"><li>Site</li><li>System</li><li>Tariff</li><li>Review</li></ol>
+    <form novalidate data-validate data-onboard>
+      <div class="errsum" role="alert" tabindex="-1" hidden></div>
+      <div class="card" data-step="0">
+        <h2 style="margin-bottom:var(--sp-4)">About your site</h2>
+        <div data-field="ob-site|Site name|text|organization|e.g. My Site|required"></div>
+        <div data-field="ob-addr|Address|text|street-address|Street, area|required"></div>
+        <div class="two"><div data-field="ob-city|City|text|address-level2|Your city|required"></div>
+        <div class="field"><label for="ob-tz">Time zone</label><input class="input" id="ob-tz" value="Set automatically from your city" readonly aria-describedby="ob-tz-h"><p class="hint" id="ob-tz-h">Set from your city.</p></div></div>
+      </div>
+      <div class="card" data-step="1" hidden>
+        <h2 style="margin-bottom:var(--sp-4)">Your solar &amp; battery system</h2>
+        <div class="two"><div data-field="ob-pv|Solar capacity (kWp)|text|off|8.0|required,num:0.5-2000"></div>
+        <div data-field="ob-bat|Battery capacity (kWh)|text|off|10.0|required,num:1-5000"></div></div>
+        <div class="field"><label for="ob-inv">Inverter brand</label>
+          <select class="input" id="ob-inv"><option>GoodWe</option><option>Other (tell us later)</option></select>
+          <p class="hint">GoodWe inverters connect automatically through their portal. Other brands are added on request.</p></div>
+        <div data-field="ob-sn|Inverter serial number|text|off|From the inverter label|required"></div>
+      </div>
+      <div class="card" data-step="2" hidden>
+        <h2 style="margin-bottom:4px">Your electricity tariff</h2>
+        <p class="muted small" style="margin-bottom:var(--sp-4)">Prefilled with sample values. Check them against your bill.</p>
+        <div class="field"><label for="ob-plan">Plan</label><select class="input" id="ob-plan"><option>Time-of-use (peak / off-peak)</option><option>Flat rate</option></select></div>
+        <div class="two"><div data-field="ob-peak|Peak rate (PKR/kWh)|text|off|48.00|required,num:1-500"></div>
+        <div data-field="ob-off|Off-peak rate (PKR/kWh)|text|off|35.00|required,num:1-500"></div></div>
+        <div data-field="ob-exp|Export credit (PKR/kWh)|text|off|27.00|required,num:0-500|What your utility pays for power you send to the grid."></div>
+      </div>
+      <div class="card" data-step="3" hidden>
+        <h2 style="margin-bottom:var(--sp-4)">Review &amp; finish</h2>
+        <dl id="onb-review" style="margin:0;display:grid;grid-template-columns:auto 1fr;gap:8px 16px"></dl>
+        <p class="muted small" style="margin-top:var(--sp-4)">After finishing we'll connect to your inverter and build your first 24-hour plan.</p>
+      </div>
+      <div class="row between" style="margin-top:var(--sp-5)">
+        <button class="btn btn-secondary" type="button" id="onbBack">Back</button>
+        <button class="btn btn-primary" type="submit" id="onbNext">Continue</button>
+      </div>
+    </form>
+  </div>
+</section>
+
+<!-- ============ DASHBOARD ============ -->
+<section data-route="dashboard" hidden>
+  <div class="page-h"><h1 tabindex="-1">Good afternoon, Ayesha</h1><p>Here is how your system is doing right now. <span class="badge b-warn" style="margin-left:6px"><span>Sample data · <span data-clock>15:42</span></span></span></p></div>
+
+  <div class="grid g-kpi">
+    <div class="card kpi"><div class="label"><span class="ic"><svg class="i"><use href="#i-wallet"/></svg></span>Saved today</div><div class="val num pri"><small style="margin:0 4px 0 0">PKR</small><span data-count>486</span></div><div class="sub">Compared with no solar or battery</div></div>
+    <div class="card kpi"><div class="label"><span class="ic"><svg class="i"><use href="#i-sun"/></svg></span>Solar now</div><div class="val num"><span id="k-solar" data-count>3.1</span><small>kW</small></div><div class="sub">Peak today: 5.6 kW at 12:30</div></div>
+    <div class="card kpi"><div class="label"><span class="ic"><svg class="i"><use href="#i-battery"/></svg></span>Battery</div><div class="val num"><span id="k-soc" data-count>74</span><small>%</small></div><div class="sub" id="k-soc-sub"></div></div>
+    <div class="card kpi"><div class="label"><span class="ic"><svg class="i"><use href="#i-clock"/></svg></span>Backup time</div><div class="val num"><span data-backup data-count>6.2</span><small>hours</small></div><div class="sub">If the grid goes down now</div></div>
+  </div>
+
+  <div class="plate" style="margin-top:var(--sp-4)">
+    <div class="plate-h"><div><h2>Today</h2></div>
+      <div class="legend" aria-hidden="true"><span><i class="sw soft"></i>Solar kW</span><span><i class="sw" style="background:var(--c-solar);opacity:.45"></i>Used directly</span><span><i class="sw line"></i>Usage kW</span><span><i class="sw"></i>Battery %</span><span><i class="sw hatch"></i>Peak hours</span></div></div>
+    <div class="chart" id="chart-dash"></div>
+    <p class="readout" id="dash-readout" aria-live="off"></p>
+  </div>
+
+  <div class="grid g-21" style="margin-top:var(--sp-4)">
+    <div class="card">
+      <div class="card-h"><div><h2>Energy flow</h2><p>Where your power is going right now</p></div><span class="badge b-ok"><span class="dot live"></span>Grid connected</span></div>
+      <div class="flow" id="flow"></div>
+      <p class="small muted" id="flow-sum" style="text-align:center;margin-top:8px"></p>
+    </div>
+    <div class="grid" style="align-content:start">
+      <div class="card">
+        <div class="card-h" style="margin-bottom:8px"><h2>Next peak</h2><span class="badge b-info">Starts 18:00</span></div>
+        <div class="big num" id="peak-cd">2h 18m</div>
+        <p class="small muted" style="margin:6px 0 14px">until the evening rate (PKR 48 vs 35 per kWh)</p>
+        <div class="bar" role="img" id="peak-bar"><i style="width:74%"></i></div>
+        <p class="small muted" style="margin-top:8px" id="peak-note"></p>
+      </div>
+      <div class="card">
+        <div class="card-h" style="margin-bottom:0"><h2>Needs your attention</h2><a class="btn btn-ghost btn-sm" href="#/alerts">All alerts</a></div>
+        <ul class="list">
+          <li><span class="ico-chip warn"><svg class="i"><use href="#i-sun"/></svg></span><div><b>Panels are getting dusty</b><p class="small muted">Washing in the next 2 days would pay off. <a href="#/panels">See details</a></p></div></li>
+          <li><span class="ico-chip info"><svg class="i"><use href="#i-zap"/></svg></span><div><b>Outage risk is medium tonight</b><p class="small muted">Highest around 19:00. Reserve is set to 30%. <a href="#/outage">See forecast</a></p></div></li>
+          <li><span class="ico-chip ok"><svg class="i"><use href="#i-check"/></svg></span><div><b>Plan ready for tonight</b><p class="small muted">No grid power will be used to charge the battery during peak.</p></div></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ TODAY'S PLAN ============ -->
+<section data-route="plan" hidden>
+  <div class="page-h"><h1 tabindex="-1">Today's plan</h1><p>What the system expects and what it will do over the next 24 hours.</p></div>
+  <div class="card" style="margin-bottom:var(--sp-4);border-color:var(--primary-line);background:var(--primary-soft)">
+    <div class="row" style="align-items:flex-start;flex-wrap:nowrap"><span class="ico-chip ok" style="background:#fff"><svg class="i"><use href="#i-check"/></svg></span>
+    <div><h2 id="plan-ban-t"></h2><p class="muted" style="margin-top:4px" id="plan-ban-d"></p></div></div>
+  </div>
+  <div class="card">
+    <div class="card-h"><div><h2>24-hour timeline</h2><p>Hover, tap or use the arrow keys on the chart to inspect an hour.</p></div></div>
+    <div class="legend" aria-hidden="true"><span><i class="sw"></i>Solar (kW)</span><span><i class="sw" style="background:var(--c-solar);opacity:.45"></i>Used directly</span><span><i class="sw line"></i>Usage (kW)</span><span><i class="sw ghost"></i>No sun</span><span><i class="sw hatch"></i>Peak hours</span></div>
+    <div class="chart" id="chart-plan"></div>
+    <p class="readout" id="plan-readout" aria-live="off"></p>
+    <details class="alt"><summary>View as table</summary><div class="tbl-wrap"><table class="tbl num" id="plan-table"></table></div></details>
+  </div>
+  <div class="grid g-3" style="margin-top:var(--sp-4)">
+    <div class="card kpi"><div class="label">Expected solar today</div><div class="val num"><span id="pl-solar"></span><small>kWh</small></div><div class="sub">Forecast: mostly clear, light haze</div></div>
+    <div class="card kpi"><div class="label">Expected usage today</div><div class="val num"><span id="pl-load"></span><small>kWh</small></div><div class="sub">Evening is your highest-use period</div></div>
+    <div class="card kpi"><div class="label">Grid import expected</div><div class="val num"><span id="pl-grid"></span><small>kWh</small></div><div class="sub">Mostly overnight at the cheap rate</div></div>
+  </div>
+</section>
+
+<!-- ============ SAVINGS ============ -->
+<section data-route="savings" hidden>
+  <div class="page-h row between"><div><h1 tabindex="-1">Savings</h1><p>What SolarSense has saved you compared with having no solar or battery.</p></div>
+    <div class="seg" role="group" aria-label="Time range" id="savRange"><button aria-pressed="false" data-r="week">7 days</button><button aria-pressed="true" data-r="month">30 days</button><button aria-pressed="false" data-r="year">12 months</button></div></div>
+  <div class="grid g-kpi">
+    <div class="card kpi"><div class="label">Total saved</div><div class="val num" id="sv-total">PKR 0</div><div class="sub" id="sv-total-sub"></div></div>
+    <div class="card kpi"><div class="label">Estimated bill this month</div><div class="val num">PKR 12,480</div><div class="sub">vs PKR 31,900 without SolarSense</div></div>
+    <div class="card kpi"><div class="label">Export credit earned</div><div class="val num" id="sv-exp">PKR 0</div><div class="sub">Power sent to the grid at PKR 27/kWh</div></div>
+    <div class="card kpi"><div class="label">Self-powered</div><div class="val num">78<small>%</small></div><div class="sub">Share of your usage met by solar and battery</div></div>
+  </div>
+  <div class="grid g-21" style="margin-top:var(--sp-4)">
+    <div class="card"><div class="card-h"><div><h2 id="sv-title">Daily savings</h2><p>PKR saved per period</p></div></div>
+      <div class="chart" id="chart-sav"></div>
+      <details class="alt"><summary>View as table</summary><div class="tbl-wrap"><table class="tbl num" id="sav-table"></table></div></details></div>
+    <div class="card"><div class="card-h"><h2>Where savings come from</h2></div>
+      <div class="stack" id="sav-break"></div></div>
+  </div>
+</section>
+
+<!-- ============ OUTAGE ============ -->
+<section data-route="outage" hidden>
+  <div class="page-h"><h1 tabindex="-1">Outage &amp; backup</h1><p>When the grid is likely to fail and how ready your battery is.</p></div>
+  <div class="grid g-kpi">
+    <div class="card kpi"><div class="label">Outage risk tonight</div><div class="val"><span class="badge b-warn" style="font-size:1rem;padding:4px 14px">Medium</span></div><div class="sub">Peak risk 38% around 19:00</div></div>
+    <div class="card kpi"><div class="label">Reserve held</div><div class="val num">30<small>%</small></div><div class="sub">Never used for savings. <a href="#/settings">Change in settings</a></div></div>
+    <div class="card kpi"><div class="label">Backup time now</div><div class="val num"><span data-backup data-count>6.2</span><small>hours</small></div><div class="sub">At your current usage</div></div>
+    <div class="card kpi"><div class="label">Outages this month</div><div class="val num">7</div><div class="sub">Total 11.5 hours, all covered by battery</div></div>
+  </div>
+  <div class="card" style="margin-top:var(--sp-4)">
+    <div class="card-h"><div><h2>Risk by hour, next 24 hours</h2><p>Estimated chance of a grid outage in each hour</p></div></div>
+    <div class="legend"><span><i class="k-low"></i>Low (under 15%)</span><span><i class="k-med"></i>Medium (15–30%)</span><span><i class="k-high"></i>High (over 30%)</span></div>
+    <div class="chart" id="chart-risk"></div>
+    <details class="alt"><summary>View as table</summary><div class="tbl-wrap"><table class="tbl num" id="risk-table"></table></div></details>
+  </div>
+  <div class="card" style="margin-top:var(--sp-4)">
+    <div class="card-h"><h2>Recent outages</h2></div>
+    <div class="tbl-wrap"><table class="tbl num"><thead><tr><th>Date</th><th>Started</th><th class="r">Duration</th><th class="r">Battery used</th><th>Result</th></tr></thead><tbody>
+      <tr><td>Oct 27</td><td>14:05</td><td class="r">1 h 40 m</td><td class="r">2.9 kWh</td><td><span class="badge b-ok"><svg class="i" style="width:14px;height:14px"><use href="#i-check"/></svg>Fully covered</span></td></tr>
+      <tr><td>Oct 26</td><td>17:50</td><td class="r">2 h 10 m</td><td class="r">4.2 kWh</td><td><span class="badge b-ok"><svg class="i" style="width:14px;height:14px"><use href="#i-check"/></svg>Fully covered</span></td></tr>
+      <tr><td>Oct 24</td><td>03:20</td><td class="r">55 m</td><td class="r">0.7 kWh</td><td><span class="badge b-ok"><svg class="i" style="width:14px;height:14px"><use href="#i-check"/></svg>Fully covered</span></td></tr>
+      <tr><td>Oct 21</td><td>20:15</td><td class="r">3 h 05 m</td><td class="r">7.8 kWh</td><td><span class="badge b-warn"><svg class="i" style="width:14px;height:14px"><use href="#i-alert"/></svg>Battery hit reserve</span></td></tr>
+    </tbody></table></div>
+  </div>
+</section>
+
+<!-- ============ PANELS ============ -->
+<section data-route="panels" hidden>
+  <div class="page-h"><h1 tabindex="-1">Panel health</h1><p>Dust and faults cost you electricity. Here is what it costs and whether cleaning is worth it.</p></div>
+  <div class="grid g-kpi">
+    <div class="card kpi"><div class="label">Status</div><div class="val"><span class="badge b-warn" style="font-size:1rem;padding:4px 14px">Dusty</span></div><div class="sub">Last washed 11 days ago</div></div>
+    <div class="card kpi"><div class="label">Output lost to dust</div><div class="val num">9.8<small>%</small></div><div class="sub">Compared with clean panels</div></div>
+    <div class="card kpi"><div class="label">Energy lost per day</div><div class="val num">3.4<small>kWh</small></div><div class="sub">About PKR 119 per day</div></div>
+    <div class="card kpi"><div class="label">Next rain</div><div class="val num">14<small>days</small></div><div class="sub">Not soon enough to clean the panels for you</div></div>
+  </div>
+  <div class="grid g-2" style="margin-top:var(--sp-4)">
+    <div class="card">
+      <div class="card-h"><div><h2>Should you wash them?</h2><p>We compare what dust costs you until the next rain with the cost of cleaning.</p></div></div>
+      <div class="field"><label for="wash-cost">Cost of one cleaning (PKR)</label><input class="input num" id="wash-cost" inputmode="numeric" value="1500" aria-describedby="wash-h"><p class="hint" id="wash-h">Labour and water. Change it to match your quote.</p></div>
+      <div id="wash-result" aria-live="polite"></div>
+    </div>
+    <div class="card">
+      <div class="card-h"><div><h2>Dust loss since last wash</h2><p>Dashed line is the forecast without cleaning</p></div></div>
+      <div class="chart" id="chart-soil"></div>
+    </div>
+  </div>
+  <div class="card" style="margin-top:var(--sp-4)">
+    <div class="card-h"><div><h2>Check a panel photo</h2><p>Upload a picture of your array. We classify it as clean, dusty, bird droppings or damaged.</p></div></div>
+    <div class="drop" id="drop">
+      <div id="drop-empty"><svg class="i lg" style="color:var(--primary)"><use href="#i-camera"/></svg><p style="margin:8px 0 12px">JPG or PNG, up to 10 MB. Take the photo from the front, in daylight.</p>
+      <label class="btn btn-primary" for="photo"><svg class="i"><use href="#i-upload"/></svg>Choose photo</label><input type="file" id="photo" accept="image/png,image/jpeg" class="sr-only"></div>
+      <div id="drop-res" hidden aria-live="polite"><img id="photo-prev" alt="Your uploaded panel photo" src="data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw=="><div class="row" style="justify-content:center"><span class="badge b-warn">Dusty · 87% confident</span><span class="badge b-neutral">Demo result</span></div>
+      <p class="small muted" style="margin-top:8px">Light dust across the array. Estimated 6–10% output loss. A real result will come from the panel-inspection model.</p>
+      <button class="btn btn-secondary btn-sm" type="button" id="photo-reset" style="margin-top:12px">Try another photo</button></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ ALERTS ============ -->
+<section data-route="alerts" hidden>
+  <div class="page-h row between"><div><h1 tabindex="-1">Alerts</h1><p>Things that need your attention, newest first.</p></div><button class="btn btn-secondary btn-sm" id="markRead" type="button"><svg class="i"><use href="#i-check"/></svg>Mark all as read</button></div>
+  <div class="card">
+    <div class="chips" role="group" aria-label="Filter alerts" id="alertFilter" style="margin-bottom:var(--sp-3)"></div>
+    <ul class="list" id="alertList"></ul>
+    <div class="empty" id="alertEmpty" hidden><svg class="ill-empty" viewBox="0 0 96 72" aria-hidden="true" fill="none" stroke-linecap="round" stroke-linejoin="round"><circle cx="48" cy="36" r="21" fill="var(--tint)"/><g class="spin" stroke="var(--accent)" stroke-width="2.5"><path d="M48 4v5M48 63v5M16 36h5M75 36h5M25.4 13.4l3.5 3.5M67.1 55.1l3.5 3.5M25.4 58.6l3.5-3.5M67.1 16.9l3.5-3.5"/></g><path d="M38 37l7 7 13-14" stroke="var(--primary)" stroke-width="3.5"/></svg><b>You're all caught up</b><p class="small">No alerts match this filter.</p></div>
+  </div>
+</section>
+
+<!-- ============ ASSISTANT ============ -->
+<section data-route="assistant" hidden>
+  <div class="page-h"><h1 tabindex="-1">Assistant</h1><p>Ask about your bill, your battery or your panels in plain language.</p></div>
+  <div class="card chat">
+    <div class="msgs" id="msgs" role="log" aria-live="polite" aria-label="Conversation">
+      <div class="msg a">Hi Ayesha. I can explain your bills, battery behaviour and panel health. <span class="src">Preview: replies below are scripted samples, not live answers.</span></div>
+    </div>
+    <div class="chips" id="suggest" style="margin-bottom:10px"></div>
+    <form class="compose" id="chatForm"><label class="sr-only" for="chatIn">Your question</label><input class="input" id="chatIn" autocomplete="off" placeholder="Ask a question…"><button class="btn btn-primary" type="submit" aria-label="Send"><svg class="i"><use href="#i-send"/></svg><span class="hide-xs">Send</span></button></form>
+  </div>
+</section>
+
+<!-- ============ REPORTS ============ -->
+<section data-route="reports" hidden>
+  <div class="page-h row between"><div><h1 tabindex="-1">Reports</h1><p>Monthly summaries you can download or send to someone.</p></div>
+    <div class="row"><label class="sr-only" for="repMonth">Month</label><select class="input" id="repMonth" style="width:auto"><option>October 2026</option><option>September 2026</option><option>August 2026</option></select>
+    <button class="btn btn-secondary export" type="button" data-kind="CSV"><svg class="i"><use href="#i-download"/></svg>CSV</button>
+    <button class="btn btn-primary export" type="button" data-kind="PDF"><svg class="i"><use href="#i-download"/></svg>PDF</button></div></div>
+  <div class="grid g-21">
+    <div class="report-sheet">
+      <div class="row between" style="margin-bottom:var(--sp-4)"><div><h2 id="rep-title">October 2026 summary</h2><p class="muted small">My Site · Sample report</p></div><span class="badge b-warn">Sample data</span></div>
+      <div class="grid g-kpi" style="margin-bottom:var(--sp-4)">
+        <div><div class="muted small">Solar generated</div><b class="num" style="font-size:1.375rem">842 kWh</b></div>
+        <div><div class="muted small">Grid imported</div><b class="num" style="font-size:1.375rem">261 kWh</b></div>
+        <div><div class="muted small">Exported</div><b class="num" style="font-size:1.375rem">118 kWh</b></div>
+        <div><div class="muted small">Total saved</div><b class="num" style="font-size:1.375rem">PKR 14,820</b></div>
+      </div>
+      <h3 style="margin-bottom:8px">Daily savings (PKR)</h3>
+      <div class="chart" id="chart-rep"></div>
+      <h3 style="margin:var(--sp-5) 0 8px">By week</h3>
+      <div class="tbl-wrap"><table class="tbl num"><thead><tr><th>Week</th><th class="r">Solar (kWh)</th><th class="r">Grid (kWh)</th><th class="r">Saved (PKR)</th></tr></thead><tbody>
+        <tr><td>Oct 1–7</td><td class="r">201</td><td class="r">66</td><td class="r">3,510</td></tr><tr><td>Oct 8–14</td><td class="r">214</td><td class="r">58</td><td class="r">3,880</td></tr>
+        <tr><td>Oct 15–21</td><td class="r">219</td><td class="r">71</td><td class="r">3,720</td></tr><tr><td>Oct 22–28</td><td class="r">208</td><td class="r">66</td><td class="r">3,710</td></tr></tbody></table></div>
+    </div>
+    <div class="card" style="align-self:start">
+      <h2 style="margin-bottom:var(--sp-3)">Email reports</h2>
+      <div class="setting"><div><div class="t">Monthly summary</div><p class="small muted">Sent on the 1st of each month</p></div><label class="switch"><input type="checkbox" checked aria-label="Monthly summary email"><span></span></label></div>
+      <div class="setting"><div><div class="t">Weekly digest</div><p class="small muted">Every Monday morning</p></div><label class="switch"><input type="checkbox" aria-label="Weekly digest email"><span></span></label></div>
+      <div class="field" style="margin:var(--sp-3) 0 0"><label for="rep-to">Send to</label><input class="input" id="rep-to" value="ayesha@example.com" type="email" autocomplete="email"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ SETTINGS ============ -->
+<section data-route="settings" hidden>
+  <div class="page-h"><h1 tabindex="-1">Settings</h1><p>Manage your account, system and how SolarSense behaves.</p></div>
+  <div class="tabs" role="tablist" aria-label="Settings sections" id="setTabs">
+    <button role="tab" aria-selected="true" aria-controls="tp-profile" id="tb-profile">Profile</button>
+    <button role="tab" aria-selected="false" aria-controls="tp-site" id="tb-site" tabindex="-1">Site &amp; hardware</button>
+    <button role="tab" aria-selected="false" aria-controls="tp-battery" id="tb-battery" tabindex="-1">Battery control</button>
+    <button role="tab" aria-selected="false" aria-controls="tp-tariff" id="tb-tariff" tabindex="-1">Tariff</button>
+    <button role="tab" aria-selected="false" aria-controls="tp-notify" id="tb-notify" tabindex="-1">Notifications</button>
+    <button role="tab" aria-selected="false" aria-controls="tp-security" id="tb-security" tabindex="-1">Security</button>
+  </div>
+  <div id="setPanels">
+    <div role="tabpanel" id="tp-profile" aria-labelledby="tb-profile" tabindex="0">
+      <div class="card" style="max-width:720px"><h2 style="margin-bottom:var(--sp-4)">Your profile</h2>
+        <div class="row" style="margin-bottom:var(--sp-5)"><span class="avatar" style="width:56px;height:56px;font-size:1.125rem" aria-hidden="true">AK</span><div><b>Ayesha Khan</b><p class="small muted">Member since Oct 2026</p></div></div>
+        <div class="two"><div class="field"><label for="p-name">Full name</label><input class="input" id="p-name" value="Ayesha Khan" autocomplete="name"></div>
+        <div class="field"><label for="p-phone">Phone (optional)</label><input class="input" id="p-phone" type="tel" value="+92 300 1234567" autocomplete="tel"><p class="hint">Used only for account recovery and critical alerts.</p></div></div>
+        <div class="field"><label for="p-email">Email</label><div class="row" style="flex-wrap:nowrap"><input class="input" id="p-email" value="ayesha@example.com" readonly aria-describedby="p-email-h"><button class="btn btn-secondary" type="button" data-toast="We'd send a confirmation link to both addresses (preview).">Change</button></div><p class="hint" id="p-email-h">Changing your email requires confirming a link we send to the new address.</p></div>
+      </div>
+      <div class="card" style="max-width:720px;margin-top:var(--sp-4)"><h2 style="color:var(--bad)">Danger zone</h2>
+        <div class="setting"><div><div class="t">Download my data</div><p class="small muted">A copy of your profile, site settings and history.</p></div><button class="btn btn-secondary btn-sm" type="button" data-toast="Export requested. We'll email a download link (preview).">Request export</button></div>
+        <div class="setting"><div><div class="t">Delete account</div><p class="small muted">Permanently removes your account and all data. This cannot be undone.</p></div><button class="btn btn-outline-danger btn-sm" type="button" id="delBtn">Delete account</button></div></div>
+    </div>
+
+    <div role="tabpanel" id="tp-site" aria-labelledby="tb-site" tabindex="0" hidden>
+      <div class="card" style="max-width:720px"><div class="card-h"><div><h2>Site</h2></div><span class="badge b-ok"><span class="dot"></span>Inverter online · synced 2 min ago</span></div>
+        <div class="two"><div class="field"><label for="s-name">Site name</label><input class="input" id="s-name" value="My Site"></div><div class="field"><label for="s-city">City</label><input class="input" id="s-city" value=""  placeholder="Your city"></div></div>
+        <div class="field"><label for="s-addr">Address</label><input class="input" id="s-addr" value="Block C, Johar Town" autocomplete="street-address"></div>
+        <h2 style="margin:var(--sp-5) 0 var(--sp-2)">Hardware</h2>
+        <div class="note" role="note">Hardware sizes drive your forecasts and battery plan. Only change them if you've added or replaced equipment.</div>
+        <div class="two"><div class="field"><label for="s-pv">Solar capacity (kWp)</label><input class="input num" id="s-pv" value="8.0" inputmode="decimal"></div><div class="field"><label for="s-bat">Battery capacity (kWh)</label><input class="input num" id="s-bat" value="10.0" inputmode="decimal"></div></div>
+        <div class="two"><div class="field"><label for="s-inv">Inverter</label><select class="input" id="s-inv"><option>GoodWe</option><option>Other</option></select></div><div class="field"><label for="s-sn">Serial number</label><input class="input" id="s-sn" value="9010KESC000SAMPLE" readonly></div></div>
+        <button class="btn btn-secondary" type="button" data-toast="Reconnecting to inverter… (preview)">Reconnect inverter</button>
+      </div>
+    </div>
+
+    <div role="tabpanel" id="tp-battery" aria-labelledby="tb-battery" tabindex="0" hidden>
+      <div class="grid" style="max-width:720px">
+        <div class="card"><h2 style="margin-bottom:4px">How should SolarSense act?</h2><p class="muted small" style="margin-bottom:var(--sp-4)">Control of the inverter is being connected. Until then, plans are shown as recommendations.</p>
+          <div class="choice" role="radiogroup" aria-label="Control mode">
+            <label><input type="radio" name="mode" checked><span><b>Advise me <span class="badge b-ok" style="margin-left:6px">Available</span></b><span class="small muted">We show the plan; you apply it on your inverter app.</span></span></label>
+            <label><input type="radio" name="mode" disabled><span><b>Control automatically <span class="badge b-neutral" style="margin-left:6px">Coming soon</span></b><span class="small muted">SolarSense sends the plan to your inverter for you. You can still override it any time.</span></span></label>
+          </div></div>
+        <div class="card"><h2 style="margin-bottom:var(--sp-4)">Backup reserve</h2>
+          <div class="field" style="margin-bottom:0"><label for="reserve">Keep at least <b class="num" id="reserve-v">30%</b> in the battery for outages</label>
+            <input type="range" id="reserve" min="10" max="100" step="5" value="30" aria-describedby="reserve-h">
+            <div class="row between xs faint"><span>10% · more savings</span><span>100% · max backup</span></div>
+            <p class="hint" id="reserve-h" aria-live="polite" style="margin-top:6px"></p></div></div>
+        <div class="card"><h2 style="margin-bottom:var(--sp-3)">Priority</h2>
+          <div class="choice" role="radiogroup" aria-label="Priority">
+            <label><input type="radio" name="prio" value="comfort"><span><b>Max backup</b><span class="small muted">Prefer a fuller battery. Savings are lower but outages are covered longest.</span></span></label>
+            <label><input type="radio" name="prio" value="balanced" checked><span><b>Balanced <span class="badge b-primary" style="margin-left:6px">Recommended</span></b><span class="small muted">Plan around expected outages while still avoiding peak rates.</span></span></label>
+            <label><input type="radio" name="prio" value="savings"><span><b>Max savings</b><span class="small muted">Use the battery as much as possible. Higher chance it is low when an outage hits.</span></span></label>
+          </div></div>
+        <div class="card"><h2>Rules</h2>
+          <div class="setting"><div><div class="t">Never charge from the grid at peak rates</div><p class="small muted">The battery charges from solar during peak hours only.</p></div><label class="switch"><input type="checkbox" checked aria-label="Never charge from the grid at peak rates"><span></span></label></div>
+          <div class="setting"><div><div class="t">Allow charging from the grid overnight</div><p class="small muted">Useful on cloudy days when off-peak power is cheap.</p></div><label class="switch"><input type="checkbox" checked aria-label="Allow overnight grid charging"><span></span></label></div>
+          <div class="setting"><div><div class="t">Export extra solar to the grid</div><p class="small muted">Earn the export credit when the battery is full.</p></div><label class="switch"><input type="checkbox" checked aria-label="Export extra solar"><span></span></label></div>
+          <div class="two" style="margin-top:var(--sp-3)"><div class="field" style="margin-bottom:0"><label for="ch-from">Overnight charge window starts</label><input class="input" id="ch-from" type="time" value="23:00"></div><div class="field" style="margin-bottom:0"><label for="ch-to">Ends</label><input class="input" id="ch-to" type="time" value="05:00"></div></div></div>
+      </div>
+    </div>
+
+    <div role="tabpanel" id="tp-tariff" aria-labelledby="tb-tariff" tabindex="0" hidden>
+      <div class="card" style="max-width:720px"><h2 style="margin-bottom:4px">Electricity tariff</h2><p class="muted small" style="margin-bottom:var(--sp-4)">Sample values. Match these to your bill so savings are accurate.</p>
+        <div class="field"><label for="t-plan">Plan</label><select class="input" id="t-plan"><option>Time-of-use (peak / off-peak)</option><option>Flat rate</option></select></div>
+        <div class="two"><div class="field"><label for="t-ps">Peak starts</label><input class="input" id="t-ps" type="time" value="18:00"></div><div class="field"><label for="t-pe">Peak ends</label><input class="input" id="t-pe" type="time" value="22:00"></div></div>
+        <div class="two"><div class="field"><label for="t-p">Peak rate (PKR/kWh)</label><input class="input num" id="t-p" value="48.00" inputmode="decimal"></div><div class="field"><label for="t-o">Off-peak rate (PKR/kWh)</label><input class="input num" id="t-o" value="35.00" inputmode="decimal"></div></div>
+        <div class="field"><label for="t-e">Export credit (PKR/kWh)</label><input class="input num" id="t-e" value="27.00" inputmode="decimal"></div></div>
+    </div>
+
+    <div role="tabpanel" id="tp-notify" aria-labelledby="tb-notify" tabindex="0" hidden>
+      <div class="card" style="max-width:720px"><h2 style="margin-bottom:var(--sp-3)">Notifications</h2>
+        <div class="tbl-wrap"><table class="tbl"><thead><tr><th>Alert</th><th class="r">In app</th><th class="r">Email</th></tr></thead><tbody id="notifyBody"></tbody></table></div></div>
+    </div>
+
+    <div role="tabpanel" id="tp-security" aria-labelledby="tb-security" tabindex="0" hidden>
+      <div class="card" style="max-width:720px"><h2 style="margin-bottom:var(--sp-4)">Change password</h2>
+        <form novalidate data-validate data-toast="Password changed (preview)" data-noreset>
+          <div class="errsum" role="alert" tabindex="-1" hidden></div>
+          <div data-field="pw-cur|Current password|password|current-password||required"></div>
+          <div data-field="pw-new|New password|password|new-password||required,min:8"></div>
+          <div data-field="pw-conf|Confirm new password|password|new-password||required,match:pw-new"></div>
+          <button class="btn btn-primary" type="submit">Update password</button>
+        </form></div>
+      <div class="card" style="max-width:720px;margin-top:var(--sp-4)"><h2 style="margin-bottom:var(--sp-2)">Where you're logged in</h2>
+        <ul class="list"><li><div style="flex:1"><b>Chrome on Windows</b> <span class="badge b-ok" style="margin-left:6px">This device</span><p class="small muted">Active now</p></div></li>
+        <li><div style="flex:1"><b>Safari on iPhone</b><p class="small muted">2 days ago</p></div><button class="btn btn-secondary btn-sm" type="button" data-toast="Signed out of that device (preview)">Sign out</button></li></ul></div>
+    </div>
+  </div>
+  <div class="savebar" id="savebar" hidden role="region" aria-label="Unsaved changes"><span><b>Unsaved changes</b> <span class="xs" style="opacity:.8">Settings apply to your next plan.</span></span><span class="row"><button class="btn btn-secondary btn-sm" type="button" id="discard">Discard</button><button class="btn btn-primary btn-sm" type="button" id="saveSet" style="background:#fff;color:var(--text)">Save changes</button></span></div>
+</section>
+
+<!-- ============ BILLING ============ -->
+<section data-route="billing" hidden>
+  <div class="page-h"><h1 tabindex="-1">Billing</h1><p>Your SolarSense subscription. Sample plans and prices.</p></div>
+  <div class="grid g-3">
+    <div class="plan-card"><h2>Essential</h2><div class="price num">PKR 1,500<small>/month</small></div><ul class="ticks"><li><svg class="i"><use href="#i-check"/></svg>Live dashboard and savings</li><li><svg class="i"><use href="#i-check"/></svg>Daily battery plan</li><li><svg class="i"><use href="#i-check"/></svg>Email alerts</li></ul><button class="btn btn-secondary btn-block" type="button" data-toast="Plan change preview: Essential">Switch to Essential</button></div>
+    <div class="plan-card cur"><div class="row between"><h2>Plus</h2><span class="badge b-primary">Current plan</span></div><div class="price num">PKR 3,500<small>/month</small></div><ul class="ticks"><li><svg class="i"><use href="#i-check"/></svg>Everything in Essential</li><li><svg class="i"><use href="#i-check"/></svg>Outage prediction and reserve</li><li><svg class="i"><use href="#i-check"/></svg>Panel health and cleaning advice</li><li><svg class="i"><use href="#i-check"/></svg>AI assistant and reports</li></ul><button class="btn btn-secondary btn-block" type="button" disabled>Your current plan</button></div>
+    <div class="plan-card"><h2>Pro</h2><div class="price num">PKR 8,000<small>/month</small></div><ul class="ticks"><li><svg class="i"><use href="#i-check"/></svg>Everything in Plus</li><li><svg class="i"><use href="#i-check"/></svg>Automatic inverter control</li><li><svg class="i"><use href="#i-check"/></svg>Priority support</li></ul><button class="btn btn-primary btn-block" type="button" data-toast="Upgrade preview: Pro">Upgrade to Pro</button></div>
+  </div>
+  <div class="grid g-2" style="margin-top:var(--sp-4)">
+    <div class="card"><div class="card-h"><h2>Payment method</h2><button class="btn btn-secondary btn-sm" type="button" data-toast="Update payment method (preview)">Update</button></div>
+      <div class="row"><span class="ico-chip" style="background:var(--subtle)"><svg class="i"><use href="#i-card"/></svg></span><div><b>Visa ending 4242</b><p class="small muted">Expires 08/2028</p></div></div>
+      <p class="small muted" style="margin-top:var(--sp-4)">Next charge: <b>PKR 3,500</b> on Nov 1, 2026.</p>
+      <button class="btn btn-outline-danger btn-sm" type="button" style="margin-top:var(--sp-4)" data-toast="Cancellation flow (preview)">Cancel subscription</button></div>
+    <div class="card"><div class="card-h"><h2>Invoices</h2></div>
+      <div class="tbl-wrap"><table class="tbl num"><thead><tr><th>Date</th><th class="r">Amount</th><th>Status</th><th><span class="sr-only">Download</span></th></tr></thead><tbody>
+      <tr><td>Oct 1, 2026</td><td class="r">PKR 3,500</td><td><span class="badge b-ok">Paid</span></td><td class="r"><button class="icon-btn" aria-label="Download invoice for Oct 1, 2026" data-toast="Invoice download (preview)"><svg class="i"><use href="#i-download"/></svg></button></td></tr>
+      <tr><td>Sep 1, 2026</td><td class="r">PKR 3,500</td><td><span class="badge b-ok">Paid</span></td><td class="r"><button class="icon-btn" aria-label="Download invoice for Sep 1, 2026" data-toast="Invoice download (preview)"><svg class="i"><use href="#i-download"/></svg></button></td></tr>
+      <tr><td>Aug 1, 2026</td><td class="r">PKR 3,500</td><td><span class="badge b-ok">Paid</span></td><td class="r"><button class="icon-btn" aria-label="Download invoice for Aug 1, 2026" data-toast="Invoice download (preview)"><svg class="i"><use href="#i-download"/></svg></button></td></tr></tbody></table></div></div>
+  </div>
+</section>
+
+    </main>
+  </div>
+</div>
+
+<dialog id="delDlg" aria-labelledby="delT"><div class="d-in">
+  <h2 id="delT" style="color:var(--bad)">Delete your account?</h2>
+  <p class="muted" style="margin:8px 0 var(--sp-4)">This permanently deletes your account, site settings and history. Type <b>DELETE</b> to confirm.</p>
+  <div class="field"><label for="delIn">Confirmation</label><input class="input" id="delIn" autocomplete="off"></div>
+  <div class="row" style="justify-content:flex-end"><button class="btn btn-secondary" type="button" id="delCancel">Cancel</button><button class="btn btn-danger" type="button" id="delGo" disabled>Delete account</button></div>
+</div></dialog>
+
+<div class="toast-wrap" id="toasts" role="status" aria-live="polite"></div>
+<div class="jump"><label for="jumpSel" class="sr-only">Jump to screen</label><span class="faint">Preview:</span>
+  <select id="jumpSel"></select></div>
+
+<script>
+/* ============================================================
+   SolarSense dashboard design preview. All data is illustrative.
+   ============================================================ */
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+const fmt = n => Math.round(n).toLocaleString('en-US');
+const svgNS = 'http://www.w3.org/2000/svg';
+const icon = id => `<svg class="i" aria-hidden="true"><use href="#i-${id}"/></svg>`;
+
+/* ---------- Sample data (one consistent 24h simulation) ---------- */
+let NOW_H = 15, NOW_MIN = 42; // sample clock, advances in real time
+const PEAK_START = 18, PEAK_END = 22;
+const CAP = 10, RESERVE_FLOOR = 3; // kWh capacity, 30% reserve
+const H = [...Array(24).keys()];
+const solar = H.map(h => (h < 6 || h > 18) ? 0 : +(5.6 * Math.exp(-(((h + .5 - 12.5) / 3.6) ** 2))).toFixed(2)); // zero at night
+const load = [.8,.7,.7,.65,.65,.8,1.2,1.8,1.7,1.6,1.9,2.2,2.5,2.6,2.4,2.2,2.3,2.8,3.4,3.7,3.5,2.9,1.8,1.1];
+const sim = (() => { // solar charges the battery (max 2 kW); battery discharges only in peak hours
+  let soc = 3.0; const out = { soc: [], grid: [], charge: [] };
+  H.forEach(h => {
+    const net = solar[h] - load[h]; let grid = 0, ch = 0;
+    if (net > 0) { ch = Math.min(net, 2, (CAP - soc) / .95); soc += ch * .95; }
+    else if (h >= PEAK_START && h < PEAK_END) { const d = Math.min(-net, 5, Math.max(0, soc - RESERVE_FLOOR) * .95); soc -= d / .95; grid = -net - d; }
+    else grid = -net;
+    out.soc.push(+(soc / CAP * 100).toFixed(0)); out.grid.push(+grid.toFixed(2)); out.charge.push(+ch.toFixed(2));
+  });
+  return out;
+})();
+const pad = n => String(n).padStart(2, '0');
+
+/* ---------- Theme switcher ---------- */
+const THEMES = [['blue', 'Navy', '#0D1836'], ['amber', 'Amber', '#B45309'], ['emerald', 'Emerald', '#047857'], ['teal', 'Teal', '#0F766E']];
+function setTheme(t, persist = true) {
+  if (persist) { document.documentElement.classList.add('theming'); setTimeout(() => document.documentElement.classList.remove('theming'), 400); }
+  document.documentElement.dataset.theme = t;
+  if (persist) { try { localStorage.setItem('ss-theme', t); } catch (e) { /* storage unavailable: theme still applies */ } }
+  $$('[data-theme-switcher] button').forEach(b => b.setAttribute('aria-checked', String(b.dataset.t === t)));
+  Object.values(charts).forEach(c => c());
+}
+function initThemes() {
+  $$('[data-theme-switcher]').forEach(el => {
+    el.innerHTML = `<div class="themes" role="radiogroup" aria-label="Theme colour"><span class="lbl hide-xs">Colour</span>` +
+      THEMES.map(([k, n, c]) => `<button type="button" role="radio" aria-checked="false" aria-label="${n}" title="${n}" data-t="${k}" style="background:${c}"></button>`).join('') + `</div>`;
+    el.addEventListener('click', e => { const b = e.target.closest('button[data-t]'); if (b) setTheme(b.dataset.t); });
+  });
+  let saved = null; try { saved = localStorage.getItem('ss-theme'); } catch (e) { /* ignore */ }
+  setTheme(THEMES.some(t => t[0] === saved) ? saved : 'blue', false);
+}
+
+/* ---------- Toasts ---------- */
+function toast(msg) {
+  const t = document.createElement('div'); t.className = 'toast'; t.innerHTML = icon('check') + `<span></span>`; t.lastChild.textContent = msg;
+  $('#toasts').append(t); setTimeout(() => t.classList.add('out'), 3700); setTimeout(() => t.remove(), 4000);
+}
+
+/* ---------- Routing ---------- */
+const ROUTES = {
+  landing: ['SolarSense', 'landing'], login: ['Log in', 'auth'], signup: ['Create account', 'auth'], verify: ['Verify email', 'auth'], forgot: ['Reset password', 'auth'], 'forgot-sent': ['Reset link sent', 'auth'], reset: ['New password', 'auth'],
+  onboarding: ['Set up your site', 'onboard'],
+  dashboard: ['Dashboard', 'app', 'home'], plan: ["Today's plan", 'app', 'clock'], savings: ['Savings', 'app', 'trend'], outage: ['Outage & backup', 'app', 'zap'], panels: ['Panel health', 'app', 'sun'],
+  alerts: ['Alerts', 'app', 'bell'], assistant: ['Assistant', 'app', 'chat'], reports: ['Reports', 'app', 'file'], settings: ['Settings', 'app', 'sliders'], billing: ['Billing', 'app', 'card']
+};
+const onShow = {};
+function buildNav() {
+  const groups = [['Overview', ['dashboard', 'plan', 'savings']], ['System', ['outage', 'panels', 'alerts']], ['More', ['assistant', 'reports', 'settings', 'billing']]];
+  $('#nav').innerHTML = groups.map(([g, ids]) => `<div class="nav-sep">${g}</div>` + ids.map(id =>
+    `<a href="#/${id}" data-id="${id}">${icon(ROUTES[id][2])}<span>${ROUTES[id][0]}</span>${id === 'alerts' ? '<span class="badge b-bad count">3</span>' : ''}</a>`).join('')).join('') + '<span class="nav-ind" aria-hidden="true"></span>';
+  $('#jumpSel').innerHTML = Object.entries(ROUTES).map(([id, r]) => `<option value="${id}">${r[0]}</option>`).join('');
+}
+let navPlaced = false;
+function placeNavInd() {
+  const ind = $('.nav-ind'), cur = $('#nav a[aria-current="page"]'); if (!ind) return;
+  if (!cur || !cur.offsetHeight) { navPlaced = false; ind.style.opacity = 0; return; }
+  ind.style.transition = navPlaced ? '' : 'none'; ind.style.opacity = 1;
+  ind.style.transform = `translateY(${cur.offsetTop + 10}px)`; ind.style.height = (cur.offsetHeight - 20) + 'px';
+  navPlaced = true;
+}
+function authIll() {
+  let rays = ''; for (let i = 0; i <= 8; i++) { const a = Math.PI * i / 8, c = Math.cos(a), sn = Math.sin(a); rays += `M${(230 + 74 * c).toFixed(1)} ${(170 - 74 * sn).toFixed(1)}L${(230 + 92 * c).toFixed(1)} ${(170 - 92 * sn).toFixed(1)}`; }
+  const panel = x => `<g transform="translate(${x} 128)"><path d="M0 22 10 0H50L40 22Z" fill="rgba(255,255,255,.12)" stroke-opacity=".6" stroke-width="2"/><path d="M20 0 10 22M30 0 20 22M5 11H45" stroke-opacity=".35" stroke-width="1.5"/><path d="M25 22V42" stroke-opacity=".5" stroke-width="2"/></g>`;
+  return `<svg class="auth-ill" viewBox="0 0 460 220" aria-hidden="true" fill="none" stroke="#fff" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M0 170H460" stroke-opacity=".35" stroke-width="2"/>
+    <path d="M170 170a60 60 0 0 1 120 0z" fill="rgba(255,255,255,.16)" stroke="none"/><path d="M188 170a42 42 0 0 1 84 0z" fill="rgba(255,255,255,.24)" stroke="none"/>
+    <path class="sunrays" d="${rays}" stroke-opacity=".55" stroke-width="2.5"/>
+    ${panel(14)}${panel(76)}
+    <rect x="360" y="118" width="46" height="52" rx="8" fill="rgba(255,255,255,.12)" stroke-opacity=".6" stroke-width="2"/><rect x="376" y="110" width="14" height="8" rx="2" fill="#fff" fill-opacity=".6" stroke="none"/>
+    <rect class="blink b3" x="368" y="128" width="30" height="8" rx="2" fill="#fff" fill-opacity=".7" stroke="none"/><rect class="blink b2" x="368" y="142" width="30" height="8" rx="2" fill="#fff" fill-opacity=".7" stroke="none"/><rect class="blink b1" x="368" y="156" width="30" height="8" rx="2" fill="#fff" fill-opacity=".7" stroke="none"/>
+    <path class="fl" d="M126 188H356" stroke-opacity=".6" stroke-width="2"/></svg>`;
+}
+function moveTabInd() {
+  const box = $('#setTabs'), on = box && $('[aria-selected="true"]', box); if (!on || !on.offsetWidth) return;
+  let ind = $('.tab-ind', box), fresh = !ind;
+  if (fresh) { ind = document.createElement('span'); ind.className = 'tab-ind'; ind.setAttribute('aria-hidden', 'true'); ind.style.transition = 'none'; box.append(ind); }
+  ind.style.width = on.offsetWidth + 'px'; ind.style.transform = `translateX(${on.offsetLeft}px)`;
+  if (fresh) { ind.offsetWidth; ind.style.transition = ''; }
+}
+addEventListener('resize', moveTabInd);
+const REDUCE = matchMedia('(prefers-reduced-motion: reduce)'), seen = new Set();
+function countUp(el) {
+  if (REDUCE.matches) return;
+  const txt = el.textContent.trim(), end = parseFloat(txt.replace(/,/g, '')); if (!isFinite(end)) return;
+  const dec = (txt.split('.')[1] || '').length, t0 = performance.now();
+  const step = now => { const k = Math.min(1, (now - t0) / 700), v = end * (1 - (1 - k) ** 3); el.textContent = k < 1 ? (dec ? v.toFixed(dec) : fmt(v)) : txt; if (k < 1) requestAnimationFrame(step); };
+  requestAnimationFrame(step);
+}
+function paintAuth() {
+  $$('.auth-brand').forEach(b => { let p = $('.auth-plate', b); if (!p) { b.insertAdjacentHTML('beforeend', '<div class="auth-plate" aria-hidden="true"></div>'); p = $('.auth-plate', b); } if (p.offsetParent) drawBars(p, p.clientWidth, { values: solar, rows: 9, h: 130, noAxis: true, max: 6, aria: '' }); });
+}
+function route() {
+  let id = (location.hash.replace(/^#\/?/, '') || 'landing'); if (!ROUTES[id]) id = 'landing';
+  const [title, layout] = ROUTES[id];
+  $$('[data-route]').forEach(s => s.hidden = s.dataset.route !== id);
+  document.body.dataset.layout = layout;
+  document.title = id === 'landing' ? 'SolarSense · Smarter solar and battery' : `${title} · SolarSense`;
+  $('#topTitle').textContent = title;
+  $$('#nav a').forEach(a => a.dataset.id === id ? a.setAttribute('aria-current', 'page') : a.removeAttribute('aria-current'));
+  $('#jumpSel').value = id;
+  placeNavInd();
+  closeDrawer(); closeUserMenu();
+  window.scrollTo(0, 0);
+  onShow[id] && onShow[id]();
+  if (layout === 'auth') paintAuth();
+  Object.values(charts).forEach(c => c());
+  const h = $(`[data-route="${id}"] h1`); if (h) { h.setAttribute('tabindex', '-1'); h.focus({ preventScroll: true }); }
+  const sec = $(`[data-route="${id}"]`), play = () => $$('[data-count]', sec).forEach(countUp);
+  if (layout === 'app' && !REDUCE.matches && !seen.has(id)) { sec.classList.add('loading'); setTimeout(() => { sec.classList.remove('loading'); play(); }, 320); } else play();
+  $$('.card,.plate,.plan-card,.report-sheet', sec).slice(0, 14).forEach((e, i) => e.style.setProperty('--s', i));
+  seen.add(id);
+}
+window.addEventListener('hashchange', route);
+
+/* drawer + user menu */
+function trapTab(box, e) {
+  if (e.key !== 'Tab') return;
+  const f = $$('a[href],button:not([disabled]),input:not([disabled]),select', box).filter(n => n.offsetParent !== null); if (!f.length) return;
+  const first = f[0], last = f[f.length - 1];
+  if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+  else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+}
+function openDrawer() { $('#sidebar').classList.add('open'); $('#overlay').hidden = false; $('#menuBtn').setAttribute('aria-expanded', 'true'); $('#nav a').focus(); }
+function closeDrawer() { const had = $('#sidebar').contains(document.activeElement) && $('#sidebar').classList.contains('open'); $('#sidebar').classList.remove('open'); $('#overlay').hidden = true; $('#menuBtn').setAttribute('aria-expanded', 'false'); if (had) $('#menuBtn').focus(); }
+document.addEventListener('keydown', e => { const sb = $('#sidebar'); if (sb.classList.contains('open')) trapTab(sb, e); });
+function closeUserMenu() { $('#userMenu').hidden = true; $('#userBtn').setAttribute('aria-expanded', 'false'); }
+$('#menuBtn').onclick = () => $('#sidebar').classList.contains('open') ? closeDrawer() : openDrawer();
+$('#overlay').onclick = closeDrawer;
+$('#userBtn').onclick = e => { e.stopPropagation(); const m = $('#userMenu'); m.hidden = !m.hidden; $('#userBtn').setAttribute('aria-expanded', String(!m.hidden)); };
+document.addEventListener('click', e => { if (!e.target.closest('.menu-wrap')) closeUserMenu(); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape') { closeDrawer(); closeUserMenu(); } });
+$('#jumpSel').onchange = e => { location.hash = '#/' + e.target.value; };
+
+/* ---------- Form fields & validation ---------- */
+function buildFields() {
+  $$('[data-field]').forEach(el => {
+    const [id, label, type, ac, ph, rules = '', hint = ''] = el.dataset.field.split('|');
+    const req = rules.includes('required');
+    const isPw = type === 'password';
+    const describe = [hint ? `${id}-hint` : '', `${id}-err`].filter(Boolean).join(' ');
+    const input = `<input class="input" id="${id}" name="${id}" type="${type === 'text' && /num:/.test(rules) ? 'text' : type}" ${/num:/.test(rules) ? 'inputmode="decimal"' : ''} autocomplete="${ac}" placeholder="${ph}" data-rules="${rules}" aria-describedby="${describe}" ${req ? 'aria-required="true"' : ''}>`;
+    el.outerHTML = `<div class="field"><label for="${id}">${label}${req ? ' <span class="req" aria-hidden="true">*</span>' : ''}</label>` +
+      (isPw ? `<div class="pw">${input}<button type="button" aria-label="Show password" aria-pressed="false" data-pw="${id}">${icon('eye')}</button></div>` : input) +
+      (hint ? `<p class="hint" id="${id}-hint">${hint}</p>` : '') + `<p class="err" id="${id}-err" hidden></p></div>`;
+  });
+  document.addEventListener('click', e => {
+    const b = e.target.closest('[data-pw]'); if (!b) return;
+    const inp = $('#' + b.dataset.pw), show = inp.type === 'password'; inp.type = show ? 'text' : 'password';
+    b.setAttribute('aria-pressed', String(show)); b.setAttribute('aria-label', show ? 'Hide password' : 'Show password'); b.innerHTML = icon(show ? 'eyeoff' : 'eye');
+  });
+}
+function checkField(inp) {
+  const v = inp.type === 'checkbox' ? inp.checked : inp.value.trim(); let msg = '';
+  const label = (inp.labels && inp.labels[0] ? inp.labels[0].textContent.replace('*', '').trim() : 'This field').toLowerCase();
+  for (const r of (inp.dataset.rules || '').split(',').filter(Boolean)) {
+    const [k, a] = r.split(':');
+    if (k === 'required' && !v) msg = `Enter your ${label}.`;
+    else if (k === 'checked' && !v) msg = 'You need to accept to continue.';
+    else if (v && k === 'email' && !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v)) msg = 'Enter a valid email address, like name@example.com.';
+    else if (v && k === 'min' && v.length < +a) msg = `Use at least ${a} characters (you have ${v.length}).`;
+    else if (v && k === 'match' && v !== $('#' + a).value) msg = 'The two passwords don\'t match. Re-enter them.';
+    else if (v && k === 'num') { const [lo, hi] = a.split('-').map(Number), n = Number(v); if (!isFinite(n) || n < lo || n > hi) msg = `Enter a number between ${lo} and ${hi}.`; }
+    if (msg) break;
+  }
+  const err = $('#' + inp.id + '-err'); if (!err) return msg;
+  inp.setAttribute('aria-invalid', msg ? 'true' : 'false');
+  err.hidden = !msg; err.innerHTML = msg ? icon('alert').replace('class="i"', 'class="i" style="width:16px;height:16px;margin-top:1px"') + `<span>${msg}</span>` : '';
+  return msg;
+}
+function validate(form) {
+  const fields = $$('[data-rules]', form).filter(i => i.offsetParent !== null || i.type === 'checkbox');
+  const errs = []; fields.forEach(f => { const m = checkField(f); if (m) errs.push([f, m]); });
+  const sum = $('.errsum[role="alert"]', form);
+  if (sum) {
+    sum.hidden = !errs.length;
+    sum.innerHTML = errs.length ? `<b>Please fix ${errs.length} ${errs.length > 1 ? 'problems' : 'problem'}:</b><ul>${errs.map(([f, m]) => `<li><a href="#${f.id}" data-focus="${f.id}">${m}</a></li>`).join('')}</ul>` : '';
+    if (errs.length) sum.focus();
+  }
+  return !errs.length;
+}
+document.addEventListener('click', e => { const a = e.target.closest('[data-focus]'); if (a) { e.preventDefault(); $('#' + a.dataset.focus).focus(); } });
+document.addEventListener('focusout', e => { if (e.target.matches('[data-rules]') && e.target.value !== '' ) checkField(e.target); });
+document.addEventListener('submit', e => {
+  const f = e.target; if (!f.hasAttribute('data-validate') || f.hasAttribute('data-onboard')) return;
+  e.preventDefault(); if (!validate(f)) return;
+  if (f.dataset.toast) toast(f.dataset.toast);
+  if (f.dataset.next) location.hash = f.dataset.next; else if (!f.hasAttribute('data-noreset')) f.reset(); else f.reset();
+});
+/* password strength */
+document.addEventListener('input', e => {
+  if (e.target.id !== 'su-password') return; const v = e.target.value; let s = 0;
+  if (v.length >= 8) s++; if (/[A-Z]/.test(v) && /[a-z]/.test(v)) s++; if (/\d/.test(v)) s++; if (/[^A-Za-z0-9]/.test(v) || v.length >= 14) s++;
+  $('#strength').dataset.s = v ? s : 0;
+});
+/* resend cooldown */
+let cd = 0, cdT;
+$('#resendBtn').onclick = () => {
+  if (cd) return; cd = 30; $('#resendBtn').disabled = true; toast('Verification email sent (preview)');
+  cdT = setInterval(() => { cd--; $('#resendHint').textContent = cd ? `You can resend in ${cd}s.` : ''; if (!cd) { clearInterval(cdT); $('#resendBtn').disabled = false; } }, 1000);
+};
+
+/* ---------- Onboarding ---------- */
+let step = 0;
+function showStep() {
+  $$('[data-step]').forEach(s => s.hidden = +s.dataset.step !== step);
+  $$('#stepper li').forEach((li, i) => { li.dataset.state = i < step ? 'done' : ''; i === step ? li.setAttribute('aria-current', 'step') : li.removeAttribute('aria-current'); });
+  $('#onbBack').style.visibility = step ? 'visible' : 'hidden';
+  $('#onbNext').textContent = step === 3 ? 'Finish setup' : 'Continue';
+  if (step === 3) {
+    const g = id => $('#' + id).value || '—';
+    $('#onb-review').innerHTML = [['Site', g('ob-site')], ['Address', `${g('ob-addr')}, ${g('ob-city')}`], ['Solar', g('ob-pv') + ' kWp'], ['Battery', g('ob-bat') + ' kWh'], ['Inverter', `${$('#ob-inv').value} · ${g('ob-sn')}`], ['Tariff', `Peak ${g('ob-peak')} · Off-peak ${g('ob-off')} · Export ${g('ob-exp')} PKR/kWh`]]
+      .map(([k, v]) => `<dt class="muted">${k}</dt><dd style="margin:0;font-weight:500"></dd>`).join('');
+    $$('#onb-review dd').forEach((d, i) => d.textContent = [['Site', g('ob-site')], ['Address', `${g('ob-addr')}, ${g('ob-city')}`], ['Solar', g('ob-pv') + ' kWp'], ['Battery', g('ob-bat') + ' kWh'], ['Inverter', `${$('#ob-inv').value} · ${g('ob-sn')}`], ['Tariff', `Peak ${g('ob-peak')} · Off-peak ${g('ob-off')} · Export ${g('ob-exp')} PKR/kWh`]][i][1]);
+  }
+}
+$('[data-onboard]').addEventListener('submit', e => {
+  e.preventDefault(); const card = $(`[data-step="${step}"]`);
+  const fields = $$('[data-rules]', card); const errs = fields.filter(f => checkField(f));
+  const sum = $('.errsum[role="alert"]', e.target);
+  sum.hidden = !errs.length; sum.innerHTML = errs.length ? `<b>Please fix ${errs.length} ${errs.length > 1 ? 'problems' : 'problem'}:</b><ul>${errs.map(f => `<li><a href="#${f.id}" data-focus="${f.id}">${$('#' + f.id + '-err').textContent}</a></li>`).join('')}</ul>` : '';
+  if (errs.length) { sum.focus(); return; }
+  if (step < 3) { step++; showStep(); window.scrollTo(0, 0); $('h2', $(`[data-step="${step}"]`)).setAttribute('tabindex', '-1'); $('h2', $(`[data-step="${step}"]`)).focus(); }
+  else { toast('Setup complete. Building your first plan…'); step = 0; showStep(); location.hash = '#/dashboard'; }
+});
+$('#onbBack').onclick = () => { if (step) { step--; showStep(); } };
+onShow.onboarding = () => { step = 0; showStep(); };
+
+/* ============================================================
+   Charts (hand-drawn SVG, redrawn on resize / theme change)
+   ============================================================ */
+const charts = {};
+function mount(id, draw) {
+  const el = $('#' + id); if (!el) return;
+  let drawn = false; // the draw-in plays only on the first render of each chart
+  const run = () => {
+    if (!(el.clientWidth > 0 && el.offsetParent !== null)) return;
+    draw(el, el.clientWidth);
+    if (!drawn) { drawn = true; el.classList.add('first'); setTimeout(() => el.classList.remove('first'), 1400); }
+  };
+  let raf = 0; // defer the redraw so it never resizes the element inside its own observer callback
+  charts[id] = run; new ResizeObserver(() => { cancelAnimationFrame(raf); raf = requestAnimationFrame(run); }).observe(el);
+}
+function niceMax(v, steps = 4) { const raw = v / steps, p = 10 ** Math.floor(Math.log10(raw)), n = raw / p; const f = n <= 1 ? 1 : n <= 2 ? 2 : n <= 2.5 ? 2.5 : n <= 5 ? 5 : 10; return { step: f * p, max: f * p * steps }; }
+/* monotone cubic (Fritsch-Carlson): smooth curve that never overshoots the data */
+const smooth = pts => {
+  const n = pts.length, L = (p, i) => `${i ? 'L' : 'M'}${p[0]},${p[1]}`; if (n < 3) return pts.map(L).join(' ');
+  const dx = [], m = [], t = [];
+  for (let i = 0; i < n - 1; i++) { dx[i] = pts[i + 1][0] - pts[i][0]; m[i] = (pts[i + 1][1] - pts[i][1]) / dx[i]; }
+  t[0] = m[0]; t[n - 1] = m[n - 2];
+  for (let i = 1; i < n - 1; i++) t[i] = m[i - 1] * m[i] <= 0 ? 0 : (m[i - 1] + m[i]) / 2;
+  for (let i = 0; i < n - 1; i++) {
+    if (m[i] === 0) { t[i] = t[i + 1] = 0; continue; }
+    const a = t[i] / m[i], b = t[i + 1] / m[i], q = a * a + b * b;
+    if (q > 9) { const k = 3 / Math.sqrt(q); t[i] = k * a * m[i]; t[i + 1] = k * b * m[i]; }
+  }
+  let d = `M${pts[0][0]},${pts[0][1]}`;
+  for (let i = 0; i < n - 1; i++) d += ` C${pts[i][0] + dx[i] / 3},${pts[i][1] + t[i] * dx[i] / 3} ${pts[i + 1][0] - dx[i] / 3},${pts[i + 1][1] - t[i + 1] * dx[i] / 3} ${pts[i + 1][0]},${pts[i + 1][1]}`;
+  return d;
+};
+function tipFor(el) {
+  let t = $('.tip', el); if (!t) { t = document.createElement('div'); t.className = 'tip'; t.setAttribute('aria-hidden', 'true'); el.append(t); }
+  return {
+    show(html, x, y) { t.innerHTML = html; t.style.opacity = 1; const tw = t.offsetWidth, cw = el.clientWidth; t.style.left = Math.max(4, Math.min(cw - tw - 4, x + 14 + tw > cw ? x - 14 - tw : x + 14)) + 'px'; t.style.top = Math.max(0, y - t.offsetHeight - 8) + 'px'; },
+    hide() { t.style.opacity = 0; }
+  };
+}
+const trow = (c, k, v) => `<div class="tr"><span><i style="background:${c}"></i>${k}</span><b>${v}</b></div>`;
+const grad = (id, c = 'var(--primary)') => `<linearGradient id="${id}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" style="stop-color:${c};stop-opacity:.3"/><stop offset="1" style="stop-color:${c};stop-opacity:.02"/></linearGradient>`;
+
+/* 24h timeline: solar area + usage line on top, battery level below, quiet peak band, now marker, scrubber. */
+function drawPlan(el, w, readoutSel, h = 300) {
+  const m = { l: 34, r: 8, t: 10, b: 22 }, iw = w - m.l - m.r, bH = Math.max(54, h * .2), gap = 34, sH = h - m.t - m.b - bH - gap;
+  const sBot = m.t + sH, bTop = sBot + gap, bBot = bTop + bH, SMAX = 6, x = i => m.l + iw * (i + .5) / 24;
+  const ys = v => sBot - sH * v / SMAX, yb = v => bBot - bH * v / 100, step = w < 460 ? 6 : 3;
+  let s = `<svg viewBox="0 0 ${w} ${h}" role="img" aria-label="Chart of one day. Solar output as an area, home usage as a line, and battery level in a strip below. The battery is nearly full before the evening peak and drains during it."><defs>${grad(el.id + '-gs', 'var(--c-solar)')}${grad(el.id + '-gb')}<!--clip--></defs>`;
+  s += `<rect x="${m.l + iw * PEAK_START / 24}" y="${m.t}" width="${iw * (PEAK_END - PEAK_START) / 24}" height="${bBot - m.t}" fill="var(--tint)"/><text x="${m.l + iw * (PEAK_START + 2) / 24}" y="${m.t + 12}" text-anchor="middle" class="em pri">Peak</text>`;
+  [0, 3, 6].forEach(v => { s += `<line class="gridline" x1="${m.l}" x2="${w - m.r}" y1="${ys(v)}" y2="${ys(v)}"/><text x="${m.l - 8}" y="${ys(v) + 4}" text-anchor="end">${v}${v === 6 ? ' kW' : ''}</text>`; });
+  [0, 50, 100].forEach(v => { s += `<line class="gridline" x1="${m.l}" x2="${w - m.r}" y1="${yb(v)}" y2="${yb(v)}"/><text x="${m.l - 8}" y="${yb(v) + 4}" text-anchor="end">${v}%</text>`; });
+  s += `<text x="${m.l}" y="${bTop - 8}" class="lbl">Battery</text>`;
+  for (let hh = 0; hh < 24; hh += step) s += `<text x="${x(hh)}" y="${h - 5}" text-anchor="middle">${pad(hh)}:00</text>`;
+  const sp = solar.map((v, i) => [x(i), ys(v)]), lp = load.map((v, i) => [x(i), ys(v)]), bp = sim.soc.map((v, i) => [x(i), yb(v)]);
+  s += `<path d="${smooth(sp)} L${x(23)},${ys(0)} L${x(0)},${ys(0)}Z" class="fade" fill="url(#${el.id}-gs)"/><path class="draw" pathLength="1" d="${smooth(sp)}" fill="none" stroke="var(--c-solar)" stroke-width="2" stroke-linecap="round"/>`;
+  const area = (pts, y0) => `${smooth(pts)} L${pts[pts.length - 1][0]},${y0} L${pts[0][0]},${y0}Z`;
+  s = s.replace('<!--clip-->', `<clipPath id="${el.id}-cu"><path d="${area(lp, ys(0))}"/></clipPath>`);
+  s += `<path class="fade" d="${area(sp, ys(0))}" fill="var(--c-solar)" opacity=".26" clip-path="url(#${el.id}-cu)"/>`;
+  const pk = solar.indexOf(Math.max(...solar));
+  const nowX = m.l + iw * (NOW_H + NOW_MIN / 60) / 24;
+  s += `<circle cx="${x(pk)}" cy="${ys(solar[pk])}" r="3.5" fill="#fff" stroke="var(--c-solar)" stroke-width="2"/>${Math.abs(x(pk) - nowX) > 56 ? `<text x="${x(pk)}" y="${ys(solar[pk]) - 10}" text-anchor="middle" class="em">${solar[pk].toFixed(1)} kW</text>` : ''}`;
+  s += `<path d="${smooth(lp)}" class="halo" fill="none" stroke-width="5" stroke-linejoin="round" stroke-linecap="round" opacity=".85"/><path class="draw" pathLength="1" d="${smooth(lp)}" fill="none" stroke="var(--text)" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>`;
+  s += `<path d="${smooth(bp)} L${x(23)},${yb(0)} L${x(0)},${yb(0)}Z" class="fade" fill="url(#${el.id}-gb)"/><path class="draw" pathLength="1" d="${smooth(bp)}" fill="none" stroke="var(--primary)" stroke-width="2" stroke-linecap="round"/>`;
+  const nx = m.l + iw * (NOW_H + NOW_MIN / 60) / 24;
+  s += `<line x1="${nx}" x2="${nx}" y1="${m.t}" y2="${bBot}" stroke="var(--text)" stroke-dasharray="3 4"/><text x="${nx}" y="${m.t + 12}" dx="${nx > w - 60 || w < 480 ? -5 : 5}" text-anchor="${nx > w - 60 || w < 480 ? 'end' : 'start'}" class="em">Now</text><circle class="nowring" cx="${nx}" cy="${m.t}" r="3.5"/><circle cx="${nx}" cy="${m.t}" r="3.5" style="fill:var(--text)"/>`;
+  s += `<line id="${el.id}-cur" y1="${m.t}" y2="${bBot}" stroke="var(--primary)" stroke-width="1.5" opacity="0"/><circle id="${el.id}-dot" r="4" fill="#fff" stroke="var(--c-solar)" stroke-width="2" opacity="0"/><circle id="${el.id}-dl" r="4" fill="#fff" stroke="var(--text)" stroke-width="2" opacity="0"/><circle id="${el.id}-db" r="4" fill="#fff" stroke="var(--primary)" stroke-width="2" opacity="0"/>`;
+  s += `<rect id="${el.id}-hit" x="${m.l}" y="${m.t}" width="${iw}" height="${bBot - m.t}" fill="transparent" tabindex="0" role="slider" aria-label="Inspect hour of the day" aria-valuemin="0" aria-valuemax="23" aria-valuenow="${NOW_H}" aria-valuetext="${pad(NOW_H)}:00"/></svg>`;
+  el.innerHTML = s;
+  const ro = readoutSel ? $(readoutSel) : null, hit = $('#' + el.id + '-hit'), cl = $('#' + el.id + '-cur'), dt = $('#' + el.id + '-dot'), dl = $('#' + el.id + '-dl'), db = $('#' + el.id + '-db'), tip = tipFor(el); let cur = NOW_H;
+  const show = (i, on = true) => {
+    cur = Math.max(0, Math.min(23, i)); cl.setAttribute('x1', x(cur)); cl.setAttribute('x2', x(cur)); cl.setAttribute('opacity', on ? 1 : 0);
+    dt.setAttribute('cx', x(cur)); dt.setAttribute('cy', ys(solar[cur])); dt.setAttribute('opacity', on ? 1 : 0);
+    dl.setAttribute('cx', x(cur)); dl.setAttribute('cy', ys(load[cur])); dl.setAttribute('opacity', on ? 1 : 0);
+    db.setAttribute('cx', x(cur)); db.setAttribute('cy', yb(sim.soc[cur])); db.setAttribute('opacity', on ? 1 : 0);
+    if (on) tip.show(`<div class="th">${pad(cur)}:00</div>${trow('var(--c-solar)', 'Solar', solar[cur].toFixed(1) + ' kW')}${trow('#fff', 'Usage', load[cur].toFixed(1) + ' kW')}${trow('var(--tint-3)', 'Battery', sim.soc[cur] + '%')}${trow('#94A3B8', 'Grid import', sim.grid[cur].toFixed(1) + ' kW')}`, x(cur), m.t + 90); else tip.hide();
+    if (ro) ro.innerHTML = `<b>${pad(cur)}:00</b> · Solar <b>${solar[cur].toFixed(1)}&nbsp;kW</b> · Usage <b>${load[cur].toFixed(1)}&nbsp;kW</b> · Battery <b>${sim.soc[cur]}%</b> · Grid import <b>${sim.grid[cur].toFixed(1)}&nbsp;kW</b>`;
+    hit.setAttribute('aria-valuenow', cur); hit.setAttribute('aria-valuetext', `${pad(cur)}:00, solar ${solar[cur].toFixed(1)} kilowatts, battery ${sim.soc[cur]} percent`);
+  };
+  const idxAt = e => { const r = hit.getBoundingClientRect(); return Math.floor((e.clientX - r.left) / r.width * 24); };
+  hit.addEventListener('pointermove', e => show(idxAt(e))); hit.addEventListener('pointerdown', e => show(idxAt(e)));
+  hit.addEventListener('pointerleave', () => show(NOW_H, false));
+  hit.addEventListener('blur', () => show(NOW_H, false));
+  hit.addEventListener('keydown', e => { const d = { ArrowRight: 1, ArrowLeft: -1, Home: -99, End: 99 }[e.key]; if (d) { e.preventDefault(); show(Math.abs(d) > 50 ? (d < 0 ? 0 : 23) : cur + d); } });
+  show(NOW_H, false);
+}
+
+/* Rounded gradient bars with an average line and a hover tooltip. level 0/1/2 only changes opacity, and values are labelled. */
+function drawBars(el, w, o) {
+  const { values, labels, h = 220, fmtV = fmt, level, showVals, labelEvery = 1, aria } = o;
+  const m = { l: 44, r: 6, t: showVals ? 22 : 10, b: 24 }, iw = w - m.l - m.r, ih = h - m.t - m.b, n = values.length, bw = iw / n;
+  const { step, max } = o.max ? { step: o.max / 4, max: o.max } : niceMax(Math.max(...values) * 1.05), y = v => m.t + ih * (1 - v / max);
+  const live = !o.noAxis, gid = el.id + '-bg', avg = values.reduce((a, b) => a + b, 0) / n;
+  let s = `<svg viewBox="0 0 ${w} ${h}" role="img" aria-label="${aria || ''}"><defs><linearGradient id="${gid}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" style="stop-color:var(--primary)"/><stop offset="1" style="stop-color:var(--primary);stop-opacity:.55"/></linearGradient></defs>`;
+  for (let v = 0; v <= max + 1e-9; v += step) s += `<line class="gridline" x1="${m.l}" x2="${w - m.r}" y1="${y(v)}" y2="${y(v)}"/><text x="${m.l - 8}" y="${y(v) + 4}" text-anchor="end">${o.axisFmt ? o.axisFmt(v) : fmtV(v)}</text>`;
+  values.forEach((v, i) => {
+    const bx = m.l + i * bw + bw * .18, bwid = Math.max(2, bw * .64), op = level ? [.3, .62, 1][level[i]] : 1;
+    s += `<rect class="bar-r" style="--i:${i}" x="${bx}" y="${y(v)}" width="${bwid}" height="${Math.max(0, y(0) - y(v))}" rx="${Math.min(4, bwid / 2)}" fill="url(#${gid})" opacity="${op}"/>`;
+    if (showVals && bw >= 24) s += `<text class="val" x="${bx + bwid / 2}" y="${y(v) - 6}" text-anchor="middle">${o.valFmt ? o.valFmt(v) : fmtV(v)}</text>`;
+    if (i % labelEvery === 0) s += `<text x="${bx + bwid / 2}" y="${h - 6}" text-anchor="middle">${labels[i]}</text>`;
+  });
+  if (live && !level && n > 1) { const t = `Avg ${(o.tipFmt || fmtV)(avg)}`, tw = t.length * 6.6 + 12; s += `<line x1="${m.l}" x2="${w - m.r}" y1="${y(avg)}" y2="${y(avg)}" stroke="var(--text)" stroke-width="1.25" stroke-dasharray="5 4"/><rect x="${w - m.r - tw}" y="${y(avg) - 22}" width="${tw}" height="20" rx="6" fill="#fff" stroke="var(--line-strong)"/><text class="em" x="${w - m.r - tw / 2}" y="${y(avg) - 8}" text-anchor="middle">${t}</text>`; }
+  s += live ? `<rect class="hit" x="${m.l}" y="${m.t}" width="${iw}" height="${ih}" fill="transparent"/></svg>` : '</svg>';
+  el.innerHTML = s;
+  if (!live) return;
+  const tip = tipFor(el), hit = $('.hit', el), bars = $$('.bar-r', el); let last = -1;
+  const off = () => { bars[last] && bars[last].classList.remove('on'); last = -1; tip.hide(); };
+  const at = e => { const r = hit.getBoundingClientRect(); return Math.max(0, Math.min(n - 1, Math.floor((e.clientX - r.left) / r.width * n))); };
+  hit.addEventListener('pointermove', e => {
+    const i = at(e); if (i !== last) { bars[last] && bars[last].classList.remove('on'); bars[i].classList.add('on'); last = i; }
+    tip.show(`<div class="th">${o.tipHead ? o.tipHead(labels[i]) : labels[i]}</div>${trow('var(--primary)', o.tipName || 'Value', (o.tipFmt || fmtV)(values[i]))}`, m.l + (i + .5) * bw, y(values[i]));
+  });
+  hit.addEventListener('pointerleave', off);
+}
+
+/* Line chart with a soft area under the first series, hover crosshair and tooltip. Series with a null value are skipped at that point. */
+function drawLine(el, w, o) {
+  const { xs, series, h = 220, yMin, yMax, yFmt, xEvery = 2, aria } = o;
+  const m = { l: 44, r: 12, t: 14, b: 26 }, iw = w - m.l - m.r, ih = h - m.t - m.b, n = xs.length;
+  const X = i => m.l + iw * i / (n - 1), Y = v => m.t + ih * (1 - (v - yMin) / (yMax - yMin)), gid = el.id + '-lg';
+  const pts = se => se.values.flatMap((v, i) => v == null ? [] : [[X(i), Y(v)]]);
+  let s = `<svg viewBox="0 0 ${w} ${h}" role="img" aria-label="${aria}"><defs>${grad(gid)}</defs>`;
+  for (let k = 0; k <= 4; k++) { const v = yMin + (yMax - yMin) * k / 4; s += `<line class="gridline" x1="${m.l}" x2="${w - m.r}" y1="${Y(v)}" y2="${Y(v)}"/><text x="${m.l - 8}" y="${Y(v) + 4}" text-anchor="end">${yFmt(v)}</text>`; }
+  xs.forEach((l, i) => { if (i % xEvery === 0) s += `<text x="${X(i)}" y="${h - 6}" text-anchor="middle">${l}</text>`; });
+  const p0 = pts(series[0]); s += `<path d="${smooth(p0)} L${p0[p0.length - 1][0]},${Y(yMin)} L${p0[0][0]},${Y(yMin)}Z" class="fade" fill="url(#${gid})"/>`;
+  series.forEach(se => { s += `<path ${se.dash ? '' : 'class="draw" pathLength="1"'} fill="none" stroke="${se.color}" stroke-width="2.25" ${se.dash ? 'stroke-dasharray="5 5"' : ''} stroke-linejoin="round" stroke-linecap="round" d="${smooth(pts(se))}"/>`; });
+  const last = p0[p0.length - 1]; s += `<circle cx="${last[0]}" cy="${last[1]}" r="9" fill="var(--primary)" opacity=".16"/><circle cx="${last[0]}" cy="${last[1]}" r="4.5" fill="#fff" stroke="var(--primary)" stroke-width="2.25"/>`;
+  if (o.marker != null) s += `<line x1="${X(o.marker)}" x2="${X(o.marker)}" y1="${m.t}" y2="${m.t + ih}" stroke="var(--text)" stroke-dasharray="3 4"/><text x="${X(o.marker)}" y="${m.t + 10}" dx="-5" text-anchor="end" class="em">Today</text>`;
+  s += `<line class="cur" y1="${m.t}" y2="${m.t + ih}" stroke="var(--primary)" stroke-width="1.5" opacity="0"/><rect class="hit" x="${m.l}" y="${m.t}" width="${iw}" height="${ih}" fill="transparent"/></svg>`;
+  el.innerHTML = s;
+  const tip = tipFor(el), hit = $('.hit', el), cl = $('.cur', el);
+  hit.addEventListener('pointermove', e => {
+    const r = hit.getBoundingClientRect(), i = Math.max(0, Math.min(n - 1, Math.round((e.clientX - r.left) / r.width * (n - 1))));
+    cl.setAttribute('x1', X(i)); cl.setAttribute('x2', X(i)); cl.setAttribute('opacity', 1);
+    const rows = series.filter(se => se.values[i] != null).map(se => trow(se.color, se.name || 'Value', yFmt(se.values[i]))).join('');
+    if (rows) tip.show(`<div class="th">${o.tipHead ? o.tipHead(xs[i]) : xs[i]}</div>${rows}`, X(i), Y(Math.max(...series.map(se => se.values[i]).filter(v => v != null))));
+  });
+  hit.addEventListener('pointerleave', () => { cl.setAttribute('opacity', 0); tip.hide(); });
+}
+
+/* mounts */
+mount('chart-dash', (el, w) => drawPlan(el, w, '#dash-readout', w < 480 ? 280 : 330));
+mount('chart-land', (el, w) => drawPlan(el, w, '#land-readout', w < 480 ? 270 : 340));
+/* landing: in-page anchor links scroll to their section without leaving the landing route */
+document.addEventListener('click', e => {
+  const a = e.target.closest('[data-scroll]'); if (!a) return; e.preventDefault();
+  const t = document.getElementById(a.dataset.scroll); if (t) { t.scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' }); t.setAttribute('tabindex', '-1'); t.focus({ preventScroll: true }); }
+});
+/* landing: mobile drawer, active-section indicator, hourly usage bars (peak hours highlighted) */
+const landDrawer = $('#landDrawer');
+function setLandDrawer(open) {
+  landDrawer.classList.toggle('open', open); $('#landScrim').hidden = !open;
+  $('#landMenuBtn').setAttribute('aria-expanded', String(open));
+  if (open) $('#landCloseBtn').focus(); else if (landDrawer.contains(document.activeElement)) $('#landMenuBtn').focus();
+}
+$('#landMenuBtn').onclick = () => setLandDrawer(true);
+$('#landCloseBtn').onclick = $('#landScrim').onclick = () => setLandDrawer(false);
+landDrawer.addEventListener('click', e => { if (e.target.closest('a')) setLandDrawer(false); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape') setLandDrawer(false); else if (landDrawer.classList.contains('open')) trapTab(landDrawer, e); });
+window.addEventListener('hashchange', () => setLandDrawer(false));
+const spy = new IntersectionObserver(es => es.forEach(en => {
+  if (!en.isIntersecting) return;
+  $$('#landLinks a').forEach(a => a.setAttribute('aria-current', String(a.dataset.scroll === en.target.id)));
+}), { rootMargin: '-45% 0px -50% 0px' });
+['features', 'how', 'pricing', 'faq'].forEach(id => spy.observe(document.getElementById(id)));
+$$('[data-hours]').forEach(el => el.innerHTML = load.map((v, h) => `<i class="${h >= PEAK_START && h < PEAK_END ? 'pk' : ''}" style="height:${Math.round(v / Math.max(...load) * 100)}%"></i>`).join(''));
+/* live sample clock: the Now line and the countdown advance each minute */
+setInterval(() => {
+  if (NOW_H === 23 && NOW_MIN === 59) return;
+  if (++NOW_MIN === 60) { NOW_MIN = 0; NOW_H++; }
+  $$('[data-clock]').forEach(e => e.textContent = `${pad(NOW_H)}:${pad(NOW_MIN)}`);
+  if (!$('.chart:hover')) Object.values(charts).forEach(c => c());
+  renderDash();
+}, 60000);
+/* header hairline appears only once the page scrolls */
+const stickyBars = [$('.land-nav'), $('.topbar')];
+addEventListener('scroll', () => stickyBars.forEach(n => n.classList.toggle('scrolled', scrollY > 4)), { passive: true });
+/* landing cards fade up once as they enter the viewport */
+if (!REDUCE.matches) {
+  const rv = new IntersectionObserver(es => es.forEach(en => {
+    if (!en.isIntersecting) return; const t = en.target; rv.unobserve(t); t.classList.add('in');
+    setTimeout(() => { t.classList.remove('rv', 'in'); t.style.removeProperty('--d'); }, 1000);
+  }), { rootMargin: '0px 0px -8% 0px' });
+  $$('[data-route="landing"] .cell, [data-route="landing"] .plan-card, [data-route="landing"] .steps li').forEach(el => {
+    el.style.setProperty('--d', [...el.parentElement.children].indexOf(el) * 60 + 'ms'); el.classList.add('rv'); rv.observe(el);
+  });
+}
+mount('chart-plan', (el, w) => drawPlan(el, w, '#plan-readout', w < 480 ? 250 : 300));
+
+/* Savings */
+const savData = {
+  week: { labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'], v: [492, 515, 388, 540, 470, 561, 486], t: 'Daily savings', word: 'day' },
+  month: { labels: [...Array(30)].map((_, i) => String(i + 1)), v: [...Array(30)].map((_, i) => Math.round(420 + 130 * Math.sin(i * 1.3) + (i % 7 === 3 ? -150 : 0) + (i % 5) * 12)), t: 'Daily savings', word: 'day' },
+  year: { labels: ['Nov', 'Dec', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct'], v: [9800, 8600, 8100, 9900, 13200, 15600, 16900, 15200, 14100, 15400, 14600, 14820], t: 'Monthly savings', word: 'month' }
+};
+let savR = 'month';
+function renderSav() {
+  const d = savData[savR], tot = d.v.reduce((a, b) => a + b, 0);
+  $('#sv-total').textContent = 'PKR ' + fmt(tot); $('#sv-total-sub').textContent = `Average PKR ${fmt(tot / d.v.length)} per ${d.word}`;
+  $('#sv-exp').textContent = 'PKR ' + fmt(tot * .17); $('#sv-title').textContent = d.t;
+  $('#sav-break').innerHTML = [['Solar used directly', .52], ['Battery shifted to peak hours', .31], ['Export credit', .17]].map(([k, p]) =>
+    `<div><div class="row between small"><span>${k}</span><b class="num">PKR ${fmt(tot * p)} · ${Math.round(p * 100)}%</b></div><div class="bar" style="margin-top:6px"><i style="width:${p * 100}%"></i></div></div>`).join('');
+  $('#sav-table').innerHTML = `<thead><tr><th>${d.word[0].toUpperCase() + d.word.slice(1)}</th><th class="r">Saved (PKR)</th></tr></thead><tbody>${d.v.map((v, i) => `<tr><td>${d.labels[i]}</td><td class="r">${fmt(v)}</td></tr>`).join('')}</tbody>`;
+  $$('#savRange button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.r === savR)));
+  charts['chart-sav'] && charts['chart-sav']();
+}
+mount('chart-sav', (el, w) => { const d = savData[savR]; drawBars(el, w, { values: d.v, labels: d.labels, h: 240, labelEvery: savR === 'month' ? (w < 500 ? 5 : 2) : 1, showVals: savR !== 'month', tipName: 'Saved', tipFmt: v => 'PKR ' + fmt(v), tipHead: l => savR === 'month' ? 'Day ' + l : l, aria: `Bar chart of ${d.t.toLowerCase()} in rupees over the selected range.` }); });
+$('#savRange').onclick = e => { const b = e.target.closest('button'); if (b) { savR = b.dataset.r; renderSav(); } };
+onShow.savings = renderSav;
+
+/* Outage risk */
+const risk = [4, 4, 5, 5, 6, 6, 7, 8, 8, 9, 10, 11, 14, 17, 21, 26, 30, 34, 36, 38, 33, 24, 14, 8];
+const riskLevel = v => v > 30 ? 2 : v >= 15 ? 1 : 0;
+mount('chart-risk', (el, w) => drawBars(el, w, { values: risk, labels: H.map(h => pad(h)), h: 240, level: risk.map(riskLevel), rows: 10, max: 40, showVals: true, valFmt: v => v + '%', axisFmt: v => v + '%', tipName: 'Outage risk', tipFmt: v => v + '%', tipHead: l => l + ':00', labelEvery: w < 560 ? 3 : 1, aria: 'Bar chart of outage risk by hour. Risk is lowest overnight and rises to 38 percent at 19:00.' }));
+onShow.outage = () => { $('#risk-table').innerHTML = `<thead><tr><th>Hour</th><th class="r">Risk</th><th>Level</th></tr></thead><tbody>${risk.map((v, i) => `<tr><td>${pad(i)}:00</td><td class="r">${v}%</td><td>${v > 30 ? 'High' : v >= 15 ? 'Medium' : 'Low'}</td></tr>`).join('')}</tbody>`; };
+
+/* Soiling */
+const soilHist = [0, 0.6, 1.3, 2.0, 2.8, 3.8, 4.8, 5.9, 7.0, 8.4, 9.8];
+const soilFc = [...Array(10).fill(null), 9.8, 10.9, 12.0, 13.0, 14.0];
+mount('chart-soil', (el, w) => drawLine(el, w, { xs: [...Array(15)].map((_, i) => i), series: [{ values: [...soilHist, ...Array(4).fill(null)], color: 'var(--primary)', name: 'Output lost' }, { values: soilFc, color: 'var(--primary)', dash: true, name: 'Forecast' }], tipHead: l => 'Day ' + l, yMin: 0, yMax: 16, yFmt: v => v + '%', xEvery: 2, marker: 10, h: 230, aria: 'Line chart of output lost to dust since the last wash: 9.8 percent today, forecast to reach 14 percent in four more days.' }));
+function washCalc() {
+  const cost = Math.max(0, +($('#wash-cost').value.replace(/[^\d.]/g, '')) || 0), kwh = 3.4, rate = 35, days = 14, loss = kwh * rate * days, net = loss - cost;
+  $('#wash-result').innerHTML = `<div class="plan-card" style="padding:var(--sp-4);background:var(--subtle)"><div class="small muted">Dust cost until next rain</div><b class="num" style="font-size:1.125rem">${kwh} kWh × PKR ${rate} × ${days} days = PKR ${fmt(loss)}</b></div>` +
+    (net > 0 ? `<div class="note wash" style="margin:var(--sp-3) 0 0"><b>Wash them.</b> Cleaning costs PKR ${fmt(cost)} and saves about <b>PKR ${fmt(net)}</b> more than it costs. Best in the next 2 days.</div>`
+      : `<div class="note wait" style="margin:var(--sp-3) 0 0"><b>Wait.</b> At PKR ${fmt(cost)}, washing costs PKR ${fmt(-net)} more than the dust would. We'll tell you when that changes.</div>`);
+}
+$('#wash-cost').addEventListener('input', washCalc); onShow.panels = washCalc;
+$('#photo').addEventListener('change', e => { const f = e.target.files[0]; if (!f) return; $('#photo-prev').src = URL.createObjectURL(f); $('#drop-empty').hidden = true; $('#drop-res').hidden = false; });
+$('#photo-reset').onclick = () => { $('#photo').value = ''; $('#drop-empty').hidden = false; $('#drop-res').hidden = true; };
+
+/* Reports */
+mount('chart-rep', (el, w) => drawBars(el, w, { values: savData.month.v, labels: savData.month.labels, h: 180, labelEvery: w < 500 ? 5 : 2, tipName: 'Saved', tipFmt: v => 'PKR ' + fmt(v), tipHead: l => 'Day ' + l, aria: 'Bar chart of daily savings for the selected month.' }));
+$('#repMonth').onchange = e => { $('#rep-title').textContent = e.target.value + ' summary'; };
+$$('.export').forEach(b => b.onclick = () => toast(`${b.dataset.kind} export would download now (preview).`));
+
+/* Alerts */
+const ALERTS = [
+  { sev: 'crit', t: 'Grid outage ended', d: 'Battery covered 1 h 40 m (2.9 kWh). Reserve held.', when: 'Today, 15:45', unread: true },
+  { sev: 'warn', t: 'Panels are dusty', d: 'Output is down 9.8%. Washing in the next 2 days would pay off.', when: 'Today, 09:00', unread: true },
+  { sev: 'info', t: 'Outage risk is medium tonight', d: 'Highest around 19:00 (38%). Reserve is 30%.', when: 'Today, 08:00', unread: true },
+  { sev: 'ok', t: 'Peak hours handled', d: 'Yesterday the battery covered 86% of your peak-hour usage.', when: 'Yesterday, 22:00' },
+  { sev: 'warn', t: 'Inverter reconnected', d: 'We lost contact for 12 minutes and caught up the missing data.', when: 'Oct 25, 11:20' },
+  { sev: 'info', t: 'Monthly report ready', d: 'Your September report is ready to download.', when: 'Oct 1, 07:00' }
+];
+const SEV = { crit: ['Critical', 'alert'], warn: ['Warning', 'alert'], info: ['Info', 'info'], ok: ['Good news', 'check'] };
+let aFilter = 'all';
+function renderAlerts() {
+  const counts = k => k === 'all' ? ALERTS.length : ALERTS.filter(a => a.sev === k).length;
+  $('#alertFilter').innerHTML = [['all', 'All'], ['crit', 'Critical'], ['warn', 'Warnings'], ['info', 'Info'], ['ok', 'Good news']].map(([k, n]) => `<button class="chip" aria-pressed="${aFilter === k}" data-k="${k}">${n} (${counts(k)})</button>`).join('');
+  const rows = ALERTS.filter(a => aFilter === 'all' || a.sev === aFilter);
+  $('#alertList').innerHTML = rows.map(a => `<li><span class="ico-chip ${a.sev}">${icon(SEV[a.sev][1])}</span><div style="flex:1"><div class="row" style="gap:8px"><b>${a.t}</b>${a.unread ? '<span class="badge b-primary">New</span>' : ''}<span class="sr-only">${SEV[a.sev][0]}</span></div><p class="small muted">${a.d}</p></div><span class="xs faint" style="white-space:nowrap">${a.when}</span></li>`).join('');
+  $('#alertEmpty').hidden = rows.length > 0;
+}
+$('#alertFilter').onclick = e => { const b = e.target.closest('button'); if (b) { aFilter = b.dataset.k; renderAlerts(); } };
+$('#markRead').onclick = () => { ALERTS.forEach(a => a.unread = false); renderAlerts(); toast('All alerts marked as read'); };
+onShow.alerts = renderAlerts;
+
+/* Assistant (scripted preview) */
+const QA = {
+  'Why was my bill higher last week?': 'Three evenings had outages during peak hours, so the battery ran down earlier and about 6 kWh came from the grid at the PKR 48 peak rate instead of 35. That added roughly PKR 78 per evening. Cloud cover on Thursday also cut solar by 31%.',
+  'How much did the battery save me in the last outage?': 'On Oct 27 the battery covered 1 h 40 m (2.9 kWh) with no grid use. Without it, you would have had no power. At peak rates that energy is worth about PKR 139.',
+  'Should I wash the panels this week?': 'Yes. Dust is costing about 3.4 kWh (PKR 119) a day and rain is 14 days away. Over that time the loss is about PKR 1,666, more than the PKR 1,500 cleaning cost. Wash within 2 days.',
+  "What's the plan for tonight?": 'The battery should be around 95% by 18:00 and will cover most of your 18:00–22:00 usage. About 1.8 kWh will come from the grid. It will not charge from the grid at peak rates, and 30% stays in reserve for outages.'
+};
+function addMsg(cls, txt, src) { const m = document.createElement('div'); m.className = 'msg ' + cls; m.textContent = txt; if (src) { const s = document.createElement('span'); s.className = 'src'; s.textContent = src; m.append(s); } $('#msgs').append(m); $('#msgs').scrollTop = 1e6; return m; }
+function ask(q) {
+  if (!q.trim()) return; addMsg('u', q);
+  const t = document.createElement('div'); t.className = 'msg a'; t.innerHTML = '<span class="typing" aria-label="Assistant is typing"><i></i><i></i><i></i></span>'; $('#msgs').append(t); $('#msgs').scrollTop = 1e6;
+  setTimeout(() => { t.remove(); addMsg('a', QA[q] || "I can explain your bills, battery behaviour, outages and panel health. Try one of the suggested questions. In the live product I'll answer from your own data.", QA[q] ? 'Based on sample data from the last 7 days' : ''); }, 900);
+}
+$('#suggest').innerHTML = Object.keys(QA).map(q => `<button class="chip" type="button">${q}</button>`).join('');
+$('#suggest').onclick = e => { const b = e.target.closest('button'); if (b) ask(b.textContent); };
+$('#chatForm').onsubmit = e => { e.preventDefault(); const v = $('#chatIn').value; $('#chatIn').value = ''; ask(v); };
+
+/* Settings */
+const NOTIFY = [['Grid outage starts or ends', 1, 1], ['High outage risk tonight', 1, 1], ['Peak hours starting soon', 1, 0], ['Panels need cleaning', 1, 1], ['Inverter offline', 1, 1], ['Weekly savings digest', 0, 1]];
+$('#notifyBody').innerHTML = NOTIFY.map(([n, a, e], i) => `<tr><td>${n}</td><td class="r"><label class="switch"><input type="checkbox" ${a ? 'checked' : ''} aria-label="${n}, in app"><span></span></label></td><td class="r"><label class="switch"><input type="checkbox" ${e ? 'checked' : ''} aria-label="${n}, email"><span></span></label></td></tr>`).join('');
+const tabs = $$('#setTabs [role=tab]');
+function selTab(t) { tabs.forEach(b => { const on = b === t; b.setAttribute('aria-selected', on); b.tabIndex = on ? 0 : -1; $('#' + b.getAttribute('aria-controls')).hidden = !on; }); moveTabInd(); }
+tabs.forEach((t, i) => { t.onclick = () => selTab(t); t.onkeydown = e => { const k = { ArrowRight: 1, ArrowLeft: -1 }[e.key]; if (k) { const n = tabs[(i + k + tabs.length) % tabs.length]; n.focus(); selTab(n); } }; });
+const reserve = $('#reserve');
+function reserveText() { const v = +reserve.value, hrs = (CAP * v / 100 / .9); $('#reserve-v').textContent = v + '%'; $('#reserve-h').textContent = `About ${hrs.toFixed(1)} hours of typical overnight backup, held back from daily savings.`; }
+reserve.addEventListener('input', reserveText); reserveText();
+let dirty = false;
+function setDirty(v) { dirty = v; $('#savebar').hidden = !v; }
+$('#setPanels').addEventListener('input', e => { if (!e.target.closest('form')) setDirty(true); });
+$('#setPanels').addEventListener('change', e => { if (!e.target.closest('form')) setDirty(true); });
+$('#saveSet').onclick = () => { const b = $('#saveSet'); b.innerHTML = icon('check') + 'Saved'; toast('Settings saved. Your next plan will use them.'); setTimeout(() => { setDirty(false); b.textContent = 'Save changes'; }, 1100); };
+$('#discard').onclick = () => { $$('#setPanels input:not([readonly]), #setPanels select').forEach(i => { if (i.type === 'checkbox' || i.type === 'radio') i.checked = i.defaultChecked; else i.value = i.defaultValue; }); reserveText(); setDirty(false); toast('Changes discarded'); };
+onShow.settings = () => { setDirty(false); moveTabInd(); };
+document.addEventListener('click', e => { const b = e.target.closest('[data-toast]'); if (b && b.tagName === 'BUTTON' && !b.closest('form')) toast(b.dataset.toast); });
+
+/* Delete dialog */
+const dlg = $('#delDlg');
+$('#delBtn').onclick = () => { $('#delIn').value = ''; $('#delGo').disabled = true; dlg.showModal(); $('#delIn').focus(); };
+$('#delCancel').onclick = () => dlg.close();
+$('#delIn').addEventListener('input', e => { $('#delGo').disabled = e.target.value !== 'DELETE'; });
+$('#delGo').onclick = () => { dlg.close(); toast('Account deletion requested (preview)'); location.hash = '#/login'; };
+
+/* ---------- Dashboard: flow diagram, KPIs, countdown ---------- */
+function renderDash() {
+  const s = solar[NOW_H], l = load[NOW_H], ch = sim.charge[NOW_H], g = sim.grid[NOW_H], exp = Math.max(0, s - l - ch);
+  $('#k-solar').textContent = s.toFixed(1); $('#k-soc').textContent = sim.soc[NOW_H];
+  const soc = sim.soc[NOW_H], sum = a => a.reduce((x, y) => x + y, 0), peakH = H.filter(h => h >= PEAK_START && h < PEAK_END);
+  $('#k-soc-sub').textContent = ch > 0 ? `Charging at ${ch.toFixed(1)} kW from solar` : soc >= 100 ? 'Full. Ready for peak hours' : 'Idle';
+  $('#peak-bar').setAttribute('aria-label', `Battery is ${soc} percent full ahead of peak hours`); $('#peak-bar i').style.width = soc + '%';
+  $('#peak-note').textContent = soc >= 100 ? 'Battery is full and ready for the evening peak.' : `Battery should reach about ${soc}%+ by 18:00.`;
+  const backupH = Math.max(0, (soc / 100 * CAP - CAP * .1) * .95 / l).toFixed(1); $$('[data-backup]').forEach(e => e.textContent = backupH);
+  const pkLoad = sum(peakH.map(h => load[h])), pkGrid = sum(peakH.map(h => sim.grid[h]));
+  $('#plan-ban-t').textContent = `Tonight, the battery covers ${Math.round((1 - pkGrid / pkLoad) * 100)}% of your peak-hour usage`;
+  $('#plan-ban-d').textContent = `From 18:00 to 22:00 your home uses ${pkLoad.toFixed(1)} kWh. The battery supplies ${(pkLoad - pkGrid).toFixed(1)} kWh and the grid the remaining ${pkGrid.toFixed(1)} kWh. The last ${Math.round(RESERVE_FLOOR / CAP * 100)}% of the battery is kept back for outages, and it is never charged from the grid at peak rates.`;
+  $('#pl-solar').textContent = sum(solar).toFixed(1); $('#pl-load').textContent = sum(load).toFixed(1); $('#pl-grid').textContent = sum(sim.grid).toFixed(1);
+  const nodes = (x, y, ic, on) => `<rect class="node ${on ? 'on' : ''}" x="${x - 30}" y="${y - 30}" width="60" height="60"/><g transform="translate(${x - 12} ${y - 12})" class="ic">${$(`#i-${ic}`).innerHTML}</g>`;
+  const line = (d, on, rev, kw = 0) => `<path class="ln ${on ? 'on' : ''} ${rev ? 'rev' : ''}" style="animation-duration:${(1.8 - Math.min(kw, 6) * .2).toFixed(2)}s" d="${d}"/>`;
+  $('#flow').innerHTML = `<svg viewBox="0 0 360 232" role="img" aria-label="Energy flow. Solar produces ${s.toFixed(1)} kilowatts. Home uses ${l.toFixed(1)}. Battery charging ${ch.toFixed(1)}. Grid ${g > 0 ? 'importing ' + g.toFixed(1) : 'idle'}.">` +
+    line('M180 68 V118', s > 0, false, s) + line('M82 150 H148', g > 0 || exp > 0, exp > 0 && g === 0, g || exp) + line('M212 150 H278', ch > 0, false, ch) +
+    nodes(180, 36, 'sun', s > 0) + `<text class="nl" x="222" y="32">Solar</text><text class="nv" x="222" y="50">${s.toFixed(1)} kW</text>` +
+    nodes(180, 150, 'home', true) + `<text class="nl" x="180" y="202" text-anchor="middle">Home</text><text class="nv" x="180" y="220" text-anchor="middle">${l.toFixed(1)} kW</text>` +
+    nodes(50, 150, 'grid', g > 0 || exp > 0) + `<text class="nl" x="50" y="202" text-anchor="middle">${exp > 0 ? 'Exporting' : 'Grid'}</text><text class="nv" x="50" y="220" text-anchor="middle">${g > 0 ? g.toFixed(1) + ' kW' : exp > 0 ? exp.toFixed(1) + ' kW' : 'Idle'}</text>` +
+    nodes(310, 150, 'battery', ch > 0) + `<text class="nl" x="310" y="202" text-anchor="middle">Battery ${sim.soc[NOW_H]}%</text><text class="nv" x="310" y="220" text-anchor="middle">${ch > 0 ? '+' + ch.toFixed(1) + ' kW' : '0 kW'}</text></svg>`;
+  $('#flow-sum').textContent = `Solar ${s.toFixed(1)} kW is powering your home (${l.toFixed(1)} kW)` + (ch > 0 ? ` and charging the battery (${ch.toFixed(1)} kW)` : '') + (exp > 0 ? `, with ${exp.toFixed(1)} kW exported to the grid` : '') + (g > 0 ? `, with ${g.toFixed(1)} kW coming from the grid` : '. No grid power is being used') + '.';
+  const mins = (PEAK_START * 60) - (NOW_H * 60 + NOW_MIN); $('#peak-cd').textContent = mins > 0 ? `${Math.floor(mins / 60)}h ${mins % 60}m` : 'Now';
+}
+onShow.dashboard = renderDash;
+
+/* plan table */
+onShow.plan = () => { $('#plan-table').innerHTML = `<thead><tr><th>Hour</th><th class="r">Solar kW</th><th class="r">Usage kW</th><th class="r">Battery %</th><th class="r">Grid kW</th></tr></thead><tbody>${H.map(h => `<tr><td>${pad(h)}:00</td><td class="r">${solar[h].toFixed(1)}</td><td class="r">${load[h].toFixed(1)}</td><td class="r">${sim.soc[h]}</td><td class="r">${sim.grid[h].toFixed(1)}</td></tr>`).join('')}</tbody>`; };
+
+/* ---------- Init ---------- */
+buildFields(); buildNav(); initThemes(); renderDash(); $$('.auth-brand').forEach(b => b.insertAdjacentHTML('beforeend', authIll())); route();
+</script>
+</body>
+</html>

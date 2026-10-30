@@ -1,0 +1,63 @@
+/* ---------- Tokens: quiet neutrals, one solid primary ---------- */
+:root {
+  --font:
+    var(--font-inter), 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, Arial, sans-serif;
+  --canvas: #f1f5f9;
+  --text: #0f172a;
+  --muted: #475569;
+  --faint: #586577;
+  --line: #dce3eb;
+  --line-strong: #c3cdd9;
+  --subtle: #e8edf3;
+  --well: #f8fafc;
+  --ease: 150ms cubic-bezier(0.16, 1, 0.3, 1);
+  --ring: 0 0 0 2px var(--canvas), 0 0 0 4px var(--primary);
+  --ok: #166534;
+  --ok-soft: #ecfdf3;
+  --warn: #92400e;
+  --warn-soft: #fef6e7;
+  --bad: #b91c1c;
+  --bad-soft: #fef2f2;
+  --r: 10px;
+  --r-sm: 8px;
+  --sp-1: 4px;
+  --sp-2: 8px;
+  --sp-3: 12px;
+  --sp-4: 16px;
+  --sp-5: 24px;
+  --sp-6: 32px;
+  --sp-7: 48px;
+  --sp-8: 80px;
+  --sidebar: 248px;
+}
+[data-theme='navy'] {
+  --primary: #0d1836;
+  --hover: #070e22;
+  --accent: #f59e0b;
+  --ov: rgba(255, 255, 255, 0.12);
+  --ov-lo: rgba(255, 255, 255, 0.07);
+}
+:root {
+  --tint: color-mix(in srgb, var(--primary) 8%, #fff);
+  --tint-2: color-mix(in srgb, var(--primary) 16%, #fff);
+  --tint-3: color-mix(in srgb, var(--primary) 32%, #fff);
+  /* names used by the screen markup */
+  --bg: #fff;
+  --surface: #fff;
+  --border: var(--line);
+  --border-strong: var(--line-strong);
+  --primary-soft: var(--tint);
+  --primary-line: var(--tint-3);
+  --primary-hover: var(--hover);
+  --c-solar: var(--primary);
+  --c-usage: var(--text);
+  --t1: var(--tint);
+  --t2: var(--tint-2);
+  --t3: var(--tint-3);
+  --rule: var(--line);
+}
+
+/* Brand colour for actions and data; a warm accent marks solar generation */
+:root {
+  --c-solar: var(--accent);
+}

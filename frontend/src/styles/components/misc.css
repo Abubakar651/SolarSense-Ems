@@ -1,0 +1,229 @@
+/* ---------- Lists, chips, tabs, chat, misc ---------- */
+.list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.list li {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+  padding: 16px 0;
+  border-bottom: 1px solid var(--line);
+}
+.list li:first-child {
+  padding-top: 4px;
+}
+.list li:last-child {
+  border-bottom: 0;
+  padding-bottom: 0;
+}
+.ico-chip {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  display: grid;
+  place-items: center;
+  flex: none;
+  background: var(--tint);
+  color: var(--primary);
+}
+.ico-chip.crit {
+  background: var(--bad-soft);
+  color: var(--bad);
+}
+.ico-chip.warn {
+  background: var(--warn-soft);
+  color: var(--warn);
+}
+.ico-chip.info {
+  background: var(--tint);
+  color: var(--primary);
+}
+.ico-chip.ok {
+  background: var(--ok-soft);
+  color: var(--ok);
+}
+.chips {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.chip {
+  min-height: 36px;
+  padding: 0 14px;
+  border-radius: 99px;
+  border: 1px solid var(--line-strong);
+  background: #fff;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  color: var(--text);
+}
+.chip:hover {
+  background: var(--subtle);
+}
+.chip[aria-pressed='true'] {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: #fff;
+}
+.tabs {
+  display: flex;
+  gap: 4px;
+  border-bottom: 1px solid var(--line);
+  margin-bottom: var(--sp-5);
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: none;
+}
+.tabs::-webkit-scrollbar {
+  display: none;
+}
+.tabs button {
+  border: 0;
+  background: none;
+  min-height: 44px;
+  padding: 0 14px;
+  font-weight: 500;
+  color: var(--muted);
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  white-space: nowrap;
+}
+.tabs button:hover {
+  color: var(--text);
+}
+.tabs button[aria-selected='true'] {
+  color: var(--primary);
+  border-color: var(--primary);
+  font-weight: 600;
+}
+.savebar:not([hidden]) {
+  animation: slideup 0.2s ease-out;
+}
+@keyframes slideup {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+}
+.savebar {
+  position: sticky;
+  bottom: 12px;
+  margin-top: var(--sp-5);
+  background: var(--text);
+  color: #fff;
+  border-radius: var(--r);
+  padding: 12px 16px;
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  box-shadow: 0 10px 30px rgba(17, 24, 39, 0.25);
+  z-index: 20;
+}
+.savebar .btn-secondary {
+  background: transparent;
+  color: #fff;
+  border-color: #6b7280;
+}
+.savebar .btn-secondary:hover {
+  background: #1f2937;
+}
+.drop {
+  border: 1px dashed var(--line-strong);
+  border-radius: var(--r);
+  padding: 24px;
+  text-align: center;
+  background: var(--subtle);
+}
+.drop img {
+  max-width: 100%;
+  max-height: 220px;
+  border-radius: 8px;
+  margin: 0 auto 12px;
+  display: block;
+}
+.plan-card {
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: var(--sp-5);
+}
+.toast-wrap {
+  position: fixed;
+  left: 50%;
+  bottom: 20px;
+  transform: translateX(-50%);
+  z-index: 300;
+  display: grid;
+  gap: 8px;
+  width: min(92vw, 420px);
+}
+.toast {
+  background: var(--text);
+  color: #fff;
+  border-radius: 10px;
+  padding: 12px 16px;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  box-shadow: 0 10px 30px rgba(17, 24, 39, 0.25);
+  font-size: 0.9375rem;
+}
+dialog {
+  border: 0;
+  border-radius: 14px;
+  padding: 0;
+  max-width: min(92vw, 460px);
+  width: 100%;
+  box-shadow: 0 20px 60px rgba(17, 24, 39, 0.3);
+}
+dialog::backdrop {
+  background: rgba(17, 24, 39, 0.5);
+}
+dialog .d-in {
+  padding: var(--sp-5);
+}
+.report-sheet {
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: var(--sp-5);
+  background: #fff;
+}
+.empty {
+  text-align: center;
+  padding: 40px 16px;
+  color: var(--muted);
+}
+.empty .mail-ic {
+  margin: 0 auto 12px;
+}
+.big {
+  font-size: 2.5rem;
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  line-height: 1.05;
+  font-variant-numeric: tabular-nums;
+}
+.k-low,
+.k-med,
+.k-high {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+  background: var(--primary);
+}
+.k-low {
+  opacity: 0.3;
+}
+.k-med {
+  opacity: 0.62;
+}
+/* Settings cards span the page; paired fields fill the width, a lone field stays at a readable width. */
+[data-route='settings'] .card > .field {
+  max-width: 560px;
+}

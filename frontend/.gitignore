@@ -1,0 +1,21 @@
+# Dependencies and build output
+node_modules/
+.next/
+out/
+coverage/
+*.tsbuildinfo
+next-env.d.ts
+
+# Test and parity output
+playwright-report/
+test-results/
+parity-report/
+
+# Env (only .env.example is tracked)
+.env
+.env*.local
+
+# The repo-root .gitignore has an unanchored `lib/` rule meant for Python;
+# it must not hide src/lib/ here.
+!lib/
+!src/lib/

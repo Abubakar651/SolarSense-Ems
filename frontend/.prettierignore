@@ -1,0 +1,8 @@
+design/
+.next/
+node_modules/
+parity-report/
+playwright-report/
+test-results/
+coverage/
+pnpm-lock.yaml

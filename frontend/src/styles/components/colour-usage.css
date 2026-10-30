@@ -1,0 +1,8 @@
+/* ---------- Colour usage ---------- */
+.hl {
+  color: var(--primary);
+  font-style: normal;
+}
+.kpi .val.pri {
+  color: var(--primary);
+}

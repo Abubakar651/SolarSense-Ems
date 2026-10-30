@@ -1,0 +1,68 @@
+/* ---------- Flow diagram ---------- */
+.flow svg {
+  width: 100%;
+  max-width: 440px;
+  margin: 0 auto;
+  display: block;
+}
+.flow text {
+  font-family: var(--font);
+}
+.flow .nl {
+  font-size: 12px;
+  fill: var(--muted);
+}
+.flow .nv {
+  font-size: 14px;
+  font-weight: 600;
+  fill: var(--text);
+  font-variant-numeric: tabular-nums;
+}
+.flow .node {
+  fill: #fff;
+  stroke: var(--line-strong);
+  stroke-width: 1.5;
+  rx: 14;
+}
+.flow .node.on {
+  fill: var(--tint);
+  stroke: var(--primary);
+}
+.flow .ic {
+  stroke: var(--muted);
+  fill: none;
+  stroke-width: 1.75;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.flow .node.on + .ic {
+  stroke: var(--primary);
+}
+.flow .ln {
+  stroke: var(--line-strong);
+  stroke-width: 1.5;
+  fill: none;
+  stroke-dasharray: 3 5;
+}
+.flow .ln.on {
+  stroke: var(--primary);
+  stroke-width: 2.5;
+  stroke-dasharray: 7 7;
+  animation: dash 1s linear infinite;
+}
+.flow .ln.on.rev {
+  animation-direction: reverse;
+}
+@keyframes dash {
+  to {
+    stroke-dashoffset: -14;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .flow .ln.on {
+    animation: none;
+  }
+  * {
+    transition-duration: 0.01ms !important;
+  }
+}

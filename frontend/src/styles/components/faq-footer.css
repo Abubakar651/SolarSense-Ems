@@ -1,0 +1,81 @@
+.faq {
+  max-width: 720px;
+}
+.faq details {
+  border-bottom: 1px solid var(--line);
+  padding: 2px 0;
+}
+.faq summary {
+  cursor: pointer;
+  font-weight: 500;
+  min-height: 52px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  list-style: none;
+  transition: color var(--ease);
+}
+.faq summary:hover {
+  color: var(--primary);
+}
+.faq summary::-webkit-details-marker {
+  display: none;
+}
+:root {
+  interpolate-size: allow-keywords;
+}
+.faq details::details-content {
+  block-size: 0;
+  overflow: clip;
+  transition:
+    block-size 0.25s ease,
+    content-visibility 0.25s allow-discrete;
+}
+.faq details[open]::details-content {
+  block-size: auto;
+}
+.faq summary::after {
+  content: '';
+  width: 14px;
+  height: 14px;
+  flex: none;
+  background:
+    linear-gradient(var(--faint), var(--faint)) center/100% 1.5px no-repeat,
+    linear-gradient(var(--faint), var(--faint)) center/1.5px 100% no-repeat;
+  transition: background-size 0.2s ease;
+}
+.faq details[open] summary::after {
+  background-size:
+    100% 1.5px,
+    1.5px 0;
+}
+.faq p {
+  color: var(--muted);
+  padding: 0 0 16px;
+  max-width: 60ch;
+}
+.land-foot {
+  padding: var(--sp-6) 0;
+  border-top: 1px solid var(--line);
+  color: var(--faint);
+  font-size: 0.875rem;
+}
+.land-foot .wrap {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+.land-foot a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  color: var(--muted);
+  text-decoration: none;
+  transition: color var(--ease);
+}
+.land-foot a:hover {
+  color: var(--primary);
+}

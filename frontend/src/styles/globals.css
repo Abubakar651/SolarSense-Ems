@@ -1,0 +1,19 @@
+@layer theme, base, components, utilities;
+@import 'tailwindcss/theme.css' layer(theme);
+@import 'tailwindcss/utilities.css' layer(utilities);
+
+@import './tokens.css';
+@import './theme.css';
+@import './base.css';
+@import './components/buttons-forms.css';
+@import './components/cards-data.css';
+@import './components/app-shell.css';
+@import './components/auth.css';
+@import './components/flow.css';
+@import './components/misc.css';
+@import './components/colour-usage.css';
+@import './components/landing.css';
+@import './components/sidebar.css';
+@import './components/illustrations.css';
+@import './components/motion.css';
+@import './components/faq-footer.css';

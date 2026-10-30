@@ -1,0 +1,17 @@
+/* Maps the runtime design tokens (tokens.css) into Tailwind's theme.
+   `inline` keeps utilities pointing at var(--token), so they follow the active data-theme. */
+@theme inline {
+  --color-canvas: var(--canvas);
+  --color-text: var(--text);
+  --color-muted: var(--muted);
+  --color-faint: var(--faint);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-subtle: var(--subtle);
+  --color-well: var(--well);
+  --color-primary: var(--primary);
+  --color-primary-hover: var(--hover);
+  --color-accent: var(--accent);
+  --color-tint: var(--tint);
+  --font-sans: var(--font);
+}

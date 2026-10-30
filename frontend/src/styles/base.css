@@ -1,0 +1,134 @@
+* {
+  box-sizing: border-box;
+  scrollbar-width: thin;
+  scrollbar-color: var(--line-strong) transparent;
+}
+html {
+  -webkit-text-size-adjust: 100%;
+}
+body {
+  margin: 0;
+  background: var(--canvas);
+  color: var(--text);
+  font: 400 16px/1.6 var(--font);
+  font-variant-numeric: tabular-nums;
+  -webkit-font-smoothing: antialiased;
+  accent-color: var(--primary);
+  caret-color: var(--primary);
+}
+::selection {
+  background: var(--tint-3);
+}
+h1,
+h2,
+h3,
+h4 {
+  margin: 0;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+  font-weight: 600;
+  text-wrap: balance;
+}
+h1 {
+  font-size: 1.75rem;
+}
+h2 {
+  font-size: 1.0625rem;
+}
+h3 {
+  font-size: 1rem;
+}
+p {
+  margin: 0;
+}
+a {
+  color: var(--primary);
+  text-underline-offset: 3px;
+}
+a:not([class]):hover {
+  color: var(--hover);
+}
+button,
+input,
+select,
+textarea {
+  font: inherit;
+  color: inherit;
+}
+:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+.btn:focus-visible,
+.icon-btn:focus-visible,
+.chip:focus-visible,
+.tabs button:focus-visible,
+.seg button:focus-visible,
+.nav a:focus-visible,
+.land-links a:focus-visible,
+.land-drawer a:focus-visible,
+.menu a:focus-visible,
+.menu button:focus-visible,
+.faq summary:focus-visible {
+  outline: none;
+  box-shadow: var(--ring);
+}
+[hidden] {
+  display: none !important;
+}
+.muted,
+.faint {
+  color: var(--muted);
+}
+.small {
+  font-size: 0.875rem;
+}
+.xs {
+  font-size: 0.8125rem;
+}
+.num {
+  font-variant-numeric: tabular-nums;
+}
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+.skip {
+  position: absolute;
+  left: 12px;
+  top: -60px;
+  background: var(--primary);
+  color: #fff;
+  padding: 10px 16px;
+  border-radius: 8px;
+  z-index: 200;
+  text-decoration: none;
+}
+.skip:focus {
+  top: 12px;
+}
+.i {
+  width: 20px;
+  height: 20px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.75;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  flex: none;
+}
+.i.lg {
+  width: 24px;
+  height: 24px;
+}
+.mark {
+  width: 28px;
+  height: 28px;
+  color: var(--primary);
+  flex: none;
+}

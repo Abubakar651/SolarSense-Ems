@@ -1,0 +1,117 @@
+/* ---------- Illustrations ---------- */
+.ill {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+.step-ill {
+  background: var(--well);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: var(--sp-3) var(--sp-4);
+  margin-bottom: var(--sp-4);
+  max-width: 280px;
+}
+.ill-empty {
+  display: block;
+  width: 96px;
+  height: 72px;
+  margin: 0 auto 12px;
+}
+.spin {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: spin 30s linear infinite;
+}
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+.fl {
+  stroke-dasharray: 3 4;
+  animation: dash 1s linear infinite;
+}
+.blink {
+  animation: bars 2.4s ease-in-out infinite;
+}
+.blink.b2 {
+  animation-delay: 0.3s;
+}
+.blink.b3 {
+  animation-delay: 0.6s;
+}
+@keyframes bars {
+  0%,
+  100% {
+    opacity: 0.25;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+.bob {
+  animation: bob 3s ease-in-out infinite;
+}
+@keyframes bob {
+  50% {
+    transform: translateY(-3px);
+  }
+}
+.auth-ill {
+  margin-top: auto;
+  width: 100%;
+  max-width: 480px;
+  align-self: center;
+  height: auto;
+  opacity: 0.95;
+}
+.auth-ill .sunrays {
+  animation: raypulse 4s ease-in-out infinite;
+}
+@keyframes raypulse {
+  50% {
+    opacity: 0.35;
+  }
+}
+.cta-panel {
+  position: relative;
+  overflow: hidden;
+}
+.cta-panel > *:not(.cta-ill) {
+  position: relative;
+  z-index: 1;
+}
+.cta-ill {
+  position: absolute;
+  left: 50%;
+  bottom: -4px;
+  transform: translateX(-50%);
+  width: min(900px, 150%);
+  height: auto;
+  pointer-events: none;
+}
+.cta-ill circle {
+  fill: none;
+  stroke: #fff;
+  stroke-opacity: 0.14;
+  stroke-width: 2;
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: ripple 6s ease-in-out infinite;
+}
+.cta-ill circle:nth-child(2) {
+  animation-delay: 0.6s;
+}
+.cta-ill circle:nth-child(3) {
+  animation-delay: 1.2s;
+}
+.cta-ill circle:nth-child(4) {
+  animation-delay: 1.8s;
+}
+@keyframes ripple {
+  50% {
+    transform: scale(1.05);
+    stroke-opacity: 0.06;
+  }
+}

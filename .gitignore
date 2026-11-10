@@ -57,5 +57,8 @@ env/
 .coverage
 htmlcov/
 
+# Graphify knowledge graph
+graphify-out/
+
 # Office temporary lock files
 .~lock.*#

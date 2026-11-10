@@ -351,3 +351,39 @@ class ProsumerCompareResponse(BaseModel):
     grandfathered: ProsumerSettlementItem
     net_billing_2026: ProsumerSettlementItem
     grandfathered_advantage_pkr: str
+
+
+class InverterLiveResponse(BaseModel):
+    model_config = ConfigDict(frozen=True)
+
+    timestamp_iso: str
+    model_name: str
+    serial_number: str
+    battery_soc_pct: float
+    battery_soh_pct: float
+    battery_voltage_v: float
+    battery_current_a: float
+    battery_power_w: float
+    battery_mode: str
+    battery_temp_c: float
+    total_pv_power_w: float
+    pv1_power_w: float
+    pv2_power_w: float
+    house_consumption_w: float
+    grid_voltage_v: float
+    grid_frequency_hz: float
+    grid_active_power_w: float
+    grid_mode: str
+    is_grid_connected: bool
+    is_blackout: bool
+    backup_voltage_v: float
+    backup_power_w: float
+    work_mode: str
+    today_pv_kwh: float
+    today_export_kwh: float
+    today_import_kwh: float
+    today_load_kwh: float
+    today_battery_charge_kwh: float
+    today_battery_discharge_kwh: float
+    inverter_temp_air_c: float
+    inverter_temp_radiator_c: float

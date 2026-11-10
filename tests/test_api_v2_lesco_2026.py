@@ -124,3 +124,54 @@ def test_soiling_endpoint_dynamic_valuation(client):
     assert d["daily_revenue_lost_pkr"] > 0.0
     assert d["decision"] in ("TRIGGER CLEANING CREW", "HOLD (WAIT FOR NATURAL RAIN)")
 
+
+def test_v2_inverter_live_endpoint(client):
+    from unittest.mock import patch
+    from src.data_engineering.goodwe_live_reader import GoodWeLiveTelemetryDTO
+
+    mock_dto = GoodWeLiveTelemetryDTO(
+        timestamp_iso="2026-11-10T20:00:00+05:00",
+        model_name="GW6000ES20",
+        serial_number="9010KESC253L0146",
+        battery_soc_pct=88.0,
+        battery_soh_pct=100.0,
+        battery_voltage_v=52.2,
+        battery_current_a=38.5,
+        battery_power_w=-2000.0,
+        battery_mode="Discharge",
+        battery_temp_c=26.5,
+        pv1_voltage_v=0.0,
+        pv1_power_w=0.0,
+        pv2_voltage_v=0.0,
+        pv2_power_w=0.0,
+        total_pv_power_w=0.0,
+        grid_voltage_v=0.0,
+        grid_frequency_hz=0.0,
+        grid_active_power_w=0.0,
+        grid_mode="Not connected",
+        is_grid_connected=False,
+        is_blackout=True,
+        house_consumption_w=2000.0,
+        backup_voltage_v=228.3,
+        backup_power_w=430.0,
+        work_mode="Normal (Off-Grid)",
+        today_pv_kwh=13.2,
+        today_export_kwh=12.6,
+        today_import_kwh=0.2,
+        today_load_kwh=16.1,
+        today_battery_charge_kwh=0.0,
+        today_battery_discharge_kwh=0.5,
+        inverter_temp_air_c=38.0,
+        inverter_temp_radiator_c=37.0,
+    )
+    with patch("src.data_engineering.goodwe_live_reader.GoodWeLiveReader.fetch_telemetry", return_value=mock_dto):
+        r = client.get("/api/v2/inverter/live")
+        assert r.status_code == 200
+        data = r.json()
+        assert data["model_name"] == "GW6000ES20"
+        assert data["serial_number"] == "9010KESC253L0146"
+        assert data["battery_soc_pct"] == 88.0
+        assert data["is_blackout"] is True
+        assert data["is_grid_connected"] is False
+
+

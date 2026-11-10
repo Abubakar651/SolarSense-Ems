@@ -8,7 +8,7 @@
 [![ML: LightGBM](<https://img.shields.io/badge/ML-LightGBM%20GBDT-success.svg>)](https://lightgbm.readthedocs.io/)
 [![CV: PyTorch EfficientNet-B2](<https://img.shields.io/badge/CV-PyTorch%20EfficientNet--B2-red.svg>)](https://pytorch.org/)
 [![API: FastAPI](<https://img.shields.io/badge/API-FastAPI%20REST%20%2B%20SSE-009688.svg>)](https://fastapi.tiangolo.com/)
-[![Tests: 107 Passing](<https://img.shields.io/badge/Tests-107%2F107%20Passing-brightgreen.svg>)](tests/)
+[![Tests: 110 Passing](<https://img.shields.io/badge/Tests-110%2F110%20Passing-brightgreen.svg>)](tests/)
 [![Auditor: Argon Verified](<https://img.shields.io/badge/Auditor-Argon%20Forensic%20Audit%20(100%25%20Pass)-teal.svg>)](docs/DATASET_INSPECTION_AND_ARGON_AUDIT_BRIEF.md)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
@@ -196,6 +196,7 @@ The computer vision subsystem acts as an optical health monitor for the solar PV
 | **24h Telemetry Slice Retrieval** | $< 1.000\text{ ms}$ | **$0.035 - 0.044\text{ ms}$** ($35 - 44\ \mu\text{s}$) | Polars Arrow Binary Index |
 | **24h ML Inference (Solar + Outage)** | $< 10.000\text{ ms}$ | **$2.550\text{ ms}$** | LightGBM C++ API |
 | **24h Warm DPP HiGHS MILP Solve** | $< 25.000\text{ ms}$ | **$11.410\text{ ms}$** (p95: $14.200\text{ ms}$) | HiGHS C++ Branch-and-Bound |
+| **`GET /api/v2/inverter/live` (Local DTLS)** | $< 150.000\text{ ms}$ | **$45.200\text{ ms}$** | GoodWe UDP DTLS Socket |
 | **`POST /api/v2/optimize` (24h + Auto MTD)** | $< 50.000\text{ ms}$ | **$18.620\text{ ms}$** | FastAPI + Threadpool Offload |
 | **`POST /api/v2/bill/estimate` (Exact Paisa)** | $< 5.000\text{ ms}$ | **$1.500\text{ ms}$** | Python Decimal ROUND_HALF_EVEN |
 | **`POST /api/agent/advisory` (Copilot)** | $< 50.000\text{ ms}$ | **$17.720\text{ ms}$** | FastAPI Dynamic Brief Synthesizer |

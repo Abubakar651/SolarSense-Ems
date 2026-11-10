@@ -36,6 +36,7 @@ from src.api.schemas import (
     BillEstimateResponse,
     DateBoundsResponse,
     HealthResponse,
+    InverterLiveResponse,
     Lesco2026OptimizeRequest,
     Lesco2026OptimizeResponse,
     OptimizationRequest,
@@ -56,6 +57,7 @@ from src.data_engineering.feature_store import (
     EMSDataRepository,
     TariffPolicy,
 )
+from src.data_engineering.goodwe_live_reader import GoodWeLiveReader
 from src.optimizer.milp_solver import (
     BESSConfig,
     DispatchResultDTO,
@@ -116,6 +118,7 @@ async def lifespan(app: FastAPI):
     app.state.loss_calculator = SolarPlantLossCalculator()
     app.state.soiling_map = _load_soiling_lookup(SOILING_CSV_PATH)
     app.state.vision_monitor = None
+    app.state.goodwe_reader = GoodWeLiveReader()
     yield
 
 
@@ -1011,3 +1014,47 @@ async def compare_prosumer_v2(request: ProsumerCompareRequest):
         net_billing_2026=_item(nb),
         grandfathered_advantage_pkr=str(adv),
     )
+
+
+@app.get("/api/v2/inverter/live", response_model=InverterLiveResponse, tags=["Hardware Integration"])
+async def get_inverter_live():
+    """Polls live real-time telemetry directly from the physical GoodWe inverter at 192.168.100.102."""
+    reader: GoodWeLiveReader = app.state.goodwe_reader
+    try:
+        t = await reader.fetch_telemetry()
+        return InverterLiveResponse(
+            timestamp_iso=t.timestamp_iso,
+            model_name=t.model_name,
+            serial_number=t.serial_number,
+            battery_soc_pct=t.battery_soc_pct,
+            battery_soh_pct=t.battery_soh_pct,
+            battery_voltage_v=t.battery_voltage_v,
+            battery_current_a=t.battery_current_a,
+            battery_power_w=t.battery_power_w,
+            battery_mode=t.battery_mode,
+            battery_temp_c=t.battery_temp_c,
+            total_pv_power_w=t.total_pv_power_w,
+            pv1_power_w=t.pv1_power_w,
+            pv2_power_w=t.pv2_power_w,
+            house_consumption_w=t.house_consumption_w,
+            grid_voltage_v=t.grid_voltage_v,
+            grid_frequency_hz=t.grid_frequency_hz,
+            grid_active_power_w=t.grid_active_power_w,
+            grid_mode=t.grid_mode,
+            is_grid_connected=t.is_grid_connected,
+            is_blackout=t.is_blackout,
+            backup_voltage_v=t.backup_voltage_v,
+            backup_power_w=t.backup_power_w,
+            work_mode=t.work_mode,
+            today_pv_kwh=t.today_pv_kwh,
+            today_export_kwh=t.today_export_kwh,
+            today_import_kwh=t.today_import_kwh,
+            today_load_kwh=t.today_load_kwh,
+            today_battery_charge_kwh=t.today_battery_charge_kwh,
+            today_battery_discharge_kwh=t.today_battery_discharge_kwh,
+            inverter_temp_air_c=t.inverter_temp_air_c,
+            inverter_temp_radiator_c=t.inverter_temp_radiator_c,
+        )
+    except Exception as e:
+        raise HTTPException(status_code=503, detail=f"Inverter offline or unreachable: {e}")
+

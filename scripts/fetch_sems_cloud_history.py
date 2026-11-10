@@ -25,9 +25,12 @@ from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 import zoneinfo
+import logging
 
 import requests
+import polars as pl
 from dotenv import load_dotenv
+from pygoodwe.sems_plus import SemsPlusClient
 
 load_dotenv()
 
@@ -52,6 +55,14 @@ class GoodWeSEMSCloudClient:
         self.api_base: str = "https://hk.semsportal.com/api"
         self.station_id: Optional[str] = None
         self.station_name: str = "Station 904-A JT"
+        self._sems_plus: Optional[SemsPlusClient] = None
+
+    def _get_sems_plus(self) -> SemsPlusClient:
+        if self._sems_plus is None:
+            sp = SemsPlusClient(requests.Session(), self.account, self.password, logging.getLogger("sems_plus"))
+            sp.login()
+            self._sems_plus = sp
+        return self._sems_plus
 
     def login(self) -> bool:
         """Authenticates with SEMS Portal CrossLogin across regional gateways."""
@@ -145,6 +156,64 @@ class GoodWeSEMSCloudClient:
         except Exception as e:
             print(f"Monthly balance error: {e}")
         return []
+
+    def fetch_day_power_curve(
+        self,
+        date_str: str,
+        time_scale: int = 5,
+    ) -> List[Dict[str, Any]]:
+        """
+        Fetches high-resolution intraday power curve from SEMS+ (/sems-plant/api/v1/hems/power/statisticsAndPreV2).
+        time_scale=5 returns 288 5-minute points; time_scale=1 returns 1440 1-minute points.
+        Returns unified records with pv_kw, load_kw, battery_kw, grid_kw, battery_soc_pct.
+        """
+        sp = self._get_sems_plus()
+        station_id = self.station_id or "064f10e9-b719-437d-996a-203937c0ba9b"
+        
+        payload = {
+            "stationId": station_id,
+            "items": ["pSystem", "pConsum", "pBat", "pGrid", "soc"],
+            "timeScale": time_scale,
+            "timeZone": -5,  # Asia/Karachi UTC+5 has inverted sign -5
+            "startTime": f"{date_str} 00:00:00",
+            "endTime": f"{date_str} 23:59:59",
+        }
+        
+        ep = "/sems-plant/api/v1/hems/power/statisticsAndPreV2"
+        res = sp.request(ep, method="POST", payload=payload)
+        data_list = res.get("dataList", []) if isinstance(res, dict) else []
+        
+        by_time: Dict[str, Dict[str, Any]] = {}
+        for s in data_list:
+            item = s.get("item")
+            for pt in s.get("powerData", []):
+                tp = pt.get("tp")
+                val = pt.get("power")
+                if not tp:
+                    continue
+                if tp not in by_time:
+                    by_time[tp] = {
+                        "timestamp": tp,
+                        "date": date_str,
+                        "time": tp.split()[1] if len(tp.split()) > 1 else "",
+                        "pv_kw": 0.0,
+                        "load_kw": 0.0,
+                        "battery_kw": 0.0,
+                        "grid_kw": 0.0,
+                        "battery_soc_pct": 0.0,
+                    }
+                if item == "pSystem":
+                    by_time[tp]["pv_kw"] = round(float(val or 0.0), 3)
+                elif item == "pConsum":
+                    by_time[tp]["load_kw"] = round(abs(float(val or 0.0)), 3)
+                elif item == "pBat":
+                    by_time[tp]["battery_kw"] = round(float(val or 0.0), 3)
+                elif item == "pGrid":
+                    by_time[tp]["grid_kw"] = round(-float(val or 0.0) if val is not None else 0.0, 3)
+                elif item == "soc":
+                    by_time[tp]["battery_soc_pct"] = round(float(val or 0.0), 1)
+
+        return sorted(by_time.values(), key=lambda x: x["timestamp"])
 
     def fetch_daily_generation_history(
         self,
@@ -296,12 +365,56 @@ def run_historical_download(
     return True
 
 
+def run_curve_download(
+    account: str,
+    password: str,
+    curve_date: str,
+    time_scale: int = 5,
+) -> bool:
+    print("=" * 75)
+    print(f"☀️  SolarSense EMS — SEMS+ Intraday Power Curve Extractor ({curve_date})")
+    print("=" * 75)
+    
+    client = GoodWeSEMSCloudClient(account, password)
+    if not client.login():
+        print("❌ Login failed.")
+        return False
+        
+    client.discover_station()
+    print(f"📍 Station: {client.station_name} | ID: {client.station_id}")
+    print(f"⏱️ Fetching curve with timeScale={time_scale} ({'5-minute' if time_scale == 5 else '1-minute'} resolution)...")
+
+    curve_rows = client.fetch_day_power_curve(curve_date, time_scale=time_scale)
+    if not curve_rows:
+        print(f"⚠️ No curve data recorded for {curve_date}.")
+        return False
+
+    df = pl.DataFrame(curve_rows)
+    peak_pv = df["pv_kw"].max()
+    peak_load = df["load_kw"].max()
+    min_soc = df["battery_soc_pct"].min()
+    max_soc = df["battery_soc_pct"].max()
+
+    print(f"✅ Extracted {len(curve_rows)} interval data points!")
+    print(f"   • Peak Solar PV: {peak_pv:.3f} kW")
+    print(f"   • Peak Household Load: {peak_load:.3f} kW")
+    print(f"   • Battery SoC Range: {min_soc:.1f}% ──► {max_soc:.1f}%")
+
+    out_file = OUTPUT_DIR / f"sems_cloud_{time_scale}min_curve_{curve_date}.csv"
+    df.write_csv(out_file)
+    print(f"📁 Output Saved: {out_file}")
+    print("=" * 75)
+    return True
+
+
 def main():
     parser = argparse.ArgumentParser(description="GoodWe SEMS Cloud Full History Ingestion")
     parser.add_argument("--account", "-u", default=os.getenv("SEMS_ACCOUNT"), help="SEMS Portal Email/Username")
     parser.add_argument("--password", "-p", default=os.getenv("SEMS_PASSWORD"), help="SEMS Portal Password")
     parser.add_argument("--start", "-s", default="2025-07-01", help="Start Date (YYYY-MM-DD, defaults to 2025-07-01)")
     parser.add_argument("--end", "-e", default=None, help="End Date (YYYY-MM-DD, defaults to today)")
+    parser.add_argument("--curve", "-c", default=None, help="Fetch high-resolution power curve for a specific date (YYYY-MM-DD)")
+    parser.add_argument("--time-scale", "-t", type=int, default=5, choices=[1, 5], help="Curve resolution: 5 (5-min intervals) or 1 (1-min intervals)")
     
     args = parser.parse_args()
 
@@ -317,12 +430,20 @@ def main():
         print("❌ Error: Both SEMS account and password are required.")
         sys.exit(1)
 
-    run_historical_download(
-        account=account,
-        password=password,
-        start_date=args.start,
-        end_date=args.end,
-    )
+    if args.curve:
+        run_curve_download(
+            account=account,
+            password=password,
+            curve_date=args.curve,
+            time_scale=args.time_scale,
+        )
+    else:
+        run_historical_download(
+            account=account,
+            password=password,
+            start_date=args.start,
+            end_date=args.end,
+        )
 
 
 if __name__ == "__main__":

@@ -29,37 +29,33 @@ TARGET_TRAIN_PER_CLASS = 200
 
 
 def apply_photometric_jitter(img: Image.Image) -> Image.Image:
-    """Simulates harsh solar illumination, haze, and color temperature shifts."""
-    # Brightness (0.75 - 1.30)
-    b_factor = random.uniform(0.75, 1.30)
+    """Simulates subtle solar illumination shifts while preserving dust vs. clean contrast."""
+    # Brightness (0.90 - 1.12)
+    b_factor = random.uniform(0.90, 1.12)
     img = ImageEnhance.Brightness(img).enhance(b_factor)
 
-    # Contrast (0.80 - 1.30)
-    c_factor = random.uniform(0.80, 1.30)
+    # Contrast (0.92 - 1.12)
+    c_factor = random.uniform(0.92, 1.12)
     img = ImageEnhance.Contrast(img).enhance(c_factor)
 
-    # Color saturation (0.80 - 1.25)
-    s_factor = random.uniform(0.80, 1.25)
+    # Color saturation (0.92 - 1.10)
+    s_factor = random.uniform(0.92, 1.10)
     img = ImageEnhance.Color(img).enhance(s_factor)
 
-    # Sharpness (0.90 - 1.40) to highlight crack and bird droppings edges
-    sh_factor = random.uniform(0.90, 1.40)
+    # Sharpness (0.95 - 1.25) to highlight crack and bird droppings edges
+    sh_factor = random.uniform(0.95, 1.25)
     img = ImageEnhance.Sharpness(img).enhance(sh_factor)
 
     return img
 
 
 def apply_geometric_transform(img: Image.Image) -> Image.Image:
-    """Applies physics-preserving rotations and flips."""
+    """Applies physics-preserving flips without black border wedges."""
     # Random horizontal or vertical flip
     if random.random() < 0.5:
         img = ImageOps.mirror(img)
     if random.random() < 0.5:
         img = ImageOps.flip(img)
-
-    # Random subtle angle rotation (-15 to +15 deg)
-    angle = random.uniform(-15.0, 15.0)
-    img = img.rotate(angle, resample=Image.Resampling.BILINEAR, expand=False)
 
     return img
 
@@ -102,7 +98,10 @@ def generate_augmented_dataset(
             out_class_dir = out_split / class_dir.name
             out_class_dir.mkdir(parents=True, exist_ok=True)
 
-            images = sorted(list(class_dir.glob("*.jpg")) + list(class_dir.glob("*.png")))
+            images = sorted(
+                p for p in class_dir.iterdir()
+                if p.is_file() and p.suffix.lower() in {".jpg", ".jpeg", ".png", ".bmp", ".webp"}
+            )
             # Copy all original images first
             for img_p in images:
                 shutil.copy2(img_p, out_class_dir / img_p.name)

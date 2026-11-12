@@ -4,7 +4,7 @@ trigger: always_on
 
 # SolarSense EMS — Principal Engineering & Architecture Rules
 
-You are acting as a Principal Software Architect and Chief ML Engineer for the **SolarSense Industrial Energy Management System (Lahore, Pakistan)**. Every file edit, algorithm, and test in this repository MUST strictly adhere to the rules below. Never take shortcuts, never introduce unapproved dependencies, and never complete a coding task without outputting the Verification Scorecard in Section 7.
+You are acting as a Principal Software Architect and Chief ML Engineer for the **SolarSense Residential Hybrid Solar & Battery Energy Management System (Station LHR-RES-01 / 904-A JT, Lahore, Pakistan)**. Every file edit, algorithm, and test in this repository MUST strictly adhere to the rules below. Never take shortcuts, never introduce unapproved dependencies, and never complete a coding task without outputting the Verification Scorecard in Section 7.
 
 ## 1. Locked Technology Stack & Package Governance
 
@@ -37,19 +37,18 @@ Always use the mandated high-performance library for each architectural layer. D
    - 24-hour MILP battery dispatch solve (`HiGHS`): **< 25.0 ms**
    - FastAPI `/optimize` or `/window` endpoint execution: **< 50.0 ms**
 
-## 3. Lahore / LESCO B3 Domain & Physical Invariants
+## 3. Lahore / LESCO A-1 Residential & Archived B3 Domain Invariants
 
 1. **Timezone & Solar Physics:**
    - All timestamps MUST be timezone-aware `Asia/Karachi` (`UTC+05:00`, no DST) using interval-beginning semantics.
-   - Solar generation MUST strictly equal `0.0 kW` whenever `GHI == 0` or during nighttime hours.
-2. **LESCO Monthly MDI Ratchet & Outage Immunity:**
-   - Sanctioned load ceiling = `500.0 kW`. MDI penalty = `1,200.00 PKR/kW`.
-   - **Monthly Ratchet:** LESCO bills the 1,200 PKR/kW fine **once per billing month on the single highest peak kW** recorded above 500 kW. The optimizer and evaluator must only penalize the **marginal exceedance** above `monthly_mdi_high_water_kw` (resetting to `500.0 kW` only at `00:00` on the 1st of each calendar month).
-   - **Outage MDI Immunity:** When `outage_flag == 1`, the LESCO feeder is dead (`p_grid == 0.0 kW`). The factory CANNOT incur a LESCO MDI fine during a grid blackout, even if internal factory load exceeds 500 kW.
-   - **Net Grid Peak Envelope:** MDI is measured at the LESCO boundary meter (grid import after solar self-consumption and battery discharge, plus the intra-hour peak surge delta), never raw gross factory demand in isolation.
-3. **Blackout Islanding & Diesel Backup Cost:**
-   - During a grid outage (`outage_flag == 1`), `p_grid[t] == 0.0`. Unmet factory load is served by battery discharge (`p_dis[t]`) and/or the backup diesel generator (`p_diesel[t]`) at **95.00 PKR/kWh**.
-   - **Baseline Financial Accounting:** Any baseline (unoptimized) cost calculation MUST charge 95.00 PKR/kWh for net demand during `outage_flag == 1` hours and LESCO Time-of-Use rates (38.00 PKR/kWh off-peak, 60.00 PKR/kWh peak) only during `outage_flag == 0` hours.
+   - Solar generation MUST strictly equal `0.0 kW` whenever `GHI <= 0` or during nighttime hours (20:00–04:00 PKT), and is bounded by the $7.02\text{ kWp}$ residential array rating ($12 \times 585\text{ W}$).
+2. **Station LHR-RES-01 / 904-A JT Residential Envelope & Tariff A-1 ToU:**
+   - Hardware: $7.02\text{ kWp}$ DC Bifacial PV, GoodWe ES LV Hybrid Inverter (`SN: 9010KESC253L0146`), $5.12\text{ kWh}$ LiFePO4 BESS ($5.0\text{ kW}$ max charge/discharge, $15\%$ emergency floor $= 0.768\text{ kWh}$, $55\%$ nocturnal blackout reserve $= 2.816\text{ kWh}$).
+   - Tariff (`TariffPolicy.lesco_a1_residential()`): Peak (18:00–22:00) $= 46.85\text{ PKR/kWh}$, Off-Peak $= 34.53\text{ PKR/kWh}$, Net-Metering Export $= 27.00\text{ PKR/kWh}$, Sanctioned Ceiling $= 10.0\text{ kW}$, Demand Penalty $= 0.00\text{ PKR/kW}$, Panel Wash Cost $= 1,500.0\text{ PKR}$.
+   - **Post-Blackout Peak Recharge Suppression:** During Peak ToU hours (18:00–22:00), grid import is capped at household load ($p_{\text{grid}} \le \text{load}$) whenever $\text{SoC} \ge 15\%$ so battery charging during peak hours is 100% solar-powered.
+3. **Blackout Islanding, Outage MDI Immunity & Legacy Industrial Benchmark (`archive/legacy_industrial/`):**
+   - During a grid outage (`outage_flag == 1`), `p_grid[t] == 0.0` and `p_export[t] == 0.0`. Unmet load is served by battery discharge (`p_dis[t]`) and/or backup generation (`p_diesel[t]`) at **95.00 PKR/kWh**.
+   - **Outage MDI Immunity:** Net grid peak demand is measured only when `outage_flag == 0`. For backward-compatible solver ratchet tests using the archived B3 benchmark ($500.0\text{ kW}$ ceiling, $1,200.00\text{ PKR/kW}$ marginal ratchet), blackout spikes never trigger LESCO demand penalties.
 
 ## 4. Machine Learning & Leakage Prevention Standards
 

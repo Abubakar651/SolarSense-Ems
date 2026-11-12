@@ -10,6 +10,10 @@ data/raw/
 data/processed/
 data/backups/
 data/argon_audit_pack/
+data/5min_interval/**
+!data/5min_interval/.gitkeep
+data/hourly_interval/**
+!data/hourly_interval/.gitkeep
 *.zip
 *.tar.gz
 *.7z
@@ -56,6 +60,9 @@ env/
 .pytest_cache/
 .coverage
 htmlcov/
+
+# Graphify knowledge graph
+graphify-out/
 
 # Office temporary lock files
 .~lock.*#

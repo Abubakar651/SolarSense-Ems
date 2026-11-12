@@ -8,17 +8,20 @@ Welcome to the **SolarSense Energy Management System (Lahore, Pakistan)** reposi
 
 The platform supports two complementary operational profiles:
 
-### A. Station LHR-RES-01 (Empirical Residential Digital Twin)
+### A. Station LHR-RES-01 / 904-A JT (Active Primary System — Empirical Residential Digital Twin)
 * **Location:** Lahore, Pakistan ($31.52^\circ\text{ N}, 74.36^\circ\text{ E}$, Asia/Karachi UTC+05:00).
 * **Hardware:** 
   * $7.02\text{ kWp}$ DC Bifacial PV Array ($12 \times 585\text{ W}$).
   * GoodWe ES / ES-Uniq Low-Voltage Hybrid Inverter (SN: `9010KESC253L0146`, rated up to $10.0\text{ kW}$).
-  * $5.12\text{ kWh}$ LiFePO4 Battery Pack ($51.2\text{ V}, 100\text{ Ah}$, 1C / $5.0\text{ kW}$ charge/discharge).
-* **Tariff Framework:** LESCO / NEPRA Residential Tariff A-1 Time-of-Use & Net-Metering:
-  * Peak ToU (18:00–22:00): **$46.85\text{ PKR/kWh}$**
-  * Off-Peak (00:00–18:00 & 22:00–24:00): **$34.53\text{ PKR/kWh}$**
-  * Net-Metering Export: **$27.00\text{ PKR/kWh}$**
-  * Sanctioned Load: **$10.0\text{ kW}$**; Demand Penalty: **$0.00\text{ PKR/kW}$**
+  * $5.12\text{ kWh}$ LiFePO4 Battery Pack ($51.2\text{ V}, 100\text{ Ah}$, 1C / $5.0\text{ kW}$ charge/discharge, $15\%$ emergency reserve $= 0.768\text{ kWh}$, $55\%$ nocturnal blackout reserve $= 2.816\text{ kWh}$).
+* **Tariff Framework:** LESCO / NEPRA Calendar Year 2026 Residential Tariff A-1 Time-of-Use & Solar Prosumer Regulations (`S.R.O. 279(I)/2026`, `S.R.O. 251(I)/2026`, `S.R.O. 547(I)/2026`):
+  * Peak ToU (Seasonal: Dec–Feb 17–21h, Mar–May 18–22h, Jun–Aug 19–23h, Sep–Nov 18–22h): **$46.85\text{ PKR/kWh}$**
+  * Off-Peak (remaining 20 hours): **$34.53\text{ PKR/kWh}$**
+  * Fixed Demand Charge: **$675.00\text{ PKR/kW/month}$**; FC Surcharge: **$3.23\text{ PKR/kWh}$**; QTA: **$+0.5194\text{ PKR/kWh}$**; FCA (Aug 2026 units billed Oct 2026): **$+1.1086\text{ PKR/kWh}$**
+  * Grandfathered Net-Metering (`< 09-02-2026`): 1:1 monthly Off-Peak kWh netting + **$25.32\text{ PKR/kWh}$** NAPPP surplus buyback (or contract rate e.g. **$27.00\text{ PKR/kWh}$** per `docs/station_profile_lhr_res_01.json`)
+  * New Net-Billing (`\ge 09-02-2026`): Gross billing with zero 1:1 netting; export credited at **$8.13\text{ PKR/kWh}$** NAEPP
+  * Single-Phase Non-ToU (< 5 kW): Hard zero-export limiting, 200-unit Protected guardrail (preserving $10.54\text{–}13.01\text{ PKR}$ slab vs. $28.91+\text{ PKR}$ cliff)
+  * Sanctioned Load: **$10.0\text{ kW}$**; Demand Penalty: **$0.00\text{ PKR/kW}$**; Panel Cleaning Cost: **$1,500.0\text{ PKR}$**
 
 ### B. LESCO B3 Industrial Factory Microgrid Benchmark (Archived Benchmark — `archive/legacy_industrial/`)
 * **Status:** Historical simulation benchmark segregated into `archive/legacy_industrial/`.
@@ -59,10 +62,10 @@ vec.setflags(write=False)
 
 ## 4. Hard Latency Budgets (Enforced via Tests)
 
-* **24-hour repository slice retrieval (`get_optimization_slice`):** **< 1.0 ms** (measured: $0.046\text{ ms}$)
-* **24-hour ML feature assembly + inference (`use_forecasts=True`):** **< 10.0 ms** (measured: $2.77\text{ ms}$)
-* **24-hour HiGHS MILP solve:** **< 25.0 ms** (measured: $12.06\text{ ms}$)
-* **FastAPI endpoint round-trip:** **< 50.0 ms**
+* **24-hour repository slice retrieval (`get_optimization_slice`):** **< 1.0 ms** (measured: $0.035\text{ ms}$)
+* **24-hour ML feature assembly + inference (`use_forecasts=True`):** **< 10.0 ms** (measured: $2.72\text{ ms}$)
+* **24-hour HiGHS MILP solve (`BESSConfig.station_904a_residential()`):** **< 25.0 ms** (measured: $10.45\text{ ms}$)
+* **FastAPI endpoint round-trip (`/api/window` & `/api/optimize`):** **< 50.0 ms** (measured: $1.29\text{ ms}$ / $13.26\text{ ms}$)
 
 ---
 

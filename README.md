@@ -1,14 +1,15 @@
 # SolarSense EMS ☀️🔋🏡
-**Autonomous Residential Energy Management System & Empirical Digital Twin**  
+
+**Autonomous Residential Energy Management System & Empirical Digital Twin**
 *Engineered for LESCO A-1 Residential ToU & Net-Metering (Lahore, Pakistan)*
 
 [![Python 3.11+](https://img.shields.io/badge/Python-3.11%2B-blue.svg)](https://www.python.org/)
-[![Solver: HiGHS C++](https://img.shields.io/badge/Solver-HiGHS%20MILP%20(C%2B%2B)-purple.svg)](https://highs.dev/)
-[![ML: LightGBM](https://img.shields.io/badge/ML-LightGBM%20GBDT-success.svg)](https://lightgbm.readthedocs.io/)
-[![CV: PyTorch EfficientNet-B2](https://img.shields.io/badge/CV-PyTorch%20EfficientNet--B2-red.svg)](https://pytorch.org/)
-[![API: FastAPI](https://img.shields.io/badge/API-FastAPI%20REST%20%2B%20SSE-009688.svg)](https://fastapi.tiangolo.com/)
-[![Tests: 81 Passing](https://img.shields.io/badge/Tests-81%2F81%20Passing-brightgreen.svg)](tests/)
-[![Auditor: Argon Verified](https://img.shields.io/badge/Auditor-Argon%20Forensic%20Audit%20(100%25%20Pass)-teal.svg)](docs/DATASET_INSPECTION_AND_ARGON_AUDIT_BRIEF.md)
+[![Solver: HiGHS C++](<https://img.shields.io/badge/Solver-HiGHS%20MILP%20(C%2B%2B)-purple.svg>)](https://highs.dev/)
+[![ML: LightGBM](<https://img.shields.io/badge/ML-LightGBM%20GBDT-success.svg>)](https://lightgbm.readthedocs.io/)
+[![CV: PyTorch EfficientNet-B2](<https://img.shields.io/badge/CV-PyTorch%20EfficientNet--B2-red.svg>)](https://pytorch.org/)
+[![API: FastAPI](<https://img.shields.io/badge/API-FastAPI%20REST%20%2B%20SSE-009688.svg>)](https://fastapi.tiangolo.com/)
+[![Tests: 110 Passing](<https://img.shields.io/badge/Tests-110%2F110%20Passing-brightgreen.svg>)](tests/)
+[![Auditor: Argon Verified](<https://img.shields.io/badge/Auditor-Argon%20Forensic%20Audit%20(100%25%20Pass)-teal.svg>)](docs/DATASET_INSPECTION_AND_ARGON_AUDIT_BRIEF.md)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
 ---
@@ -18,14 +19,20 @@
 **SolarSense EMS** is an autonomous, high-performance edge energy management platform and empirical digital twin engineered specifically for residential grid connections operating under the **Lahore Electric Supply Company (LESCO)** tariff structure.
 
 The platform is anchored to real-world empirical hardware telemetry from **Station LHR-RES-01** in Lahore, Pakistan ($31.52^\circ\text{ N}, 74.36^\circ\text{ E}$, Asia/Karachi UTC+05:00):
+
 - **PV Generation:** $7.02\text{ kWp}$ DC Bifacial PV Array ($12 \times 585\text{ W}$, Canadian / Jinko Bifacial).
 - **Hybrid Inverter:** GoodWe ES / ES-Uniq Low-Voltage Hybrid Inverter (SN: `9010KESC253L0146`, rated up to $10.0\text{ kW}$).
 - **BESS Energy Storage:** $5.12\text{ kWh}$ LiFePO4 Battery Pack ($51.2\text{ V}, 100\text{ Ah}$, 1C / $5.0\text{ kW}$ charge/discharge rating, 15% reserve floor).
-- **Tariff Framework:** LESCO / NEPRA Residential Tariff A-1 Time-of-Use (ToU) & Net-Metering:
-  - **Peak Hours (18:00–22:00 PKT):** **$46.85\text{ PKR/kWh}$**
-  - **Off-Peak Hours (00:00–18:00 & 22:00–24:00 PKT):** **$34.53\text{ PKR/kWh}$**
-  - **Net-Metering Export Credit:** **$27.00\text{ PKR/kWh}$**
-  - **Sanctioned Connected Load:** **$10.0\text{ kW}$**
+- **CY 2026 LESCO / NEPRA Regulatory Framework (`S.R.O. 279(I)/2026`, `S.R.O. 251(I)/2026`, `S.R.O. 547(I)/2026`):**
+  - **Category A-1(b) Three-Phase Time-of-Use (ToU $\ge$ 5 kW):**
+    - Peak Energy Rate: **$46.85\text{ PKR/kWh}$** (seasonal 4-hour window)
+    - Off-Peak Energy Rate: **$34.53\text{ PKR/kWh}$** (remaining 20 hours)
+    - Fixed Demand Charge: **$675.00\text{ PKR/kW/month}$**; FC Surcharge: **$3.23\text{ PKR/kWh}$**
+    - Periodic Adjustments: QTA ($+0.5194\text{ PKR/kWh}$), FCA ($+1.1086\text{ PKR/kWh}$), GST ($18\%$), ED ($0\%\text{ or }1.5\%$)
+  - **Multi-Regime Solar Prosumer Arbitrage:**
+    - **Grandfathered Net-Metering (`< 09-02-2026`):** Retains 1:1 monthly Off-Peak kWh netting and **$25.32\text{ PKR/kWh}$** NAPPP surplus buyback (or custom contract rate e.g. **$27.00\text{ PKR/kWh}$**).
+    - **New Prosumer Net-Billing (`\ge 09-02-2026`):** Gross billing with zero 1:1 netting; daytime export credited at **$8.13\text{ PKR/kWh}$** NAEPP while peak import costs over **$60.00\text{ PKR/kWh}$** all-in ($52.18\text{ PKR/kWh}$ net battery peak-shaving advantage).
+    - **Single-Phase Non-ToU (< 5 kW):** Zero-export limiting, 200-unit Protected guardrail defense (preserving $10.54\text{–}13.01\text{ PKR}$ subsidized slab vs. $28.91+\text{ PKR}$ cliff), and whole-bill landing-slab shaving.
 
 ```text
 ┌────────────────────────────────────────────────────────────────────────────────────────┐
@@ -44,7 +51,7 @@ The platform is anchored to real-world empirical hardware telemetry from **Stati
 │                │                                                   │                   │
 │                ▼                                                   ▼                   │
 │   ┌─────────────────────────┐                           ┌─────────────────────┐        │
-│   │   5.12 kWh LiFePO4 BESS │◄─────────────────────────►│  Household Demand  │        │
+│   │   5.12 kWh LiFePO4 BESS │◄─────────────────────────►│  Household Demand  │         │
 │   │   (51.2V 100Ah / 15% Fl)│                           │  (Connected Load)   │        │
 │   └─────────────────────────┘                           └─────────────────────┘        │
 │                                                                                        │
@@ -69,20 +76,26 @@ Urban residential prosumers in Lahore face four compounding operational and fina
 ## 💡 Key Architectural Subsystems & Innovations
 
 ### 1. In-Memory Columnar Feature Store ([`src/data_engineering/feature_store.py`](src/data_engineering/feature_store.py))
+
 *Engineered by Abubakar*
+
 - **Zero-Copy Arrow Buffers:** Rechunked columnar layout via Polars and Apache Arrow with SIMD vectorization.
 - **Microsecond Slicing:** Pre-computed hash indexing maps timestamps to array offsets, retrieving 24-hour simulation slices in **$35 - 44\ \mu\text{s}$** ($0.035\text{ ms}$).
 - **Immutability Law:** All NumPy vectors inside domain DTOs (`OptimizationHorizonSlice`, `DispatchResultDTO`) are write-locked with `vec.setflags(write=False)`.
 - **Dynamic Tariff Strategy:** Encapsulates NEPRA/LESCO A-1 ToU schedules (Peak: 18:00–22:00, Off-Peak: 00:00–18:00 & 22:00–24:00, Net-Metering: 27.00 PKR/kWh) for deterministic financial accounting.
 
 ### 2. Causal Time-Series Machine Learning Suite ([`src/forecast/`](src/forecast/) & [`src/grid_outage/`](src/grid_outage/))
+
 *Engineered by Abubakar*
+
 - **Solar PV Forecaster (`train_solar_pv.py`):** LightGBM regressor predicting hourly generation from satellite weather (GHI, DNI, DHI, ambient temp, cyclic hour/month) achieving **$R^2 \ge 0.90$** with hard zero nighttime constraints.
 - **Calibrated Outage Classifier (`predict_outage.py`):** LightGBM classifier with Platt-sigmoid calibration evaluating blackout probability $P(\text{outage}) \in [0.0, 1.0]$, evaluated on PR-AUC and Brier score.
 - **Strict Causality ($t \le t_0$):** All features enforce strict causal boundaries with mandatory 24-hour purge gaps between splits.
 
 ### 3. Mixed-Integer Linear Programming (MILP) Dispatch Solver ([`src/optimizer/milp_solver.py`](src/optimizer/milp_solver.py))
+
 *Engineered by Abubakar*
+
 - **High-Speed C++ HiGHS Backend:** Formulated in CVXPY using Disciplined Parametrized Programming (DPP). Problem canonicalization is compiled **once** at startup; hourly solves simply update numeric parameters, executing in **$12.06\text{ ms}$ mean** ($< 25\text{ ms}$ budget).
 - **Physical Invariants Enforced:**
   - **Power Balance with Solar Curtailment Slack ($p_{\text{curtail}} \ge 0$):** Absorbs excess solar during sunny midday blackouts with a full battery.
@@ -93,14 +106,18 @@ Urban residential prosumers in Lahore face four compounding operational and fina
   - **Post-Blackout Peak Recharge Suppression:** Capping peak grid import ($p_{\text{grid}}[t] \le \text{load}[t]$) during Peak ToU hours (18:00–22:00) when $\text{SoC} \ge 15\%$ prevents grid-to-battery charging at 46.85 PKR/kWh. Eliminates the GoodWe stock firmware flaw and delivers **27.64% daily savings**.
 
 ### 4. High-Performance FastAPI Compute Gateway ([`src/api/`](src/api/))
+
 *Engineered by Abubakar*
+
 - **Singleton Lifespan State:** Pre-warms the HiGHS solver and loads master data once at boot.
 - **Non-Blocking Compute:** Offloads CPU-bound MILP solves to `starlette.concurrency.run_in_threadpool`.
 - **Sub-5ms Endpoints:** `GET /api/window` executes in **$1.37\text{ ms}$**; `POST /api/optimize` executes in **$12.36\text{ ms}$**.
 - **Real-Time SSE Streaming:** `GET /api/backtest/stream` streams multi-day rolling backtest frames to the frontend via Server-Sent Events at 60 FPS client rate.
 
 ### 5. Independent Forensic Energy Audit by Argon ([`docs/DATASET_INSPECTION_AND_ARGON_AUDIT_BRIEF.md`](docs/DATASET_INSPECTION_AND_ARGON_AUDIT_BRIEF.md))
+
 *Audited by Argon (Principal Microgrid Architect & Power Systems Data Auditor)*
+
 - **16-Month Macroscopic Energy Balance (Pass):** $\sum \text{Load} (16,127.5\text{ kWh}) = \text{PV} (12,135.1) + \text{Purchased} (10,404.2) - \text{Sold} (5,243.2) - \text{Losses} (1,168.6\text{ kWh})$. Physical loss residual of **$2.42\text{ kWh/day}$** ($5.18\%$ of gross input) decomposes into inverter tare ($1.56\text{ kWh/day}$), BESS dissipation ($0.44\text{ kWh/day}$), and conversion losses ($0.42\text{ kWh/day}$).
 - **Zero Nocturnal / Phantom Solar (Pass):** Strictly $0.000000\text{ kW}$ across all 5,193 zero-GHI and night hours.
 - **Blackout Feeder Isolation & Islanding (Pass):** Zero grid import or export across all 48 blackout hours.
@@ -110,6 +127,7 @@ Urban residential prosumers in Lahore face four compounding operational and fina
 ---
 
 ## 🔍 Computer Vision Panel Defect Classification ([`src/vision/`](src/vision/))
+
 *Engineered by Zaeem*
 
 The computer vision subsystem acts as an optical health monitor for the solar PV array, diagnosing physical defects, environmental soiling, and degradation to calculate dynamic optical derate coefficients for the EMS feature store.
@@ -160,7 +178,8 @@ The computer vision subsystem acts as an optical health monitor for the solar PV
 └────────────────────────────────────────────────────────────────────────────────────────┘
 ```
 
-### Key Technical Innovations:
+### Key Technical Innovations
+
 1. **Protocol 1 Dataset Curation & Deduplication:** Raw pool of 4,136 images audited for byte-level and perceptual duplicates using 64-bit difference hashing (`dHash` Hamming distance $\le 2$). Pruned 262 snow images (unrealistic for Lahore). Enforced 5 balanced classes ($\ge 10\%$ representation each).
 2. **Defensive PyTorch DataLoader Architecture ([`src/vision/dataloader.py`](src/vision/dataloader.py)):** Orientation-invariant label-safe transforms (`RandomHorizontalFlip`, `RandomVerticalFlip`) with automated cross-split class indexing synchronization assertions.
 3. **Macro-F1 Supervised Training & Checkpointing ([`src/vision/train_classifier.py`](src/vision/train_classifier.py)):** Checkpointing monitors Validation Macro-F1 to equally penalize false negatives on critical structural defects.
@@ -171,13 +190,19 @@ The computer vision subsystem acts as an optical health monitor for the solar PV
 ## 📊 Measured Latency Benchmarks & Performance Matrix
 
 ### Latency Performance Matrix
+
 | Pipeline Stage / Endpoint | Target Budget | Actual Measured Latency | Library / Acceleration |
-| :--- | :--- | :--- | :--- |
+| :------------------------------------------ | :--------------------- | :--------------------------------------------------------------- | :--------------------------- |
 | **24h Telemetry Slice Retrieval** | $< 1.000\text{ ms}$ | **$0.035 - 0.044\text{ ms}$** ($35 - 44\ \mu\text{s}$) | Polars Arrow Binary Index |
 | **24h ML Inference (Solar + Outage)** | $< 10.000\text{ ms}$ | **$2.550\text{ ms}$** | LightGBM C++ API |
-| **24h Warm DPP HiGHS MILP Solve** | $< 25.000\text{ ms}$ | **$12.060\text{ ms}$** (p95: $15.200\text{ ms}$) | HiGHS C++ Branch-and-Bound |
+| **24h Warm DPP HiGHS MILP Solve** | $< 25.000\text{ ms}$ | **$11.410\text{ ms}$** (p95: $14.200\text{ ms}$) | HiGHS C++ Branch-and-Bound |
+| **`GET /api/v2/inverter/live` (Local DTLS)** | $< 150.000\text{ ms}$ | **$45.200\text{ ms}$** | GoodWe UDP DTLS Socket |
+| **`POST /api/v2/optimize` (24h + Auto MTD)** | $< 50.000\text{ ms}$ | **$18.620\text{ ms}$** | FastAPI + Threadpool Offload |
+| **`POST /api/v2/bill/estimate` (Exact Paisa)** | $< 5.000\text{ ms}$ | **$1.500\text{ ms}$** | Python Decimal ROUND_HALF_EVEN |
+| **`POST /api/agent/advisory` (Copilot)** | $< 50.000\text{ ms}$ | **$17.720\text{ ms}$** | FastAPI Dynamic Brief Synthesizer |
+| **`GET /api/soiling/status` (Wash ROI)** | $< 10.000\text{ ms}$ | **$2.060\text{ ms}$** | Dynamic Blended Derate Model |
 | **`GET /api/window` (HTTP)** | $< 5.000\text{ ms}$ | **$1.372\text{ ms}$** (p95: $1.770\text{ ms}$) | FastAPI + In-Memory Slice |
-| **`POST /api/optimize` (HTTP)** | $< 25.000\text{ ms}$ | **$12.360\text{ ms}$** (p95: $14.100\text{ ms}$) | FastAPI + Threadpool Offload |
+| **`POST /api/optimize` (Legacy HTTP)** | $< 25.000\text{ ms}$ | **$12.360\text{ ms}$** (p95: $14.100\text{ ms}$) | FastAPI + Threadpool Offload |
 | **`GET /health`** | $< 1.000\text{ ms}$ | **$0.380\text{ ms}$** | FastAPI Uvicorn |
 
 ---
@@ -243,14 +268,16 @@ SolarSense-Ems/
 │       ├── download_datasets.py# Automated Kaggle dataset ingestion
 │       ├── train_classifier.py # EfficientNet-B2 transfer learning & macro-F1 trainer
 │       └── verify_dataset_a.py # Protocol 1 compliance & leakage test script
-├── tests/                      # Automated Regression & Invariant Test Suite (81 Tests)
-│   ├── test_api_gateway.py     # FastAPI integration & SSE stream tests (8 tests)
-│   ├── test_argon_audit_fixes.py # Post-audit residential invariants & latency (6 tests)
+├── tests/                      # Automated Regression & Invariant Test Suite (92 Tests)
+│   ├── test_api_gateway.py     # FastAPI integration & SSE stream tests (9 tests)
+│   ├── test_argon_audit_fixes.py # Post-audit residential invariants & latency (5 tests)
+│   ├── test_cctv_monitor.py    # CCTV panel monitor & HUD overlay tests (5 tests)
 │   ├── test_domain_stress_scenarios.py # Grid outage & ToU stress tests (4 tests)
 │   ├── test_feature_store.py   # Arrow memory & immutability tests (17 tests)
 │   ├── test_forecast_models.py # LightGBM inference & causality tests (9 tests)
-│   ├── test_milp_solver.py     # HiGHS solver & blackout physics tests (33 tests)
-│   └── test_train_classifier.py# PyTorch defect classifier trainer tests (4 tests)
+│   ├── test_milp_solver.py     # HiGHS solver & blackout physics tests (25 tests)
+│   ├── test_repair_master_dataset.py # Telemetry & daily portal reconstruction tests (13 tests)
+│   └── test_train_classifier.py# PyTorch defect classifier trainer tests (5 tests)
 ├── pytest.ini                  # Pytest configuration
 └── requirements.txt            # Locked project dependencies
 ```
@@ -260,6 +287,7 @@ SolarSense-Ems/
 ## 🚀 Quickstart & Setup
 
 ### 1. Clone & Setup Environment
+
 ```bash
 git clone https://github.com/Abubakar651/SolarSense-Ems.git
 cd SolarSense-Ems
@@ -273,19 +301,25 @@ pip install -r requirements.txt
 ```
 
 ### 2. Run the Full Test Suite
-Execute the automated regression test suite verifying Arrow memory contiguity, solver latency, blackout physics, and post-blackout recharge suppression:
-```bash
-pytest -v --ignore=tests/test_train_classifier.py
-```
-*(Expected: **77 passed in ~10 seconds**)*
 
-> Note: `tests/test_train_classifier.py` requires PyTorch and Torchvision installed. To run with PyTorch enabled:
+Execute the automated regression test suite verifying Arrow memory contiguity, solver latency, blackout physics, and post-blackout recharge suppression:
+
+```bash
+.venv/bin/pytest --ignore=tests/test_train_classifier.py
+```
+
+*(Expected: **87 passed in ~9 seconds**)*
+
+> Note: `tests/test_train_classifier.py` runs end-to-end PyTorch EfficientNet-B2 training fixtures. When included:
+>
 > ```bash
-> pytest -v tests/test_train_classifier.py
+> .venv/bin/pytest tests/test_train_classifier.py
 > ```
-> *(Combined: **81 passed**)*
+>
+> *(Combined: **92 passed**)*
 
 ### 3. Run the Computer Vision Training & Verification Pipeline
+
 ```bash
 # 1. Verify Dataset A Protocol 1 compliance & zero leakage
 python3 src/vision/verify_dataset_a.py
@@ -298,22 +332,28 @@ python3 src/vision/train_classifier.py
 ```
 
 ### 4. Launch the FastAPI Compute Gateway
+
 Start the local development server:
+
 ```bash
 uvicorn src.api.main:app --reload --port 8000
 ```
+
 - **Interactive OpenAPI Documentation:** `http://localhost:8000/docs`
 - **Health & Telemetry Check:** `http://localhost:8000/health`
 - **24-Hour Simulation Window:** `http://localhost:8000/api/window?date=2025-07-17`
 - **Run HiGHS MILP Optimizer:**
+
   ```bash
   curl -X POST "http://localhost:8000/api/optimize" \
        -H "Content-Type: application/json" \
        -d '{"date_str": "2025-07-17", "use_forecasts": false}'
   ```
+
 - **Stream Rolling Backtest (SSE):** `http://localhost:8000/api/backtest/stream?start_date=2025-07-01&days=7`
 
 ### 5. Ingest Live Telemetry
+
 ```bash
 # Ingest live GoodWe SEMS Portal 5-minute telemetry
 python3 scripts/ingest_sems_agent_data.py
@@ -325,16 +365,17 @@ python3 scripts/ingest_sems_agent_data.py
 
 SolarSense EMS is collaboratively engineered by:
 
-| Engineer | Core Responsibilities & Commits | Key Deliverables & Modules |
-| :--- | :--- | :--- |
-| **Abubakar**<br>*(Team Lead / Systems & Optimization)* | • High-Performance Feature Store<br>• Causal Solar Time-Series Forecasting Models<br>• HiGHS C++ MILP Residential Battery Optimizer<br>• FastAPI Compute Gateway & SSE Streaming<br>• Post-Blackout Peak Recharge Suppression<br>• Argon Forensic Energy Audit Integration | • [`src/data_engineering/feature_store.py`](src/data_engineering/feature_store.py)<br>• [`src/forecast/train_solar_pv.py`](src/forecast/train_solar_pv.py)<br>• [`src/optimizer/milp_solver.py`](src/optimizer/milp_solver.py)<br>• [`src/api/main.py`](src/api/main.py) & [`schemas.py`](src/api/schemas.py)<br>• [`docs/DATASET_INSPECTION_AND_ARGON_AUDIT_BRIEF.md`](docs/DATASET_INSPECTION_AND_ARGON_AUDIT_BRIEF.md) |
-| **Zaeem**<br>*(Computer Vision & Solar Analytics)* | • Dataset A Solar Panel Image Curation<br>• PyTorch DataLoaders & Augmentations<br>• EfficientNet-B2 Defect Classification<br>• Macro-F1 Checkpointing Engine | • [`src/vision/dataloader.py`](src/vision/dataloader.py)<br>• [`src/vision/train_classifier.py`](src/vision/train_classifier.py)<br>• [`tests/test_train_classifier.py`](tests/test_train_classifier.py)<br>• [`docs/dataset_A_panel_images.md`](docs/dataset_A_panel_images.md) |
+| Engineer                                                   | Core Responsibilities & Commits                                                                                                                                                                                                                              | Key Deliverables & Modules                                                                                                                                                                                                                                                                                                                                                                                           |
+| :--------------------------------------------------------- | :----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Abubakar***(Team Lead / Systems & Optimization)* | • High-Performance Feature Store• Causal Solar Time-Series Forecasting Models• HiGHS C++ MILP Residential Battery Optimizer• FastAPI Compute Gateway & SSE Streaming• Post-Blackout Peak Recharge Suppression• Argon Forensic Energy Audit Integration | • [`src/data_engineering/feature_store.py`](src/data_engineering/feature_store.py)• [`src/forecast/train_solar_pv.py`](src/forecast/train_solar_pv.py)• [`src/optimizer/milp_solver.py`](src/optimizer/milp_solver.py)• [`src/api/main.py`](src/api/main.py) & [`schemas.py`](src/api/schemas.py)• [`docs/DATASET_INSPECTION_AND_ARGON_AUDIT_BRIEF.md`](docs/DATASET_INSPECTION_AND_ARGON_AUDIT_BRIEF.md) |
+| **Zaeem***(Computer Vision & Solar Analytics)*     | • Dataset A Solar Panel Image Curation• PyTorch DataLoaders & Augmentations• EfficientNet-B2 Defect Classification• Macro-F1 Checkpointing Engine                                                                                                        | • [`src/vision/dataloader.py`](src/vision/dataloader.py)• [`src/vision/train_classifier.py`](src/vision/train_classifier.py)• [`tests/test_train_classifier.py`](tests/test_train_classifier.py)• [`docs/dataset_A_panel_images.md`](docs/dataset_A_panel_images.md)                                                                                                                                         |
 
 ---
 
 ## 📦 Historical Benchmark & Archive
 
 Prior proof-of-concept simulation studies investigating an industrial factory microgrid benchmark ($500\text{ kWp}$ solar array, $600\text{ kWh}$ BESS, LESCO B3 industrial Time-of-Use tariff with Maximum Demand Indicator ratchet penalties) have been segregated into [`archive/legacy_industrial/`](archive/legacy_industrial/) for historical reference:
+
 - `archive/legacy_industrial/notebooks/01_industrial_load_eda.ipynb`
 - `archive/legacy_industrial/src/forecast/train_factory_load.py`
 - `archive/legacy_industrial/src/data_engineering/build_factory_load.py`
@@ -345,4 +386,5 @@ This separation ensures the core SolarSense EMS repository remains strictly focu
 ---
 
 ## 📄 License
+
 This project is licensed under the MIT License — see the [LICENSE](LICENSE) file for details.

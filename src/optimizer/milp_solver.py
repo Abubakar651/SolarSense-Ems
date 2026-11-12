@@ -89,6 +89,11 @@ class BESSConfig:
             degradation_cost_pkr_per_kwh=2.0,
         )
 
+    @classmethod
+    def station_904a_residential(cls) -> BESSConfig:
+        """Factory alias for Station 904-A JT / LHR-RES-01 5.12 kWh LiFePO4 residential battery."""
+        return cls.station_residential()
+
     @property
     def min_soc_kwh(self) -> float:
         return self.capacity_kwh * self.min_soc_pct

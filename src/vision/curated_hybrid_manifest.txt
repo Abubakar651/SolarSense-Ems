@@ -1,0 +1,546 @@
+bird_drop	alicjalena/train/Bird-drop/Bird (24).JPG
+bird_drop	alicjalena/train/Bird-drop/Bird (69).JPG
+bird_drop	alicjalena/val/Bird-drop/Bird (26).JPG
+bird_drop	alicjalena/train/Bird-drop/Bird (28).jpg
+bird_drop	alicjalena/train/Bird-drop/Bird (23).JPG
+bird_drop	alicjalena/train/Bird-drop/Bird (88).jpg
+bird_drop	alicjalena/train/Bird-drop/Bird (135).jpg
+bird_drop	alicjalena/train/Bird-drop/Bird (132).jpg
+bird_drop	alicjalena/train/Bird-drop/Bird (20).jpg
+bird_drop	alicjalena/test/Bird-drop/Bird (146).jpg
+bird_drop	alicjalena/val/Bird-drop/Bird (167).JPG
+bird_drop	alicjalena/test/Bird-drop/Bird (211).JPG
+bird_drop	alicjalena/train/Bird-drop/Bird (159).jpg
+bird_drop	alicjalena/val/Bird-drop/Bird (50).jpg
+bird_drop	alicjalena/train/Bird-drop/Bird (9).jpg
+bird_drop	alicjalena/train/Bird-drop/Bird (209).JPG
+bird_drop	alicjalena/train/Bird-drop/Bird (103).jpg
+bird_drop	alicjalena/train/Bird-drop/Bird (162).jpg
+bird_drop	alicjalena/train/Bird-drop/Bird (143).jpg
+bird_drop	alicjalena/test/Bird-drop/Bird (137).JPG
+bird_drop	alicjalena/test/Bird-drop/Bird (164).jpg
+bird_drop	alicjalena/train/Bird-drop/Bird (5).jpg
+bird_drop	alicjalena/test/Bird-drop/Bird (140).jpg
+bird_drop	alicjalena/train/Bird-drop/Bird (166).jpg
+bird_drop	alicjalena/test/Bird-drop/Bird (14).JPG
+bird_drop	alicjalena/train/Bird-drop/Bird (29).jpg
+bird_drop	alicjalena/test/Bird-drop/Bird (81).jpg
+bird_drop	alicjalena/train/Bird-drop/Bird (10).jpg
+bird_drop	alicjalena/train/Bird-drop/Bird (198).JPG
+bird_drop	alicjalena/train/Bird-drop/Bird (83).jpg
+bird_drop	alicjalena/val/Bird-drop/Bird (12).jpg
+bird_drop	alicjalena/val/Bird-drop/Bird (201).JPG
+bird_drop	alicjalena/test/Bird-drop/Bird (54).jpg
+bird_drop	alicjalena/train/Bird-drop/Bird (199).JPG
+bird_drop	alicjalena/train/Bird-drop/Bird (108).jpg
+bird_drop	alicjalena/train/Bird-drop/Bird (78).jpg
+bird_drop	alicjalena/train/Bird-drop/Bird (53).jpg
+bird_drop	alicjalena/train/Bird-drop/Bird (1).jpeg
+bird_drop	alicjalena/train/Bird-drop/Bird (120).jpg
+bird_drop	alicjalena/train/Bird-drop/Bird (203).JPG
+bird_drop	alicjalena/train/Bird-drop/Bird (98).jpg
+bird_drop	alicjalena/train/Bird-drop/Bird (114).jpg
+bird_drop	alicjalena/train/Bird-drop/Bird (210).JPG
+bird_drop	alicjalena/train/Bird-drop/Bird (117).jpg
+bird_drop	alicjalena/train/Bird-drop/Bird (169).jpg
+bird_drop	alicjalena/train/Bird-drop/Bird (109).jpg
+bird_drop	alicjalena/test/Bird-drop/Bird (196).jpg
+bird_drop	alicjalena/train/Bird-drop/Bird (206).JPG
+bird_drop	alicjalena/train/Bird-drop/Bird (134).JPG
+bird_drop	alicjalena/train/Bird-drop/Bird (181).jpg
+bird_drop	alicjalena/test/Bird-drop/Bird (71).jpg
+bird_drop	alicjalena/train/Bird-drop/Bird (111).jpg
+bird_drop	alicjalena/train/Bird-drop/Bird (138).JPG
+bird_drop	alicjalena/train/Bird-drop/Bird (90).jpg
+bird_drop	alicjalena/train/Bird-drop/Bird (82).jpg
+bird_drop	alicjalena/train/Bird-drop/Bird (188).jpg
+bird_drop	alicjalena/train/Bird-drop/Bird (212).JPG
+bird_drop	alicjalena/train/Bird-drop/Bird (66).jpg
+bird_drop	alicjalena/train/Bird-drop/Bird (94).jpg
+bird_drop	alicjalena/train/Bird-drop/Bird (17).jpg
+bird_drop	alicjalena/train/Bird-drop/Bird (207).JPG
+bird_drop	alicjalena/train/Bird-drop/Bird (56).jpg
+bird_drop	alicjalena/train/Bird-drop/Bird (97).jpg
+bird_drop	alicjalena/train/Bird-drop/Bird (180).jpg
+bird_drop	alicjalena/val/Bird-drop/Bird (122).jpg
+bird_drop	alicjalena/train/Bird-drop/Bird (96).jpg
+bird_drop	alicjalena/train/Bird-drop/Bird (127).jpg
+bird_drop	alicjalena/train/Bird-drop/Bird (101).jpg
+bird_drop	alicjalena/train/Bird-drop/Bird (72).jpg
+bird_drop	alicjalena/train/Bird-drop/Bird (144).jpg
+bird_drop	alicjalena/train/Bird-drop/Bird (34).jpg
+bird_drop	alicjalena/train/Bird-drop/Bird (177).jpg
+bird_drop	alicjalena/train/Bird-drop/Bird (42).jpg
+bird_drop	alicjalena/train/Bird-drop/Bird (141).jpg
+bird_drop	alicjalena/train/Bird-drop/Bird (25).jpg
+bird_drop	alicjalena/train/Bird-drop/Bird (185).jpg
+bird_drop	alicjalena/test/Bird-drop/Bird (79).jpg
+bird_drop	alicjalena/train/Bird-drop/Bird (200).JPG
+bird_drop	alicjalena/train/Bird-drop/Bird (85).jpg
+bird_drop	alicjalena/train/Bird-drop/Bird (208).JPG
+bird_drop	alicjalena/train/Bird-drop/Bird (15).JPG
+bird_drop	alicjalena/train/Bird-drop/Bird (35).jpg
+bird_drop	alicjalena/train/Bird-drop/Bird (171).JPG
+bird_drop	alicjalena/test/Bird-drop/Bird (148).jpg
+bird_drop	alicjalena/train/Bird-drop/Bird (187).jpg
+bird_drop	alicjalena/train/Bird-drop/Bird (113).jpg
+bird_drop	alicjalena/train/Bird-drop/Bird (91).jpg
+bird_drop	alicjalena/train/Bird-drop/Bird (104).jpg
+bird_drop	alicjalena/train/Bird-drop/Bird (3).jpg
+bird_drop	alicjalena/train/Bird-drop/Bird (124).jpg
+clean	alicjalena/train/Clean/Clean (103).jpg
+clean	alicjalena/train/Clean/Clean (29).jpg
+clean	alicjalena/test/Clean/Clean (175).jpg
+clean	hemanthsai7/Detect_solar_dust/Clean/Imgclean_91_0.jpg
+clean	hemanthsai7/Detect_solar_dust/Clean/Imgclean_100_0.jpg
+clean	hemanthsai7/Detect_solar_dust/Clean/Imgclean_1247_0.jpg
+clean	hemanthsai7/Detect_solar_dust/Clean/Imgclean_1113_0.jpg
+clean	alicjalena/train/Clean/Clean (28).jpg
+clean	alicjalena/test/Clean/Clean (68).jpg
+clean	hemanthsai7/Detect_solar_dust/Clean/Imgclean_1299_0.jpg
+clean	alicjalena/train/Clean/Clean (36).jpg
+clean	alicjalena/train/Clean/Clean (124).jpg
+clean	alicjalena/train/Clean/Clean (134).jpg
+clean	alicjalena/train/Clean/Clean (65).jpg
+clean	hemanthsai7/Detect_solar_dust/Clean/Imgclean_1044_0.jpg
+clean	hemanthsai7/Detect_solar_dust/Clean/Imgclean_754_0.jpg
+clean	hemanthsai7/Detect_solar_dust/Clean/Imgclean_516_0.jpg
+clean	alicjalena/train/Clean/Clean (171).jpg
+clean	hemanthsai7/Detect_solar_dust/Clean/Imgclean_31_0.jpg
+clean	alicjalena/train/Clean/Clean (193).png
+clean	hemanthsai7/Detect_solar_dust/Clean/Imgclean_1310_0.jpg
+clean	alicjalena/test/Clean/Clean (30).jpg
+clean	hemanthsai7/Detect_solar_dust/Clean/Imgclean_616_0.jpg
+clean	hemanthsai7/Detect_solar_dust/Clean/Imgclean_1050_0.jpg
+clean	alicjalena/train/Clean/Clean (86).jpg
+clean	alicjalena/train/Clean/Clean (115).jpg
+clean	hemanthsai7/Detect_solar_dust/Clean/Imgclean_68_0.jpg
+clean	hemanthsai7/Detect_solar_dust/Clean/Imgclean_345_0.jpg
+clean	hemanthsai7/Detect_solar_dust/Clean/Imgclean_917_0.jpg
+clean	alicjalena/train/Clean/Clean (56).jpg
+clean	alicjalena/train/Clean/Clean (50).jpg
+clean	alicjalena/val/Clean/Clean (33).jpg
+clean	hemanthsai7/Detect_solar_dust/Clean/Imgclean_1245_0.jpg
+clean	hemanthsai7/Detect_solar_dust/Clean/Imgclean_174_0.jpg
+clean	hemanthsai7/Detect_solar_dust/Clean/Imgclean_360_0.jpg
+clean	hemanthsai7/Detect_solar_dust/Clean/Imgclean_1030_0.jpg
+clean	hemanthsai7/Detect_solar_dust/Clean/Imgclean_289_0.jpg
+clean	alicjalena/train/Clean/Clean (174).jpg
+clean	hemanthsai7/Detect_solar_dust/Clean/Imgclean_1151_0.jpg
+clean	alicjalena/test/Clean/Clean (52).jpg
+clean	alicjalena/train/Clean/Clean (44).jpg
+clean	hemanthsai7/Detect_solar_dust/Clean/Imgclean_1009_0.jpg
+clean	hemanthsai7/Detect_solar_dust/Clean/Imgclean_787_0.jpg
+clean	hemanthsai7/Detect_solar_dust/Clean/Imgclean_215_0.jpg
+clean	alicjalena/train/Clean/Clean (128).jpg
+clean	hemanthsai7/Detect_solar_dust/Clean/Imgclean_296_0.jpg
+clean	alicjalena/train/Clean/Clean (11).jpg
+clean	alicjalena/train/Clean/Clean (146).jpg
+clean	alicjalena/train/Clean/Clean (116).jpg
+clean	alicjalena/train/Clean/Clean (38).jpg
+clean	alicjalena/train/Clean/Clean (55).jpg
+clean	hemanthsai7/Detect_solar_dust/Clean/Imgclean_40_0.jpg
+clean	hemanthsai7/Detect_solar_dust/Clean/Imgclean_28_0.jpg
+clean	alicjalena/train/Clean/Clean (12).jpg
+clean	hemanthsai7/Detect_solar_dust/Clean/Imgclean_379_0.jpg
+clean	alicjalena/train/Clean/Clean (189).jpg
+clean	alicjalena/train/Clean/Clean (151).jpg
+clean	alicjalena/train/Clean/Clean (2).jpg
+clean	alicjalena/train/Clean/Clean (69).jpg
+clean	alicjalena/train/Clean/Clean (64).jpg
+clean	hemanthsai7/Detect_solar_dust/Clean/Imgclean_1201_0.jpg
+clean	alicjalena/train/Clean/Clean (16).JPG
+clean	alicjalena/train/Clean/Clean (24).jpg
+clean	hemanthsai7/Detect_solar_dust/Clean/Imgclean_367_0.jpg
+clean	alicjalena/train/Clean/Clean (61).jpg
+clean	alicjalena/train/Clean/Clean (79).jpg
+clean	alicjalena/train/Clean/Clean (13).jpg
+clean	hemanthsai7/Detect_solar_dust/Clean/Imgclean_798_0.jpg
+clean	hemanthsai7/Detect_solar_dust/Clean/Imgclean_1248_0.jpg
+clean	hemanthsai7/Detect_solar_dust/Clean/Imgclean_393_0.jpg
+clean	hemanthsai7/Detect_solar_dust/Clean/Imgclean_885_0.jpg
+clean	alicjalena/train/Clean/Clean (119).jpg
+clean	alicjalena/train/Clean/Clean (125).jpg
+clean	hemanthsai7/Detect_solar_dust/Clean/Imgclean_377_0.jpg
+clean	alicjalena/train/Clean/Clean (89).jpg
+clean	alicjalena/train/Clean/Clean (85).jpg
+clean	alicjalena/train/Clean/Clean (176).jpg
+clean	alicjalena/train/Clean/Clean (173).jpg
+clean	hemanthsai7/Detect_solar_dust/Clean/Imgclean_1180_0.jpg
+clean	alicjalena/train/Clean/Clean (177).jpg
+clean	hemanthsai7/Detect_solar_dust/Clean/Imgclean_1165_0.jpg
+clean	alicjalena/val/Clean/Clean (179).jpg
+clean	hemanthsai7/Detect_solar_dust/Clean/Imgclean_1008_0.jpg
+clean	hemanthsai7/Detect_solar_dust/Clean/Imgclean_1103_0.jpg
+clean	hemanthsai7/Detect_solar_dust/Clean/Imgclean_1125_0.jpg
+clean	alicjalena/train/Clean/Clean (121).jpg
+clean	hemanthsai7/Detect_solar_dust/Clean/Imgclean_132_0.jpg
+clean	alicjalena/train/Clean/Clean (14).jpg
+clean	alicjalena/train/Clean/Clean (22).jpg
+clean	alicjalena/train/Clean/Clean (145).jpg
+clean	alicjalena/test/Clean/Clean (130).jpg
+clean	hemanthsai7/Detect_solar_dust/Clean/Imgclean_864_0.jpg
+clean	alicjalena/test/Clean/Clean (63).jpg
+clean	hemanthsai7/Detect_solar_dust/Clean/Imgclean_1295_0.jpg
+clean	alicjalena/train/Clean/Clean (9).jpg
+clean	hemanthsai7/Detect_solar_dust/Clean/Imgclean_1196_0.jpg
+clean	alicjalena/train/Clean/Clean (129).jpg
+clean	alicjalena/train/Clean/Clean (131).jpg
+clean	alicjalena/train/Clean/Clean (75).jpg
+clean	hemanthsai7/Detect_solar_dust/Clean/Imgclean_1045_0.jpg
+clean	hemanthsai7/Detect_solar_dust/Clean/Imgclean_458_0.jpg
+clean	alicjalena/train/Clean/Clean (91).jpg
+clean	hemanthsai7/Detect_solar_dust/Clean/Imgclean_1129_0.jpg
+clean	alicjalena/train/Clean/Clean (106).jpg
+clean	hemanthsai7/Detect_solar_dust/Clean/Imgclean_953_0.jpg
+clean	alicjalena/train/Clean/Clean (15).JPG
+clean	hemanthsai7/Detect_solar_dust/Clean/Imgclean_278_0.jpg
+clean	hemanthsai7/Detect_solar_dust/Clean/Imgclean_72_0.jpg
+clean	alicjalena/test/Clean/Clean (152).jpg
+clean	alicjalena/train/Clean/Clean (137).jpg
+clean	hemanthsai7/Detect_solar_dust/Clean/Imgclean_1021_0.jpg
+clean	alicjalena/train/Clean/Clean (101).jpg
+clean	hemanthsai7/Detect_solar_dust/Clean/Imgclean_258_0.jpg
+clean	hemanthsai7/Detect_solar_dust/Clean/Imgclean_1082_0.jpg
+clean	alicjalena/train/Clean/Clean (21).jpg
+clean	alicjalena/train/Clean/Clean (96).jpg
+clean	alicjalena/train/Clean/Clean (51).jpg
+clean	alicjalena/val/Clean/Clean (114).jpg
+clean	alicjalena/train/Clean/Clean (113).jpg
+clean	hemanthsai7/Detect_solar_dust/Clean/Imgclean_214_0.jpg
+clean	hemanthsai7/Detect_solar_dust/Clean/Imgclean_845_0.jpg
+clean	hemanthsai7/Detect_solar_dust/Clean/Imgclean_1063_0.jpg
+clean	hemanthsai7/Detect_solar_dust/Clean/Imgclean_1276_0.jpg
+clean	alicjalena/train/Clean/Clean (156).jpg
+clean	hemanthsai7/Detect_solar_dust/Clean/Imgclean_890_0.jpg
+clean	alicjalena/val/Clean/Clean (170).jpg
+clean	alicjalena/train/Clean/Clean (18).jpg
+clean	alicjalena/train/Clean/Clean (35).jpg
+clean	hemanthsai7/Detect_solar_dust/Clean/Imgclean_989_0.jpg
+clean	alicjalena/train/Clean/Clean (32).jpg
+clean	alicjalena/train/Clean/Clean (143).jpg
+clean	alicjalena/train/Clean/Clean (140).JPG
+clean	hemanthsai7/Detect_solar_dust/Clean/Imgclean_659_0.jpg
+clean	alicjalena/train/Clean/Clean (72).jpg
+clean	alicjalena/train/Clean/Clean (77).jpg
+clean	alicjalena/test/Clean/Clean (191).jpg
+clean	alicjalena/train/Clean/Clean (149).jpg
+clean	hemanthsai7/Detect_solar_dust/Clean/Imgclean_198_0.jpg
+clean	alicjalena/train/Clean/Clean (192).jpg
+clean	hemanthsai7/Detect_solar_dust/Clean/Imgclean_982_0.jpg
+clean	hemanthsai7/Detect_solar_dust/Clean/Imgclean_1394_0.jpg
+clean	alicjalena/train/Clean/Clean (132).jpg
+clean	alicjalena/test/Clean/Clean (150).jpg
+clean	hemanthsai7/Detect_solar_dust/Clean/Imgclean_156_0.jpg
+clean	hemanthsai7/Detect_solar_dust/Clean/Imgclean_971_0.jpg
+clean	alicjalena/train/Clean/Clean (104).jpg
+clean	alicjalena/test/Clean/Clean (62).jpg
+clean	alicjalena/train/Clean/Clean (4).jpg
+clean	alicjalena/test/Clean/Clean (165).jpg
+clean	hemanthsai7/Detect_solar_dust/Clean/Imgclean_1032_0.jpg
+clean	alicjalena/train/Clean/Clean (120).jpg
+clean	alicjalena/train/Clean/Clean (163).jpg
+clean	alicjalena/val/Clean/Clean (126).jpg
+clean	hemanthsai7/Detect_solar_dust/Clean/Imgclean_1265_0.jpg
+clean	hemanthsai7/Detect_solar_dust/Clean/Imgclean_1207_0.jpg
+clean	hemanthsai7/Detect_solar_dust/Clean/Imgclean_480_0.jpg
+clean	alicjalena/train/Clean/Clean (46).jpg
+clean	alicjalena/train/Clean/Clean (94).jpg
+clean	hemanthsai7/Detect_solar_dust/Clean/Imgclean_416_0.jpg
+clean	alicjalena/train/Clean/Clean (97).jpg
+clean	hemanthsai7/Detect_solar_dust/Clean/Imgclean_1349_0.jpg
+clean	alicjalena/train/Clean/Clean (138).jpg
+clean	alicjalena/train/Clean/Clean (43).jpg
+clean	alicjalena/train/Clean/Clean (19).jpg
+clean	alicjalena/val/Clean/Clean (84).jpg
+dusty	alicjalena/train/Dusty/Dust (157).jpg
+dusty	hemanthsai7/Detect_solar_dust/Dusty/Imgdirty_609_1.jpg
+dusty	alicjalena/train/Dusty/Dust (85).jpg
+dusty	alicjalena/train/Dusty/Dust (123).jpg
+dusty	alicjalena/train/Dusty/Dust (149).jpg
+dusty	alicjalena/train/Dusty/Dust (82).jpg
+dusty	alicjalena/val/Dusty/Dust (43).jpg
+dusty	alicjalena/train/Dusty/Dust (97).jpg
+dusty	hemanthsai7/Detect_solar_dust/Dusty/Imgdirty_263_1.jpg
+dusty	alicjalena/train/Dusty/Dust (127).jpg
+dusty	alicjalena/train/Dusty/Dust (119).jpg
+dusty	alicjalena/train/Dusty/Dust (92).jpg
+dusty	alicjalena/train/Dusty/Dust (132).jpg
+dusty	hemanthsai7/Detect_solar_dust/Dusty/Imgdirty_493_1.jpg
+dusty	hemanthsai7/Detect_solar_dust/Dusty/Imgdirty_490_1.jpg
+dusty	alicjalena/train/Dusty/Dust (50).jpg
+dusty	hemanthsai7/Detect_solar_dust/Dusty/Imgdirty_260_1.jpg
+dusty	alicjalena/train/Dusty/Dust (100).jpg
+dusty	alicjalena/train/Dusty/Dust (152).jpg
+dusty	hemanthsai7/Detect_solar_dust/Dusty/Imgdirty_616_1.jpg
+dusty	alicjalena/train/Dusty/Dust (95).jpg
+dusty	hemanthsai7/Detect_solar_dust/Dusty/Imgdirty_624_1.jpg
+dusty	alicjalena/train/Dusty/Dust (81).jpg
+dusty	alicjalena/val/Dusty/Dust (137).jpg
+dusty	hemanthsai7/Detect_solar_dust/Dusty/Imgdirty_594_1.jpg
+dusty	alicjalena/test/Dusty/Dust (46).jpg
+dusty	hemanthsai7/Detect_solar_dust/Dusty/Imgdirty_251_1.jpg
+dusty	alicjalena/train/Dusty/Dust (185).jpg
+dusty	hemanthsai7/Detect_solar_dust/Dusty/Imgdirty_282_1.jpg
+dusty	hemanthsai7/Detect_solar_dust/Dusty/Imgdirty_627_1.jpg
+dusty	alicjalena/train/Dusty/Dust (62).jpg
+dusty	hemanthsai7/Detect_solar_dust/Dusty/Imgdirty_334_1.jpg
+dusty	hemanthsai7/Detect_solar_dust/Dusty/Imgdirty_498_1.jpg
+dusty	alicjalena/train/Dusty/Dust (131).jpg
+dusty	alicjalena/train/Dusty/Dust (150).jpg
+dusty	alicjalena/train/Dusty/Dust (51).jpg
+dusty	hemanthsai7/Detect_solar_dust/Dusty/Imgdirty_977_1.jpg
+dusty	hemanthsai7/Detect_solar_dust/Dusty/Imgdirty_233_1.jpg
+dusty	hemanthsai7/Detect_solar_dust/Dusty/Imgdirty_706_1.jpg
+dusty	hemanthsai7/Detect_solar_dust/Dusty/Imgdirty_724_1.jpg
+dusty	alicjalena/train/Dusty/Dust (146).jpg
+dusty	alicjalena/train/Dusty/Dust (118).jpg
+dusty	hemanthsai7/Detect_solar_dust/Dusty/Imgdirty_575_1.jpg
+dusty	alicjalena/train/Dusty/Dust (48).jpg
+dusty	alicjalena/train/Dusty/Dust (53).jpg
+dusty	alicjalena/train/Dusty/Dust (86).jpg
+dusty	alicjalena/train/Dusty/Dust (151).jpg
+dusty	alicjalena/train/Dusty/Dust (101).jpg
+dusty	hemanthsai7/Detect_solar_dust/Dusty/Imgdirty_356_1.jpg
+dusty	alicjalena/train/Dusty/Dust (59).jpg
+dusty	alicjalena/train/Dusty/Dust (73).jpg
+dusty	alicjalena/train/Dusty/Dust (84).jpg
+dusty	hemanthsai7/Detect_solar_dust/Dusty/Imgdirty_268_1.jpg
+dusty	alicjalena/val/Dusty/Dust (161).jpg
+dusty	alicjalena/test/Dusty/Dust (106).jpg
+dusty	hemanthsai7/Detect_solar_dust/Dusty/Imgdirty_542_1.jpg
+dusty	alicjalena/train/Dusty/Dust (57).jpg
+dusty	alicjalena/test/Dusty/Dust (99).jpg
+dusty	hemanthsai7/Detect_solar_dust/Dusty/Imgdirty_1023_1.jpg
+dusty	alicjalena/train/Dusty/Dust (180).jpg
+dusty	alicjalena/train/Dusty/Dust (130).jpg
+dusty	hemanthsai7/Detect_solar_dust/Dusty/Imgdirty_523_1.jpg
+dusty	alicjalena/train/Dusty/Dust (42).jpg
+dusty	alicjalena/train/Dusty/Dust (78).jpg
+dusty	alicjalena/train/Dusty/Dust (70).jpg
+dusty	hemanthsai7/Detect_solar_dust/Dusty/Imgdirty_719_1.jpg
+dusty	hemanthsai7/Detect_solar_dust/Dusty/Imgdirty_606_1.jpg
+dusty	alicjalena/train/Dusty/Dust (88).jpg
+dusty	alicjalena/train/Dusty/Dust (125).jpg
+dusty	alicjalena/train/Dusty/Dust (61).jpg
+dusty	hemanthsai7/Detect_solar_dust/Dusty/Imgdirty_16_1.jpg
+dusty	alicjalena/train/Dusty/Dust (102).jpg
+dusty	hemanthsai7/Detect_solar_dust/Dusty/Imgdirty_361_1.jpg
+dusty	hemanthsai7/Detect_solar_dust/Dusty/Imgdirty_478_1.jpg
+dusty	alicjalena/train/Dusty/Dust (10).jpg
+dusty	hemanthsai7/Detect_solar_dust/Dusty/Imgdirty_860_1.jpg
+dusty	hemanthsai7/Detect_solar_dust/Dusty/Imgdirty_647_1.jpg
+dusty	hemanthsai7/Detect_solar_dust/Dusty/Imgdirty_790_1.jpg
+dusty	alicjalena/train/Dusty/Dust (56).jpg
+dusty	hemanthsai7/Detect_solar_dust/Dusty/Imgdirty_1024_1.jpg
+dusty	alicjalena/train/Dusty/Dust (32).jpg
+dusty	alicjalena/train/Dusty/Dust (80).jpg
+dusty	hemanthsai7/Detect_solar_dust/Dusty/Imgdirty_641_1.jpg
+dusty	alicjalena/val/Dusty/Dust (12).jpg
+dusty	hemanthsai7/Detect_solar_dust/Dusty/Imgdirty_525_1.jpg
+dusty	alicjalena/train/Dusty/Dust (54).jpg
+dusty	hemanthsai7/Detect_solar_dust/Dusty/Imgdirty_713_1.jpg
+dusty	hemanthsai7/Detect_solar_dust/Dusty/Imgdirty_245_1.jpg
+dusty	alicjalena/test/Dusty/Dust (169).jpg
+dusty	alicjalena/train/Dusty/Dust (72).jpg
+dusty	hemanthsai7/Detect_solar_dust/Dusty/Imgdirty_515_1.jpg
+dusty	hemanthsai7/Detect_solar_dust/Dusty/Imgdirty_651_1.jpg
+dusty	alicjalena/test/Dusty/Dust (96).jpg
+dusty	alicjalena/train/Dusty/Dust (49).jpg
+dusty	hemanthsai7/Detect_solar_dust/Dusty/Imgdirty_417_1.jpg
+dusty	alicjalena/train/Dusty/Dust (117).jpg
+dusty	alicjalena/train/Dusty/Dust (142).jpg
+dusty	hemanthsai7/Detect_solar_dust/Dusty/Imgdirty_694_1.jpg
+dusty	alicjalena/train/Dusty/Dust (147).jpg
+dusty	alicjalena/train/Dusty/Dust (107).jpg
+dusty	alicjalena/train/Dusty/Dust (87).jpg
+dusty	hemanthsai7/Detect_solar_dust/Dusty/Imgdirty_401_1.jpg
+dusty	alicjalena/train/Dusty/Dust (65).jpg
+dusty	hemanthsai7/Detect_solar_dust/Dusty/Imgdirty_343_1.jpg
+dusty	hemanthsai7/Detect_solar_dust/Dusty/Imgdirty_280_1.jpg
+dusty	alicjalena/train/Dusty/Dust (103).jpg
+dusty	hemanthsai7/Detect_solar_dust/Dusty/Imgdirty_852_1.jpg
+dusty	alicjalena/val/Dusty/Dust (94).jpg
+dusty	hemanthsai7/Detect_solar_dust/Dusty/Imgdirty_217_1.jpg
+dusty	hemanthsai7/Detect_solar_dust/Dusty/Imgdirty_550_1.jpg
+dusty	alicjalena/train/Dusty/Dust (1).jpg
+dusty	hemanthsai7/Detect_solar_dust/Dusty/Imgdirty_582_1.jpg
+dusty	hemanthsai7/Detect_solar_dust/Dusty/Imgdirty_617_1.jpg
+dusty	alicjalena/val/Dusty/Dust (91).jpg
+dusty	alicjalena/test/Dusty/Dust (93).jpg
+dusty	hemanthsai7/Detect_solar_dust/Dusty/Imgdirty_236_1.jpg
+dusty	hemanthsai7/Detect_solar_dust/Dusty/Imgdirty_819_1.jpg
+dusty	hemanthsai7/Detect_solar_dust/Dusty/Imgdirty_479_1.jpg
+dusty	alicjalena/train/Dusty/Dust (129).jpg
+dusty	alicjalena/train/Dusty/Dust (52).jpg
+dusty	hemanthsai7/Detect_solar_dust/Dusty/Imgdirty_379_1.jpg
+dusty	alicjalena/train/Dusty/Dust (112).jpg
+dusty	hemanthsai7/Detect_solar_dust/Dusty/Imgdirty_147_1.jpg
+dusty	alicjalena/train/Dusty/Dust (6).jpg
+dusty	hemanthsai7/Detect_solar_dust/Dusty/Imgdirty_466_1.jpg
+dusty	alicjalena/train/Dusty/Dust (71).jpg
+dusty	alicjalena/train/Dusty/Dust (77).jpg
+dusty	alicjalena/val/Dusty/Dust (67).jpg
+dusty	alicjalena/train/Dusty/Dust (22).jpg
+dusty	hemanthsai7/Detect_solar_dust/Dusty/Imgdirty_355_1.jpg
+dusty	alicjalena/train/Dusty/Dust (136).jpg
+dusty	alicjalena/test/Dusty/Dust (126).jpg
+dusty	alicjalena/test/Dusty/Dust (16).jpg
+dusty	alicjalena/train/Dusty/Dust (69).jpg
+dusty	alicjalena/train/Dusty/Dust (64).jpg
+dusty	alicjalena/train/Dusty/Dust (44).jpg
+dusty	alicjalena/train/Dusty/Dust (113).jpg
+dusty	alicjalena/train/Dusty/Dust (145).jpg
+dusty	alicjalena/train/Dusty/Dust (90).jpg
+dusty	hemanthsai7/Detect_solar_dust/Dusty/Imgdirty_1015_1.jpg
+dusty	hemanthsai7/Detect_solar_dust/Dusty/Imgdirty_659_1.jpg
+dusty	alicjalena/train/Dusty/Dust (141).jpg
+dusty	hemanthsai7/Detect_solar_dust/Dusty/Imgdirty_454_1.jpg
+dusty	hemanthsai7/Detect_solar_dust/Dusty/Imgdirty_563_1.jpg
+dusty	hemanthsai7/Detect_solar_dust/Dusty/Imgdirty_975_1.jpg
+dusty	hemanthsai7/Detect_solar_dust/Dusty/Imgdirty_181_1.jpg
+dusty	hemanthsai7/Detect_solar_dust/Dusty/Imgdirty_618_1.jpg
+dusty	hemanthsai7/Detect_solar_dust/Dusty/Imgdirty_1022_1.jpg
+dusty	hemanthsai7/Detect_solar_dust/Dusty/Imgdirty_836_1.jpg
+dusty	alicjalena/train/Dusty/Dust (105).jpg
+dusty	hemanthsai7/Detect_solar_dust/Dusty/Imgdirty_728_1.jpg
+dusty	hemanthsai7/Detect_solar_dust/Dusty/Imgdirty_333_1.jpg
+dusty	hemanthsai7/Detect_solar_dust/Dusty/Imgdirty_539_1.jpg
+dusty	hemanthsai7/Detect_solar_dust/Dusty/Imgdirty_667_1.jpg
+dusty	hemanthsai7/Detect_solar_dust/Dusty/Imgdirty_271_1.jpg
+dusty	hemanthsai7/Detect_solar_dust/Dusty/Imgdirty_468_1.jpg
+dusty	alicjalena/train/Dusty/Dust (55).jpg
+dusty	alicjalena/train/Dusty/Dust (45).jpg
+dusty	hemanthsai7/Detect_solar_dust/Dusty/Imgdirty_608_1.jpg
+dusty	hemanthsai7/Detect_solar_dust/Dusty/Imgdirty_276_1.jpg
+dusty	hemanthsai7/Detect_solar_dust/Dusty/Imgdirty_33_1.jpg
+dusty	hemanthsai7/Detect_solar_dust/Dusty/Imgdirty_650_1.jpg
+dusty	hemanthsai7/Detect_solar_dust/Dusty/Imgdirty_453_1.jpg
+dusty	hemanthsai7/Detect_solar_dust/Dusty/Imgdirty_811_1.jpg
+dusty	hemanthsai7/Detect_solar_dust/Dusty/Imgdirty_989_1.jpg
+electrical_damage	alicjalena/train/Electrical-damage/Electrical (24).jpg
+electrical_damage	alicjalena/train/Electrical-damage/Electrical (109).jpg
+electrical_damage	alicjalena/train/Electrical-damage/Electrical (79).jpg
+electrical_damage	alicjalena/train/Electrical-damage/Electrical (92).jpg
+electrical_damage	alicjalena/train/Electrical-damage/Electrical (146).jpg
+electrical_damage	alicjalena/train/Electrical-damage/Electrical (127).jpg
+electrical_damage	alicjalena/test/Electrical-damage/Electrical (132).jpg
+electrical_damage	alicjalena/train/Electrical-damage/Electrical (78).jpg
+electrical_damage	alicjalena/train/Electrical-damage/Electrical (4).jpg
+electrical_damage	alicjalena/train/Electrical-damage/Electrical (119).jpg
+electrical_damage	alicjalena/train/Electrical-damage/Electrical (74).jpg
+electrical_damage	alicjalena/train/Electrical-damage/Electrical (141).jpg
+electrical_damage	alicjalena/train/Electrical-damage/Electrical (137).jpg
+electrical_damage	alicjalena/train/Electrical-damage/Electrical (20).jpg
+electrical_damage	alicjalena/train/Electrical-damage/Electrical (72).jpg
+electrical_damage	alicjalena/train/Electrical-damage/Electrical (123).jpg
+electrical_damage	alicjalena/train/Electrical-damage/Electrical (120).jpg
+electrical_damage	alicjalena/test/Electrical-damage/Electrical (88).jpg
+electrical_damage	alicjalena/test/Electrical-damage/Electrical (73).jpg
+electrical_damage	alicjalena/train/Electrical-damage/Electrical (26).jpg
+electrical_damage	alicjalena/train/Electrical-damage/Electrical (10).jpg
+electrical_damage	alicjalena/train/Electrical-damage/Electrical (106).jpg
+electrical_damage	alicjalena/train/Electrical-damage/Electrical (125).jpg
+electrical_damage	alicjalena/train/Electrical-damage/Electrical (151).jpg
+electrical_damage	alicjalena/train/Electrical-damage/Electrical (37).jpg
+electrical_damage	alicjalena/val/Electrical-damage/Electrical (71).jpg
+electrical_damage	alicjalena/train/Electrical-damage/Electrical (130).jpg
+electrical_damage	alicjalena/train/Electrical-damage/Electrical (152).jpg
+electrical_damage	alicjalena/train/Electrical-damage/Electrical (11).jpg
+electrical_damage	alicjalena/train/Electrical-damage/Electrical (148).jpg
+electrical_damage	alicjalena/train/Electrical-damage/Electrical (133).jpg
+electrical_damage	alicjalena/test/Electrical-damage/Electrical (28).jpg
+electrical_damage	alicjalena/train/Electrical-damage/Electrical (45).jpg
+electrical_damage	alicjalena/train/Electrical-damage/Electrical (42).jpg
+electrical_damage	alicjalena/train/Electrical-damage/Electrical (150).jpg
+electrical_damage	alicjalena/train/Electrical-damage/Electrical (21).jpg
+electrical_damage	alicjalena/train/Electrical-damage/Electrical (61).jpg
+electrical_damage	alicjalena/train/Electrical-damage/Electrical (16).jpg
+electrical_damage	alicjalena/test/Electrical-damage/Electrical (3).jpg
+electrical_damage	alicjalena/train/Electrical-damage/Electrical (1).png
+electrical_damage	alicjalena/train/Electrical-damage/Electrical (138).jpg
+electrical_damage	alicjalena/train/Electrical-damage/Electrical (94).jpg
+electrical_damage	alicjalena/train/Electrical-damage/Electrical (23).jpg
+electrical_damage	alicjalena/train/Electrical-damage/Electrical (117).jpg
+electrical_damage	alicjalena/test/Electrical-damage/Electrical (66).jpg
+electrical_damage	alicjalena/test/Electrical-damage/Electrical (103).jpg
+electrical_damage	alicjalena/val/Electrical-damage/Electrical (145).jpg
+electrical_damage	alicjalena/test/Electrical-damage/Electrical (44).jpg
+electrical_damage	alicjalena/train/Electrical-damage/Electrical (101).jpg
+electrical_damage	alicjalena/train/Electrical-damage/Electrical (32).jpg
+electrical_damage	alicjalena/train/Electrical-damage/Electrical (22).jpg
+electrical_damage	alicjalena/train/Electrical-damage/Electrical (65).jpg
+electrical_damage	alicjalena/train/Electrical-damage/Electrical (112).jpg
+electrical_damage	alicjalena/train/Electrical-damage/Electrical (90).jpg
+electrical_damage	alicjalena/train/Electrical-damage/Electrical (97).jpg
+electrical_damage	alicjalena/test/Electrical-damage/Electrical (19).jpg
+electrical_damage	alicjalena/train/Electrical-damage/Electrical (108).jpg
+electrical_damage	alicjalena/train/Electrical-damage/Electrical (85).jpg
+electrical_damage	alicjalena/train/Electrical-damage/Electrical (98).jpg
+electrical_damage	alicjalena/test/Electrical-damage/Electrical (84).jpg
+electrical_damage	alicjalena/train/Electrical-damage/Electrical (118).jpg
+electrical_damage	alicjalena/train/Electrical-damage/Electrical (55).jpg
+electrical_damage	alicjalena/train/Electrical-damage/Electrical (153).jpg
+electrical_damage	alicjalena/train/Electrical-damage/Electrical (2).png
+electrical_damage	alicjalena/train/Electrical-damage/Electrical (70).jpg
+electrical_damage	alicjalena/val/Electrical-damage/Electrical (4).png
+electrical_damage	alicjalena/test/Electrical-damage/Electrical (50).jpg
+electrical_damage	alicjalena/train/Electrical-damage/Electrical (113).jpg
+electrical_damage	alicjalena/train/Electrical-damage/Electrical (13).jpg
+electrical_damage	alicjalena/train/Electrical-damage/Electrical (99).jpg
+physical_damage	alicjalena/train/Physical-Damage/Physical (130).jpg
+physical_damage	alicjalena/train/Physical-Damage/Physical (131).jpg
+physical_damage	alicjalena/test/Physical-Damage/Physical (82).jpg
+physical_damage	alicjalena/train/Physical-Damage/Physical (107).jpg
+physical_damage	alicjalena/train/Physical-Damage/Physical (133).jpg
+physical_damage	alicjalena/train/Physical-Damage/Physical (12).jpg
+physical_damage	alicjalena/val/Physical-Damage/Physical (85).jpg
+physical_damage	alicjalena/train/Physical-Damage/Physical (126).jpg
+physical_damage	alicjalena/train/Physical-Damage/Physical (129).jpg
+physical_damage	alicjalena/train/Physical-Damage/Physical (15).jpg
+physical_damage	alicjalena/train/Physical-Damage/Physical (117).jpg
+physical_damage	alicjalena/train/Physical-Damage/Physical (86).jpg
+physical_damage	alicjalena/test/Physical-Damage/Physical (122).jpg
+physical_damage	alicjalena/test/Physical-Damage/Physical (18).jpg
+physical_damage	alicjalena/train/Physical-Damage/Physical (66).jpg
+physical_damage	alicjalena/test/Physical-Damage/Physical (106).jpg
+physical_damage	alicjalena/train/Physical-Damage/Physical (14).jpg
+physical_damage	alicjalena/test/Physical-Damage/Physical (149).jpg
+physical_damage	alicjalena/train/Physical-Damage/Physical (75).jpg
+physical_damage	alicjalena/train/Physical-Damage/Physical (19).jpg
+physical_damage	alicjalena/test/Physical-Damage/Physical (109).jpg
+physical_damage	alicjalena/test/Physical-Damage/Physical (58).jpg
+physical_damage	alicjalena/test/Physical-Damage/Physical (108).jpg
+physical_damage	alicjalena/train/Physical-Damage/Physical (50).jpg
+physical_damage	alicjalena/train/Physical-Damage/Physical (112).jpg
+physical_damage	alicjalena/train/Physical-Damage/Physical (116).jpg
+physical_damage	alicjalena/train/Physical-Damage/Physical (69).jpg
+physical_damage	alicjalena/test/Physical-Damage/Physical (49).jpg
+physical_damage	alicjalena/test/Physical-Damage/Physical (115).jpg
+physical_damage	alicjalena/train/Physical-Damage/Physical (104).jpg
+physical_damage	alicjalena/train/Physical-Damage/Physical (46).jpg
+physical_damage	alicjalena/train/Physical-Damage/Physical (4).jpg
+physical_damage	alicjalena/train/Physical-Damage/Physical (39).jpg
+physical_damage	alicjalena/train/Physical-Damage/Physical (147).jpg
+physical_damage	alicjalena/train/Physical-Damage/Physical (125).jpg
+physical_damage	alicjalena/train/Physical-Damage/Physical (90).jpg
+physical_damage	alicjalena/test/Physical-Damage/Physical (36).jpg
+physical_damage	alicjalena/test/Physical-Damage/Physical (10).jpg
+physical_damage	alicjalena/train/Physical-Damage/Physical (7).jpg
+physical_damage	alicjalena/train/Physical-Damage/Physical (77).jpg
+physical_damage	alicjalena/train/Physical-Damage/Physical (51).jpg
+physical_damage	alicjalena/test/Physical-Damage/Physical (20).jpg
+physical_damage	alicjalena/train/Physical-Damage/Physical (45).jpg
+physical_damage	alicjalena/train/Physical-Damage/Physical (111).jpg
+physical_damage	alicjalena/train/Physical-Damage/Physical (65).jpg
+physical_damage	alicjalena/train/Physical-Damage/Physical (83).jpg
+physical_damage	alicjalena/train/Physical-Damage/Physical (143).jpg
+physical_damage	alicjalena/train/Physical-Damage/Physical (88).jpg
+physical_damage	alicjalena/train/Physical-Damage/Physical (2).jpg
+physical_damage	alicjalena/train/Physical-Damage/Physical (42).jpg
+physical_damage	alicjalena/train/Physical-Damage/Physical (22).jpg
+physical_damage	alicjalena/val/Physical-Damage/Physical (37).jpg
+physical_damage	alicjalena/train/Physical-Damage/Physical (62).jpg
+physical_damage	alicjalena/train/Physical-Damage/Physical (40).jpg
+physical_damage	alicjalena/train/Physical-Damage/Physical (48).jpg
+physical_damage	alicjalena/val/Physical-Damage/Physical (34).jpg

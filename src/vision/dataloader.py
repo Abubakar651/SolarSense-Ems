@@ -23,18 +23,14 @@ IMAGENET_STD = [0.229, 0.224, 0.225]
 def build_transforms(train: bool) -> transforms.Compose:
     steps = [transforms.Resize((IMAGE_SIZE, IMAGE_SIZE))]
     if train:
-        # Solar panel defects are invariant to flips and subtle rotation/angles.
-        # ColorJitter and RandomErasing simulate harsh Lahore sunlight, dust haze, and partial sensor occlusions.
+        # Solar panel defects are invariant to horizontal and vertical flips.
+        # Gentle photometric jitter preserves the critical optical contrast between clean and dusty panels.
         steps += [
             transforms.RandomHorizontalFlip(p=0.5),
             transforms.RandomVerticalFlip(p=0.5),
-            transforms.RandomRotation(degrees=15),
-            transforms.ColorJitter(brightness=0.3, contrast=0.3, saturation=0.2, hue=0.03),
-            transforms.RandomAffine(degrees=10, translate=(0.04, 0.04), scale=(0.95, 1.05)),
+            transforms.ColorJitter(brightness=0.08, contrast=0.08, saturation=0.05),
         ]
     steps += [transforms.ToTensor(), transforms.Normalize(IMAGENET_MEAN, IMAGENET_STD)]
-    if train:
-        steps.append(transforms.RandomErasing(p=0.2, scale=(0.02, 0.15), value="random"))
     return transforms.Compose(steps)
 
 

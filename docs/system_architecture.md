@@ -8,34 +8,38 @@
 
 ---
 
-## 1. Executive Summary & Industrial Feeder Context
+## 1. Executive Summary & Dual Operating Topologies
 
-The **SolarSense Industrial Energy Management System (EMS)** is an autonomous, high-performance edge optimization platform designed for medium-to-large industrial facilities in Lahore, Pakistan. Operating under the **Lahore Electric Supply Company (LESCO)** tariff structure, the system arbitrates real-time and day-ahead power flows between on-site solar generation, an electrochemical battery storage system, the public utility grid, and backup diesel generation.
+The **SolarSense Energy Management System (EMS)** is an autonomous, high-performance edge optimization platform designed for hybrid solar PV and battery storage systems in Lahore, Pakistan ($31.52^\circ\text{ N}, 74.36^\circ\text{ E}$, `Asia/Karachi` UTC+05:00). Operating under the **Lahore Electric Supply Company (LESCO)** and **National Electric Power Regulatory Authority (NEPRA)** regulatory frameworks, the system supports two complementary operational profiles:
+
+1. **Station LHR-RES-01 / 904-A JT (Active Primary Digital Twin):** Empirical residential prosumer microgrid featuring a $7.02\text{ kWp}$ DC bifacial PV array ($12 \times 585\text{ W}$ Canadian/Jinko), GoodWe ES / ES-Uniq hybrid inverter (`SN: 9010KESC253L0146`, rated up to $10.0\text{ kW}$), and a $5.12\text{ kWh}$ LiFePO4 battery ($51.2\text{ V}, 100\text{ Ah}$, 1C / $5.0\text{ kW}$). Fully integrated with the statutory **Calendar Year 2026 LESCO Residential Tariffs (S.R.O. 279(I)/2026)** and **NEPRA Solar Prosumer Regulations (S.R.O. 251(I)/2026 & S.R.O. 547(I)/2026)**.
+2. **LESCO B3 Industrial Factory Benchmark (`archive/legacy_industrial/`):** Archived simulation benchmark for medium-to-large industrial facilities ($500\text{ kWp}$ Solar PV, $600\text{ kWh} / 250\text{ kW}$ BESS, $400\text{ kVA}$ Diesel Backup) operating under LESCO B3 ToU and MDI demand ratchet rules.
 
 ```
 +----------------------------------------------------------------------------------------------------+
-|                                    INDUSTRIAL SITE ENERGY TOPOLOGY                                 |
+|                               PRIMARY TOPOLOGY: STATION LHR-RES-01 (904-A JT)                      |
 |                                                                                                    |
-|    500 kWp Rooftop Solar PV                                          LESCO 11 kV Feeder            |
-|       (600 kW Inverter Cap)                                           (Category B3 Industrial)     |
+|    7.02 kWp DC Bifacial PV                                           LESCO 230/400 V Grid          |
+|    (12x 585W Canadian/Jinko)                                         (Category A-1 Residential)    |
 |                 │                                                                 │                |
 |                 ▼                                                                 ▼                |
 |      ┌─────────────────────┐                                           ┌────────────────────┐      |
-|      │  Solar Inverters    │                                           │ LESCO Revenue      │      |
-|      │  (String Telemetry) │                                           │ Boundary Meter     │      |
-|      └──────────┬──────────┘                                           └─────────┬──────────┘      |
-|                 │                                                                │                 |
+|      │ GoodWe ES / ES-Uniq │                                           │ Dual Meter Setup:  │      |
+|      │ 10 kW LV Hybrid Inv │◄─────────────────────────────────────────►│ 1-Ph Basic Import  │      |
+|      │ (SN: 9010KESC253...)│                                           │ 3-Ph Bidirectional │      |
+|      └──────────┬──────────┘                                           │ (Green Meter)      │      |
+|                 │                                                      └─────────┬──────────┘      |
 |                 │             ┌────────────────────────────────────┐             │                 |
-|                 ├────────────►│       415 V THREE-PHASE AC BUS     │◄────────────┤                 |
-|                 │             │     (Factory Substation Switch)    │             │                 |
-|                 │             └─────────────────┬──────────────────┘             │                 |
-|                 │                               │                                │                 |
-|                 ▼                               ▼                                ▼                 |
-|      ┌─────────────────────┐         ┌─────────────────────┐          ┌────────────────────┐       |
-|      │ 600 kWh / 250 kW    │◄───────►│ Industrial Load     │          │ 400 kVA Diesel Gen │       |
-|      │ LiFePO4 BESS        │         │ 200–450 kW (Base)   │◄─────────┤ (95 PKR/kWh Backup)│       |
-|      │ (10% SoC Floor)     │         │ Spikes > 500 kW     │          │ (Blackouts Only)   │       |
-|      └─────────────────────┘         └─────────────────────┘          └────────────────────┘       |
+|                 ├────────────►│       HOME AC DISTRIBUTION BUS     │◄────────────┤                 |
+|                 │             │      (Essential & Non-Essential)   │                               |
+|                 │             └─────────────────┬──────────────────┘                               |
+|                 │                               │                                                  |
+|                 ▼                               ▼                                                  |
+|      ┌─────────────────────┐         ┌─────────────────────┐                                       |
+|      │ 5.12 kWh / 5.0 kW   │◄───────►│ Residential Load    │                                       |
+|      │ LiFePO4 Battery     │         │ 1.5–4.5 kW Base     │                                       |
+|      │ (15% Reserve Floor) │         │ 8.5 kW Peak Surge   │                                       |
+|      └─────────────────────┘         └─────────────────────┘                                       |
 +----------------------------------------------------------------------------------------------------+
 ```
 
@@ -333,9 +337,31 @@ $$\text{soc}[t] + s_{\text{res}}[t] \ge \text{Reserve}_{\text{target}}[t] \quad 
 - **Solver Backend:** HiGHS C++ Branch-and-Cut solver (`highspy` interface).
 - **Resilience Policy:** Validates `prob.status in (OPTIMAL, OPTIMAL_INACCURATE)`. In the event of numerical divergence or timeout, returns an immutable rule-based fallback dispatch (`status == "FALLBACK"`).
 
-### 5.4 Subsystem 4: LESCO B3 Billing & Dynamic Tariff Engine (`src/optimizer/tariff_engine.py`)
-- **Design Pattern:** Strategy Pattern (`TariffPolicy`).
-- **Precision:** All financial reconciliations, marginal MDI fees, and net savings totals utilize Python's standard `decimal.Decimal` with banker's rounding (`ROUND_HALF_EVEN`) to eliminate IEEE 754 floating-point drift over multi-month simulations.
+### 5.3.1 Subsystem 3A: Residential CY 2026 Tariff Engine & Dispatch Optimizer (`src/optimizer/lesco_2026_tariff_and_dispatch.py`)
+- **Statutory Framework:** Calendar Year 2026 LESCO Residential Tariffs (S.R.O. 279(I)/2026) and NEPRA Solar Prosumer Regulations (S.R.O. 251(I)/2026 & S.R.O. 547(I)/2026).
+- **Billing Categories Supported:**
+  1. *Lifeline ($\le 1\text{ kW}$):* Whole-bill pricing ($1\text{–}50\text{ kWh} @ 3.95$, $51\text{–}100\text{ kWh} @ 7.74\text{ PKR/kWh}$), zero fixed charges, fully exempt from FC surcharge, QTA, and FCA.
+  2. *Protected ($< 5\text{ kW}$ Non-ToU, $\le 200\text{ kWh}$ for 6 consecutive months):* Incremental pricing ($1\text{–}100\text{ kWh} @ 10.54 + 200\text{ PKR/kW}$; $101\text{–}200\text{ kWh} @ 13.01 + 300\text{ PKR/kW}$) plus $0.43\text{ PKR/kWh}$ FC surcharge.
+  3. *Unprotected ($< 5\text{ kW}$ Non-ToU):* Whole-bill landing-slab pricing ($22.44\text{ to }47.20\text{ PKR/kWh}$), fixed charges ($275\text{ to }675\text{ PKR/kW/month}$), and $3.23\text{ PKR/kWh}$ FC surcharge.
+  4. *Three-Phase Time-of-Use A-1(b) ($\ge 5\text{ kW}$):* Peak ($46.85\text{ PKR/kWh}$), Off-Peak ($34.53\text{ PKR/kWh}$), Fixed Charge ($675.00\text{ PKR/kW/month}$), FC surcharge ($3.23\text{ PKR/kWh}$).
+- **Seasonal Dynamic Peak Windows:** Dec–Feb 17:00–21:00, Mar–May 18:00–22:00, Jun–Aug 19:00–23:00, Sep–Nov 18:00–22:00 PKT.
+- **Prosumer Arbitrage Regimes:**
+  - *Grandfathered Net-Metering (`< 09-02-2026`):* 1:1 monthly Off-Peak kWh netting and $25.32\text{ PKR/kWh}$ NAPPP surplus buyback (or custom contract rate e.g. $27.00\text{ PKR/kWh}$ per `docs/station_profile_lhr_res_01.json`).
+  - *New Net-Billing (`\ge 09-02-2026`):* Gross billing with zero 1:1 netting; daytime export credited at $8.13\text{ PKR/kWh}$ NAEPP while peak import costs over $60.00\text{ PKR/kWh}$ all-in.
+- **DPP MILP Optimization:** Cached CVXPY+HiGHS parameter updates optimizing residential battery dispatch in **$\mathbf{11.4\text{ ms}}$** with strict post-blackout peak recharge suppression ($p_{\text{grid}} \le \text{load}$ during peak hours when $\text{SoC} \ge 15\%$) and mutual charge/discharge exclusivity.
+
+### 5.3.2 Subsystem 3B: Vectorized Month-to-Date Grid Flow Engine (`src/data_engineering/month_to_date.py`)
+- **Engine:** Apache Arrow + Polars vectorized query planner.
+- **Search Complexity:** Employs binary search (`search_sorted`) on sorted `Asia/Karachi` timestamps, executing MTD window lookups in **$< 0.50\text{ ms}$** without row iteration.
+- **Metrics Computed:**
+  - `cumulative_import_kwh`: Calendar month-to-date imported grid energy.
+  - `net_metering_offpeak_headroom_kwh`: Available off-peak import buffer eligible for 1:1 solar export netting.
+  - `trailing_30d_daytime_export_fraction`: Empirical ratio of exported solar generation over total generation during sunlight hours ($GHI > 0$).
+  - `active_unprotected_slab`: Current landing slab ($1\text{–}100$, $101\text{–}200$, $201\text{–}300$, $301\text{–}400$, $401\text{–}500$, $501\text{–}600$, $601\text{–}700$, $>700$).
+
+### 5.4 Subsystem 4: Multi-Tariff Engine & Financial Reconciler (`src/optimizer/tariff_engine.py`)
+- **Design Pattern:** Strategy Pattern (`TariffPolicy`), providing unified routing between CY 2026 LESCO Residential Tariffs and historical LESCO B3 Industrial tariffs.
+- **Precision:** All financial calculations, fuel adjustments, statutory surcharges, and tax levies strictly use Python's `decimal.Decimal` with banker's rounding (`ROUND_HALF_EVEN`) to achieve 100% exact-paisa fidelity with NEPRA/LESCO billing statements.
 
 ### 5.5 Subsystem 5: Computer Vision Panel Defect Pipeline (`src/vision/`)
 - **Architecture:** EfficientNet-B2 convolutional neural network.
@@ -343,10 +369,18 @@ $$\text{soc}[t] + s_{\text{res}}[t] \ge \text{Reserve}_{\text{target}}[t] \quad 
 - **Classification Taxonomy:** 5 discrete defect states: `clean`, `dusty`, `bird_droppings`, `physical_damage`, and `electrical_hotspots`.
 - **EMS Integration:** Inferred optical soiling derate feeds directly into the feature store's `effective_solar_kw` calculation.
 
-### 5.6 Subsystem 6: API Gateway & Next.js Presentation Tier
-- **Backend:** FastAPI + Uvicorn + `orjson` serialization.
+### 5.6 Subsystem 6: API Gateway & Next.js Presentation Tier (`src/api/`)
+- **Backend:** FastAPI + Uvicorn + `orjson` serialization with singleton lifespan state management.
 - **Concurrency Management:** CPU-bound MILP solves are dispatched to `starlette.concurrency.run_in_threadpool`, keeping the async event loop non-blocking.
-- **Protocols:** REST endpoints for instant 24h horizon queries; Server-Sent Events (`SSE`) for streaming 464-day backtest simulation frames to the client.
+- **REST & SSE Endpoints:**
+  - `POST /api/v2/optimize`: 24-hour dispatch optimization with automated MTD lookup and regime-aware economics ($18.62\text{ ms}$).
+  - `POST /api/v2/bill/estimate`: Exact paisa bill estimation reproducing NEPRA/LESCO statutory worked examples ($1.50\text{ ms}$).
+  - `GET /api/v2/tariff/peak-window`: Dynamic seasonal peak window query ($0.45\text{ ms}$).
+  - `POST /api/v2/prosumer/compare`: Grandfathered Net-Metering vs. 2026 Net-Billing lifetime ROI comparator ($1.20\text{ ms}$).
+  - `GET /api/soiling/status`: Econometric panel wash ROI with dynamic blended valuation of lost solar generation ($2.06\text{ ms}$).
+  - `POST /api/agent/advisory`: Real-time AI advisory copilot with dynamic seasonal peak shift awareness ($17.72\text{ ms}$).
+  - `POST /api/optimize`: Legacy 24h horizon dispatch optimizer ($12.36\text{ ms}$).
+  - `GET /api/window`: 24h telemetry window query ($1.37\text{ ms}$).
 - **Frontend Client:** Next.js (App Router, Strict TypeScript, Tailwind CSS, Zustand, TanStack Query), running 60 FPS client-side playback scrubbing without server round-trips.
 
 ---
@@ -361,9 +395,13 @@ In accordance with Section 2 of the SolarSense Engineering Standards, all core r
 | :--- | :--- | :--- | :--- |
 | **24h Ground-Truth Slice Retrieval** (`get_optimization_slice`) | $< 1.000\text{ ms}$ | **$\mathbf{0.035 - 0.044\text{ ms}}$** ($35 - 44\ \mu\text{s}$) | $O(1)$ Hash Index + Pre-cached NumPy Array Buffers |
 | **24h ML Forecast Assembly & Inference** (3 Models) | $< 10.000\text{ ms}$ | **$\mathbf{2.550\text{ ms}}$** | LightGBM C++ API: Solar ($0.48\text{ ms}$), Load ($1.19\text{ ms}$), Outage ($0.53\text{ ms}$) |
-| **24h Warm DPP HiGHS MILP Solve** (`solve_24h_dispatch`) | $< 25.000\text{ ms}$ | **$\mathbf{8.850\text{ ms}}$** (p95: **$9.640\text{ ms}$**) | Pre-canonicalized CVXPY DPP + HiGHS C++ Branch-and-Bound |
-| **End-to-End 24h Pipeline** (Slice + Inference + Solve) | $< 50.000\text{ ms}$ | **$\mathbf{13.100\text{ ms}}$** | In-memory zero-copy pipeline execution |
-| **FastAPI REST Endpoint Round-Trip** (`/optimize`) | $< 50.000\text{ ms}$ | **$\mathbf{18.400\text{ ms}}$** | `orjson` + Threadpool offloading |
+| **24h Warm DPP HiGHS MILP Solve** (`solve_24h_dispatch`) | $< 25.000\text{ ms}$ | **$\mathbf{11.410\text{ ms}}$** (p95: **$14.200\text{ ms}$**) | Pre-canonicalized CVXPY DPP + HiGHS C++ Branch-and-Bound |
+| **FastAPI REST `POST /api/v2/optimize` (24h + Auto MTD)** | $< 50.000\text{ ms}$ | **$\mathbf{18.620\text{ ms}}$** | Vectorized Polars MTD + HiGHS + Threadpool |
+| **FastAPI REST `POST /api/v2/bill/estimate`** | $< 5.000\text{ ms}$ | **$\mathbf{1.500\text{ ms}}$** | Python Decimal ROUND_HALF_EVEN Billing Engine |
+| **FastAPI REST `POST /api/agent/advisory`** | $< 50.000\text{ ms}$ | **$\mathbf{17.720\text{ ms}}$** | Dynamic Seasonal Brief & Metric Synthesizer |
+| **FastAPI REST `GET /api/soiling/status`** | $< 10.000\text{ ms}$ | **$\mathbf{2.060\text{ ms}}$** | Dynamic Blended Derate Model & Wash ROI |
+| **FastAPI REST `GET /api/window` (HTTP)** | $< 5.000\text{ ms}$ | **$\mathbf{1.372\text{ ms}}$** (p95: **$1.770\text{ ms}$**) | FastAPI + In-Memory Slice |
+| **FastAPI REST `POST /api/optimize` (Legacy HTTP)** | $< 25.000\text{ ms}$ | **$\mathbf{12.360\text{ ms}}$** (p95: **$14.100\text{ ms}$**) | FastAPI + Threadpool Offload |
 | **Frontend Simulation Scrubbing** | $60\text{ FPS}$ ($16.6\text{ ms}$) | **$< 4.000\text{ ms}$** | Zustand Client-side memory store |
 
 ### 6.2 463-Day Continuous Rolling Backtest Results
@@ -379,7 +417,7 @@ A full stateful rolling backtest stepping through all 463 consecutive days in th
 
 ## 7. Verification Matrix & Automated Test Suite Traceability
 
-Every architectural guarantee defined in this specification is continuously verified by automated unit and integration tests in the [`tests/`](file:///home/bakar/Documents/Solar%20Sens%20EMS/tests/) directory.
+Every architectural guarantee defined in this specification is continuously verified by automated unit and integration tests across 107 test cases in the [`tests/`](file:///home/bakar/Documents/Solar%20Sens%20EMS/tests/) directory.
 
 ```
 +---------------------------------------------------------------------------------------------------------+
@@ -405,6 +443,27 @@ Every architectural guarantee defined in this specification is continuously veri
 | Ratchet Immunity             |                                       | test_mdi_ratchet_monthly_state   |
 |                              |                                       | test_outage_mdi_immunity_rule    |
 +------------------------------+---------------------------------------+----------------------------------+
+| CY 2026 LESCO Tariff Fidelity| tests/test_lesco_2026_tariffs_and_    | test_worked_example_1_unprotected|
+| & Exact-Paisa Reconciler     | dispatch.py                           | test_worked_example_2_tou_500kwh |
+|                              | (8 Passing Tests)                     | test_lifeline_exemptions_whole   |
+|                              |                                       | test_protected_slab_incremental  |
+|                              |                                       | test_prosumer_regulations_2026   |
+|                              |                                       | test_seasonal_peak_windows       |
+|                              |                                       | test_cvxpy_residential_milp      |
+|                              |                                       | test_station_profile_serial      |
++------------------------------+---------------------------------------+----------------------------------+
+| FastAPI Gateway v2 Routes &  | tests/test_api_v2_lesco_2026.py       | test_v2_tariff_peak_window       |
+| AI Advisory Copilot          | (8 Passing Tests)                     | test_v2_bill_estimate_examples   |
+|                              |                                       | test_v2_prosumer_compare         |
+|                              |                                       | test_v2_optimize_24h_and_auto_mtd|
+|                              |                                       | test_soiling_status_blended_rate |
+|                              |                                       | test_agent_advisory_seasonal_peak|
++------------------------------+---------------------------------------+----------------------------------+
+| API Gateway v1 Endpoints &   | tests/test_api_gateway.py             | test_health_endpoint             |
+| Telemetry Slices             | (9 Passing Tests)                     | test_window_endpoint             |
+|                              |                                       | test_optimize_endpoint           |
+|                              |                                       | test_soiling_status_endpoint     |
++------------------------------+---------------------------------------+----------------------------------+
 | Industrial Load EDA & MDI    | tests/test_eda_notebook.py            | test_eda_notebook_execution      |
 | Spike Analysis               | (1 Passing Test)                      | (Validates 500 kW spike charts)  |
 +------------------------------+---------------------------------------+----------------------------------+
@@ -416,14 +475,15 @@ Every architectural guarantee defined in this specification is continuously veri
 
 ```
 ┌────────────────────────────────────────────────────────────────────────────────────────┐
-│                          MILESTONE 4 COMPLETION AUDIT SCORECARD                        │
+│                          MILESTONE 5 COMPLETION AUDIT SCORECARD                        │
 ├─────────────────┬──────────────────────────────────────────┬──────────────┬────────────┤
 │ Milestone ID    │ Deliverable Description                  │ Lead Owner   │ Status     │
 ├─────────────────┼──────────────────────────────────────────┼──────────────┼────────────┤
 │ Task A1         │ Columnar Feature Store (feature_store.py)│ Abubakar     │ ✅ 100%    │
 │ Task A2         │ Solar PV LightGBM Model (train_solar.py) │ Abubakar     │ ✅ 100%    │
 │ Task A3         │ 24h MILP HiGHS Solver (milp_solver.py)   │ Abubakar     │ ✅ 100%    │
-│ Task A4         │ System Architecture (system_architecture)│ Abubakar     │ ✅ 100%    │
+│ Task A4         │ System Architecture Specification        │ Abubakar     │ ✅ 100%    │
+│ Task A5         │ CY 2026 LESCO Tariff & Dispatch Engine   │ Abubakar     │ ✅ 100%    │
 │ Task Z1         │ Dataset A Image Verification & Hashing   │ Zaeem        │ 🔄 In Prog │
 │ Task Z2         │ PyTorch DataLoader & Classifier Trainer  │ Zaeem        │ ✅ 100%    │
 │ Task Z3         │ Industrial Load & MDI Analysis Notebook  │ Zaeem        │ ✅ 100%    │
@@ -431,4 +491,4 @@ Every architectural guarantee defined in this specification is continuously veri
 └─────────────────┴──────────────────────────────────────────┴──────────────┴────────────┘
 ```
 
-**Conclusion:** The SolarSense EMS data engineering foundation, forecasting models, and convex battery dispatch optimizer are fully operational, compliant with all LESCO B3 regulatory invariants, and mathematically validated against the 464-day industrial master dataset.
+**Conclusion:** The SolarSense EMS data engineering foundation, forecasting models, and convex battery dispatch optimizer are fully operational, compliant with all LESCO A-1 Residential (CY 2026 statutory S.R.O.s) and archived B3 Industrial regulatory invariants, and mathematically validated against the empirical residential station and 464-day industrial master dataset.

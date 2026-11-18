@@ -1,8 +1,8 @@
 import type { SettingsData } from '@/types/domain/settings';
 import { shortDate } from '@/lib/dates';
-import { pad } from '@/lib/format';
+import { DEFAULT_REGIME, DEFAULT_TARIFF_CATEGORY, MIN_RESERVE_PCT } from '@/lib/tariff';
 import { SAMPLE_SITE } from '../../mock/constants';
-import { LAST_READING, STATION, TARIFF } from '../../mock/lhr-res-01';
+import { LAST_READING, STATION } from '../../mock/lhr-res-01';
 import type { SettingsRepository } from './settings.repository';
 
 const SAMPLE_SETTINGS: SettingsData = {
@@ -24,22 +24,20 @@ const SAMPLE_SETTINGS: SettingsData = {
   },
   battery: {
     capacityKwh: SAMPLE_SITE.batteryCapacityKwh,
-    reservePct: Math.round((SAMPLE_SITE.reserveFloorKwh / SAMPLE_SITE.batteryCapacityKwh) * 100),
-    priority: 'balanced',
-    neverChargeAtPeak: true,
-    overnightGridCharge: true,
-    exportExtra: true,
-    chargeFrom: '23:00',
-    chargeTo: '05:00',
+    reservePct: Math.max(
+      MIN_RESERVE_PCT,
+      Math.round((SAMPLE_SITE.reserveFloorKwh / SAMPLE_SITE.batteryCapacityKwh) * 100),
+    ),
   },
   blackouts: [],
+  // Values from docs/station_profile_lhr_res_01.json.
   tariff: {
-    plan: 'Time-of-use (peak / off-peak)',
-    peakStart: `${pad(TARIFF.peakStartHour)}:00`,
-    peakEnd: `${pad(TARIFF.peakEndHour)}:00`,
-    peakRate: TARIFF.peakPkrPerKwh.toFixed(2),
-    offPeakRate: TARIFF.offPeakPkrPerKwh.toFixed(2),
-    exportRate: TARIFF.exportPkrPerKwh.toFixed(2),
+    category: DEFAULT_TARIFF_CATEGORY,
+    regime: DEFAULT_REGIME,
+    sanctionedLoadKw: '10',
+    isAtlFiler: true,
+    includeElectricityDuty: false,
+    isProtectedConsumer: false,
   },
   notifications: [
     { label: 'Grid outage starts or ends', inApp: true, email: true },

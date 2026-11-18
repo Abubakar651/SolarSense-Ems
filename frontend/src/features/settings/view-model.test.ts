@@ -16,13 +16,15 @@ describe('toFormValues', () => {
 
   it('keys values by input id', () => {
     expect(values['p-name']).toBe('Zaeem');
-    expect(values['t-p']).toBe('46.85');
+    expect(values['t-cat']).toBe('TOU_A1B');
+    expect(values['t-reg']).toBe('GRANDFATHERED_NET_METERING');
+    expect(values['t-load']).toBe('10');
     expect(values.reserve).toBe('15');
-    expect(values.prio).toBe('balanced');
   });
 
   it('keeps switches as booleans', () => {
-    expect(values['rule-peak']).toBe(true);
+    expect(values['t-atl']).toBe(true);
+    expect(values['t-duty']).toBe(false);
     expect(values['notify-2-email']).toBe(false);
     expect(values['notify-5-app']).toBe(false);
   });
@@ -48,7 +50,7 @@ describe('isDirty', () => {
   });
 
   it('is true when a switch flips', () => {
-    expect(isDirty({ ...saved, 'rule-export': false }, saved)).toBe(true);
+    expect(isDirty({ ...saved, 't-duty': true }, saved)).toBe(true);
   });
 });
 

@@ -5,11 +5,13 @@ import { useRouter } from 'next/navigation';
 import { Check } from '@/components/forms/check';
 import { Field } from '@/components/forms/field';
 import { ValidatedForm } from '@/components/forms/validated-form';
-import { rules } from '@/lib/validators';
+import { rules, type Rule } from '@/lib/validators';
 import { useToast } from '@/providers/toast-provider';
 
-const EMAIL_RULES = [rules.required(), rules.email()];
-const PASSWORD_RULES = [rules.required()];
+// Credentials are optional until a real auth backend exists: an empty form logs straight in,
+// while a typed email is still format-checked. Restore `rules.required()` when auth lands.
+const EMAIL_RULES = [rules.email()];
+const PASSWORD_RULES: Rule[] = [];
 
 export function LoginForm() {
   const router = useRouter();

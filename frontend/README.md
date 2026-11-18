@@ -80,14 +80,45 @@ ends (hourly data on 7 Oct 2026, telemetry on 27 Oct 2026) the screen says so.
 
 ### Wiring a real endpoint
 
-The backend (`src/api` in the repo root) exposes `/health`, `/api/window`, `/api/optimize` and
-`/api/backtest/stream`. Forecast, outage-risk, soiling and vision have no HTTP routes yet. To switch one
-screen to real data:
+The backend (`src/api` in the repo root) has these routes. Nothing is wired yet: every screen reads a mock.
+The options and types already follow the backend, so wiring means writing the mapper.
+
+| Screen                            | Endpoint                                                                         | Frontend type                               |
+| --------------------------------- | -------------------------------------------------------------------------------- | ------------------------------------------- |
+| Today's plan, Dashboard           | `POST /api/v2/optimize` (`/api/optimize` is the older factory-scale one)         | `DayPlan`                                   |
+| Today's plan (daily brief)        | `POST /api/agent/advisory`                                                       | `Advisory`                                  |
+| Live inverter                     | `GET /api/v2/inverter/live` (503 when the inverter is unreachable)               | `InverterReading`                           |
+| Bill & tariff                     | `POST /api/v2/bill/estimate`, `POST /api/v2/prosumer/compare`                    | `BillEstimate`, `ProsumerComparison`        |
+| Settings, Onboarding (peak hours) | `GET /api/v2/tariff/peak-window?month=`                                          | `peakWindowForMonth` in `src/lib/tariff.ts` |
+| Panel health                      | `GET /api/soiling/status`, `POST /api/vision/inspect`, `GET /api/vision/samples` | `SoilingData`                               |
+
+Also available: `/health`, `/api/dates`, `/api/window`, `/api/backtest/stream`. Outage risk, alerts, accounts, notifications and
+report emails have no route.
+
+Choices the UI already makes to match the backend (see `src/lib/tariff.ts` for the sources):
+
+- Tariff category, export arrangement (regime) and sanctioned load are settings; the peak window, the
+  peak and off-peak rates and the export credit are shown read-only. Peak hours are fixed by season and the
+  export credit follows the regime (25.32, 8.13 or 0 PKR/kWh).
+- The backup reserve cannot go below 15%, the inverter's floor. "No grid charging at peak" is a fixed rule,
+  not a switch.
+- Money from the bill endpoints is a string (Decimal) and is shown as sent. The UI never works out a bill.
+
+Mapper warnings:
+
+1. Battery power is positive when charging in `/api/v2/inverter/live`, but positive when discharging in the
+   recorded history under `data/processed/solar_timeseries`. Grid power is positive when exporting in both.
+2. The live reader fills a sensor it cannot read with `0.0` (or `100.0` for battery health), so a missing
+   value cannot be told from a real zero. `InverterLive` allows `null` for those fields.
+3. `/api/v2/inverter/live` has no authentication and the API allows any origin. Call it from the Next.js
+   server, not from the browser.
+
+To switch one screen to real data:
 
 1. Add `<name>.http.ts` next to the repository interface, implementing the same interface.
 2. Validate the response at the edge (add a schema for the Pydantic model) and map it to the domain type in
-   `types/domain`. The backend is factory-scale (`factory_load_kw`, MDI, diesel); the UI speaks home-scale,
-   so the mapper is where those fields are renamed or dropped.
+   `types/domain`. `/api/optimize` is factory-scale (`factory_load_kw`, MDI, diesel); the UI speaks
+   home-scale, so the mapper is where those fields are renamed or dropped.
 3. Return the http implementation from `getServices()`.
 
 `.env.example` lists `NEXT_PUBLIC_API_BASE_URL` and `NEXT_PUBLIC_USE_MOCKS`. Copy it to `.env.local` when you

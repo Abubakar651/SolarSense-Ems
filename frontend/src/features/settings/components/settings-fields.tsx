@@ -50,13 +50,20 @@ export function SettingsText({
   );
 }
 
+/** A select option whose stored value differs from its label. */
+export interface SelectOption {
+  value: string;
+  label: string;
+}
+
 interface SettingsSelectProps {
   id: string;
   label: string;
-  options: readonly string[];
+  options: readonly (string | SelectOption)[];
+  hint?: string;
 }
 
-export function SettingsSelect({ id, label, options }: SettingsSelectProps) {
+export function SettingsSelect({ id, label, options, hint }: SettingsSelectProps) {
   const [value, setValue] = useTextSetting(id);
 
   return (
@@ -67,11 +74,23 @@ export function SettingsSelect({ id, label, options }: SettingsSelectProps) {
         id={id}
         value={value}
         onChange={(event) => setValue(event.target.value)}
+        aria-describedby={hint ? `${id}-hint` : undefined}
       >
-        {options.map((option) => (
-          <option key={option}>{option}</option>
-        ))}
+        {options.map((option) => {
+          const { value: optionValue, label: optionLabel } =
+            typeof option === 'string' ? { value: option, label: option } : option;
+          return (
+            <option key={optionValue} value={optionValue}>
+              {optionLabel}
+            </option>
+          );
+        })}
       </select>
+      {hint && (
+        <p className="hint" id={`${id}-hint`}>
+          {hint}
+        </p>
+      )}
     </div>
   );
 }

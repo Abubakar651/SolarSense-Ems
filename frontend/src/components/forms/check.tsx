@@ -6,10 +6,18 @@ import { FieldError } from './field-error';
 import { useFormField } from './validated-form';
 
 /** Plain checkbox with its label (no validation). */
-export function Check({ name, label }: { name: string; label: string }) {
+export function Check({
+  name,
+  label,
+  defaultChecked,
+}: {
+  name: string;
+  label: string;
+  defaultChecked?: boolean;
+}) {
   return (
     <label className="check">
-      <input type="checkbox" name={name} />
+      <input type="checkbox" name={name} defaultChecked={defaultChecked} />
       {` ${label}`}
     </label>
   );

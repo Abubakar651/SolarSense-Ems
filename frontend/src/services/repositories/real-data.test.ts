@@ -7,11 +7,12 @@ import { savingsMock } from './savings/savings.mock';
 import { settingsMock } from './settings/settings.mock';
 
 describe('site and tariff come from the backend data', () => {
-  it('uses the 5.12 kWh battery with a 15% reserve and the LESCO A-1 rates', async () => {
+  it('uses the 5.12 kWh battery with a 15% reserve, the LESCO A-1 rates and the net-metering export credit', async () => {
     const plan = await energyMock.getDayPlan();
     expect(plan.batteryCapacityKwh).toBe(5.12);
     expect(plan.reserveFloorKwh / plan.batteryCapacityKwh).toBeCloseTo(0.15, 5);
-    expect(plan.tariff).toEqual({ peakPkr: 46.85, offPeakPkr: 34.53, exportPkr: 27 });
+    expect(plan.tariff).toEqual({ peakPkr: 46.85, offPeakPkr: 34.53, exportPkr: 25.32 });
+    expect([plan.peakStartHour, plan.peakEndHour]).toEqual([18, 22]);
   });
 
   it('describes Station LHR-RES-01 in the settings', async () => {
@@ -22,7 +23,14 @@ describe('site and tariff come from the backend data', () => {
       batteryKwh: '5.12',
       serial: '9010KESC253L0146',
     });
-    expect(tariff).toMatchObject({ peakRate: '46.85', offPeakRate: '34.53', exportRate: '27.00' });
+    expect(tariff).toEqual({
+      category: 'TOU_A1B',
+      regime: 'GRANDFATHERED_NET_METERING',
+      sanctionedLoadKw: '10',
+      isAtlFiler: true,
+      includeElectricityDuty: false,
+      isProtectedConsumer: false,
+    });
   });
 });
 
@@ -61,7 +69,7 @@ describe('reports', () => {
       { label: 'Solar generated', value: '580 kWh' },
       { label: 'Grid imported', value: '673 kWh' },
       { label: 'Exported', value: '214 kWh' },
-      { label: 'Total saved', value: 'PKR 16,179' },
+      { label: 'Total saved', value: 'PKR 15,819' },
     ]);
   });
 
@@ -91,7 +99,7 @@ describe('savings', () => {
   it('prices October with and without solar from the same meter figures', async () => {
     const { currentMonth } = await savingsMock.getSavings();
     expect(currentMonth.label).toBe('Oct 1–26');
-    expect(currentMonth.withoutSolarPkr - currentMonth.costPkr).toBe(16_178);
+    expect(currentMonth.withoutSolarPkr - currentMonth.costPkr).toBe(15_818);
     expect(currentMonth.selfPoweredPct).toBe(31);
   });
 });

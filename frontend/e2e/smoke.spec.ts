@@ -31,12 +31,19 @@ test('log in leads to the dashboard', async ({ page }) => {
   await expect(page).toHaveURL(/\/dashboard$/);
 });
 
-test('submitting an empty login shows an error summary that links to the fields', async ({
+test('submitting an empty login leads to the dashboard', async ({ page }) => {
+  await page.goto('/login');
+  await page.getByRole('button', { name: 'Log in' }).click();
+  await expect(page).toHaveURL(/\/dashboard$/);
+});
+
+test('a malformed email on login shows an error summary that links to the field', async ({
   page,
 }) => {
   await page.goto('/login');
+  await page.getByLabel('Email address').fill('not-an-email');
   await page.getByRole('button', { name: 'Log in' }).click();
-  const summary = page.getByRole('alert').filter({ hasText: 'Please fix 2 problems' });
+  const summary = page.getByRole('alert').filter({ hasText: 'Please fix 1 problem' });
   await expect(summary).toBeVisible();
   await expect(summary).toBeFocused();
 });

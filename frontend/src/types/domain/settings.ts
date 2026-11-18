@@ -1,4 +1,4 @@
-export type PriorityMode = 'comfort' | 'balanced' | 'savings';
+import type { ProsumerRegime, TariffCategory } from '@/lib/tariff';
 
 /** A daily window, as 24-hour "HH:MM", when the user knows the grid will be off. `end` may be earlier than `start` (crosses midnight). */
 export interface BlackoutWindow {
@@ -20,22 +20,18 @@ export interface SettingsData {
   };
   battery: {
     capacityKwh: number;
+    /** Share of the battery held back for outages; never below the 15% inverter floor. */
     reservePct: number;
-    priority: PriorityMode;
-    neverChargeAtPeak: boolean;
-    overnightGridCharge: boolean;
-    exportExtra: boolean;
-    chargeFrom: string;
-    chargeTo: string;
   };
   blackouts: BlackoutWindow[];
+  /** The per-customer fields of the backend's StationProfile (docs/station_profile_lhr_res_01.json). */
   tariff: {
-    plan: string;
-    peakStart: string;
-    peakEnd: string;
-    peakRate: string;
-    offPeakRate: string;
-    exportRate: string;
+    category: TariffCategory;
+    regime: ProsumerRegime;
+    sanctionedLoadKw: string;
+    isAtlFiler: boolean;
+    includeElectricityDuty: boolean;
+    isProtectedConsumer: boolean;
   };
   notifications: { label: string; inApp: boolean; email: boolean }[];
 }

@@ -12,6 +12,8 @@ interface FieldProps {
   type: HTMLInputTypeAttribute;
   autoComplete: string;
   placeholder?: string;
+  /** Starting value of the (uncontrolled) input. */
+  defaultValue?: string;
   rules: Rule[];
   hint?: string;
   /** Multi-step forms: the step this field belongs to (see ValidatedForm `activeGroup`). */
@@ -28,6 +30,7 @@ export function Field({
   type,
   autoComplete,
   placeholder = '',
+  defaultValue,
   rules,
   hint,
   group,
@@ -51,6 +54,7 @@ export function Field({
       inputMode={inputMode}
       autoComplete={autoComplete}
       placeholder={placeholder}
+      defaultValue={defaultValue}
       aria-describedby={[hint ? `${id}-hint` : '', `${id}-err`].filter(Boolean).join(' ')}
       aria-required={required || undefined}
       aria-invalid={error ? true : undefined}

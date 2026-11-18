@@ -11,7 +11,7 @@ describe('savingsSummary', () => {
   });
 
   it('averages per period unit', () => {
-    expect(savingsSummary(data.week).average).toBe('Average PKR 817 per day');
+    expect(savingsSummary(data.week).average).toBe('Average PKR 799 per day');
     expect(savingsSummary(data.year).average).toMatch(/per month$/);
   });
 
@@ -25,7 +25,7 @@ describe('savingsSummary', () => {
     const summary = savingsSummary(data.year);
     expect(summary.tableRows).toHaveLength(12);
     expect(summary.periodLabel).toBe('Month');
-    expect(summary.tableRows[0]).toEqual(['Nov', '11,063']);
+    expect(summary.tableRows[0]).toEqual(['Nov', '10,669']);
   });
 
   it('covers the 30 recorded days up to 7 Oct 2026 for the month view', () => {

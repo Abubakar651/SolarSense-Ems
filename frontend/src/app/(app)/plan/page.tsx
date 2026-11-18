@@ -4,6 +4,7 @@ import { ChartTable } from '@/components/ui/data-table';
 import { IconChip } from '@/components/ui/icon-chip';
 import { KpiCard } from '@/components/ui/kpi-card';
 import { PageHeader } from '@/components/ui/page-header';
+import { AdvisoryCard } from '@/features/plan/components/advisory-card';
 import { PlanTimeline } from '@/features/plan/components/plan-timeline';
 import { planSummary } from '@/features/plan/view-model';
 import { getServices } from '@/services';
@@ -19,7 +20,11 @@ const TABLE_COLUMNS = [
 ];
 
 export default async function PlanPage() {
-  const plan = await getServices().energy.getDayPlan();
+  const services = getServices();
+  const [plan, advisory] = await Promise.all([
+    services.energy.getDayPlan(),
+    services.advisory.getAdvisory(),
+  ]);
   const summary = planSummary(plan);
 
   return (
@@ -107,6 +112,7 @@ export default async function PlanPage() {
           sub={summary.gridSub}
         />
       </div>
+      <AdvisoryCard advisory={advisory} />
     </section>
   );
 }

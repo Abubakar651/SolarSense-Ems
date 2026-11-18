@@ -1,3 +1,5 @@
+import { DEFAULT_REGIME, TOU_RATES, peakWindowForMonth, regimeInfo } from '@/lib/tariff';
+
 /**
  * Recorded data from Station LHR-RES-01 (GoodWe hybrid inverter, Johar Town, Lahore), copied from the
  * Python backend's datasets so the mock repositories show real figures, not placeholders.
@@ -22,21 +24,48 @@ export const STATION = {
   efficiency: 0.95,
 } as const;
 
-/** src/lesco-tarrif.json: LESCO A-1 time-of-use with net metering. */
-export const TARIFF = {
-  peakPkrPerKwh: 46.85,
-  offPeakPkrPerKwh: 34.53,
-  exportPkrPerKwh: 27,
-  peakStartHour: 18,
-  peakEndHour: 22,
-  washCostPkr: 1500,
-} as const;
-
 /** data/processed/solar_timeseries/goodwe_station_5min_telemetry.csv: the one fully measured day. */
 export const TELEMETRY_DAY = '2026-10-26';
 
+/**
+ * LESCO A-1 time-of-use rates from docs/lesco_residential_tariffs_config_2026.json (see src/lib/tariff.ts).
+ * Export is the default regime's credit (net metering, NAPPP): docs/station_profile_lhr_res_01.json has no
+ * export-rate override. The peak window is the one for the recorded day's month.
+ */
+const SAMPLE_PEAK = peakWindowForMonth(Number(TELEMETRY_DAY.slice(5, 7)));
+export const TARIFF = {
+  peakPkrPerKwh: TOU_RATES.peakPkr,
+  offPeakPkrPerKwh: TOU_RATES.offPeakPkr,
+  exportPkrPerKwh: regimeInfo(DEFAULT_REGIME).exportPkrPerKwh,
+  peakStartHour: SAMPLE_PEAK.startHour,
+  peakEndHour: SAMPLE_PEAK.endHour,
+  washCostPkr: 1500,
+};
+
 /** Timestamp of the last inverter reading in that file. */
 export const LAST_READING = '2026-10-27 02:10';
+
+/**
+ * The last row of that file, and the energy totals for TELEMETRY_DAY (5-minute rows summed, kW x 5/60).
+ * In the file, battery power is positive when discharging and grid power is negative when importing.
+ */
+export const LAST_TELEMETRY_ROW = {
+  timestamp: '2026-10-27T02:10:00+05:00',
+  pvKw: 0,
+  loadKw: 0.85,
+  batteryKw: 0,
+  batterySocPct: 100,
+  gridKw: -0.85,
+} as const;
+
+export const TELEMETRY_DAY_KWH = {
+  pv: 25.61,
+  load: 21.87,
+  imported: 13.83,
+  exported: 15.68,
+  batteryCharged: 3.26,
+  batteryDischarged: 1.06,
+} as const;
 
 /** Hourly mean PV output (kW) on TELEMETRY_DAY. */
 export const HOURLY_SOLAR_KW: readonly number[] = [

@@ -18,11 +18,13 @@ export const APP_NAV: NavGroup[] = [
       { href: '/dashboard', label: 'Dashboard', icon: 'home' },
       { href: '/plan', label: "Today's plan", icon: 'clock' },
       { href: '/savings', label: 'Savings', icon: 'trend' },
+      { href: '/bill', label: 'Bill & tariff', icon: 'wallet' },
     ],
   },
   {
     label: 'System',
     items: [
+      { href: '/inverter', label: 'Live inverter', icon: 'battery' },
       { href: '/outage', label: 'Outage & backup', icon: 'zap' },
       { href: '/panels', label: 'Panel health', icon: 'sun' },
       { href: '/alerts', label: 'Alerts', icon: 'bell' },

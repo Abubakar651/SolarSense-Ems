@@ -1,5 +1,6 @@
 import { longDate } from '@/lib/dates';
 import { pad } from '@/lib/format';
+import type { AdvisoryMetrics } from '@/types/domain/advisory';
 import type { DayPlan } from '@/types/domain/energy';
 
 const sum = (values: number[]) => values.reduce((a, b) => a + b, 0);
@@ -50,4 +51,33 @@ export function planSummary(plan: DayPlan): PlanSummary {
       (plan.grid[hour] as number).toFixed(1),
     ]),
   };
+}
+
+const METRIC_ROWS: { label: string; key: keyof AdvisoryMetrics; unit: string; digits: number }[] = [
+  { label: 'Solar generated', key: 'solarGenerationKwh', unit: 'kWh', digits: 1 },
+  { label: 'Home usage', key: 'householdLoadKwh', unit: 'kWh', digits: 1 },
+  { label: 'Bought from the grid', key: 'gridImportKwh', unit: 'kWh', digits: 1 },
+  { label: 'Sent to the grid', key: 'netMeteringExportKwh', unit: 'kWh', digits: 1 },
+  { label: 'Export credit', key: 'exportRevenuePkr', unit: 'PKR', digits: 0 },
+  { label: 'Battery used at peak', key: 'peakBatteryDischargeKwh', unit: 'kWh', digits: 1 },
+  { label: 'Outage time', key: 'outageHours', unit: 'h', digits: 2 },
+  { label: 'Saved by the plan', key: 'netSavingsPkr', unit: 'PKR', digits: 0 },
+  { label: 'Dust loss', key: 'soilingLossKwh', unit: 'kWh', digits: 1 },
+  { label: 'Gain from washing', key: 'netCleaningBenefitPkr', unit: 'PKR', digits: 0 },
+];
+
+/** Label and value for each advisory figure; a figure the plan could not work out shows a dash. */
+export function metricRows(metrics: AdvisoryMetrics): string[][] {
+  return METRIC_ROWS.map(({ label, key, unit, digits }) => {
+    const value = metrics[key];
+    if (value === null) return [label, '—'];
+    const text = digits === 0 ? Math.round(value).toLocaleString('en-US') : value.toFixed(digits);
+    return [label, `${text} ${unit}`];
+  });
+}
+
+/** "sample_from_recorded_day" -> "Sample from recorded day". */
+export function generationModeLabel(mode: string): string {
+  const words = mode.replace(/_/g, ' ');
+  return words.charAt(0).toUpperCase() + words.slice(1);
 }

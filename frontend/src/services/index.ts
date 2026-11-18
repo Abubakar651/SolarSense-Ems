@@ -1,7 +1,13 @@
+import { advisoryMock } from './repositories/advisory/advisory.mock';
+import type { AdvisoryRepository } from './repositories/advisory/advisory.repository';
 import { alertsMock } from './repositories/alerts/alerts.mock';
 import type { AlertsRepository } from './repositories/alerts/alerts.repository';
+import { billMock } from './repositories/bill/bill.mock';
+import type { BillRepository } from './repositories/bill/bill.repository';
 import { energyMock } from './repositories/energy/energy.mock';
 import type { EnergyRepository } from './repositories/energy/energy.repository';
+import { inverterMock } from './repositories/inverter/inverter.mock';
+import type { InverterRepository } from './repositories/inverter/inverter.repository';
 import { outageMock } from './repositories/outage/outage.mock';
 import type { OutageRepository } from './repositories/outage/outage.repository';
 import { panelsMock } from './repositories/panels/panels.mock';
@@ -21,6 +27,9 @@ export interface Services {
   panels: PanelsRepository;
   reports: ReportsRepository;
   settings: SettingsRepository;
+  inverter: InverterRepository;
+  bill: BillRepository;
+  advisory: AdvisoryRepository;
 }
 
 /**
@@ -36,5 +45,8 @@ export function getServices(): Services {
     panels: panelsMock,
     reports: reportsMock,
     settings: settingsMock,
+    inverter: inverterMock,
+    bill: billMock,
+    advisory: advisoryMock,
   };
 }

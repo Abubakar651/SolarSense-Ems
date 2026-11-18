@@ -9,9 +9,9 @@ const values = {
   'ob-bat': '10.0',
   'ob-inv': 'GoodWe',
   'ob-sn': 'SN123',
-  'ob-peak': '48.00',
-  'ob-off': '35.00',
-  'ob-exp': '27.00',
+  'ob-cat': 'TOU_A1B',
+  'ob-reg': 'NET_BILLING_2026',
+  'ob-load': '10',
 };
 
 describe('reviewRows', () => {
@@ -22,7 +22,7 @@ describe('reviewRows', () => {
       { label: 'Solar', value: '8.0 kWp' },
       { label: 'Battery', value: '10.0 kWh' },
       { label: 'Inverter', value: 'GoodWe · SN123' },
-      { label: 'Tariff', value: 'Peak 48.00 · Off-peak 35.00 · Export 27.00 PKR/kWh' },
+      { label: 'Tariff', value: 'Time-of-use A-1(b) · 10 kW · Export 8.13 PKR/kWh' },
     ]);
   });
 
@@ -30,6 +30,18 @@ describe('reviewRows', () => {
     const rows = reviewRows({ ...values, 'ob-sn': '', 'ob-city': '' });
     expect(rows.find((r) => r.label === 'Address')?.value).toBe('Street 1, —');
     expect(rows.find((r) => r.label === 'Inverter')?.value).toBe('GoodWe · —');
+  });
+
+  it('derives the export credit from the chosen arrangement, not from typed text', () => {
+    const tariff = (reg: string) =>
+      reviewRows({ ...values, 'ob-reg': reg }).find((r) => r.label === 'Tariff')?.value;
+    expect(tariff('GRANDFATHERED_NET_METERING')).toContain('Export 25.32 PKR/kWh');
+    expect(tariff('SINGLE_PHASE_SLAB_ZERO_EXPORT')).toContain('Export 0.00 PKR/kWh');
+  });
+
+  it('shows dashes when the tariff choices are missing', () => {
+    const rows = reviewRows({ 'ob-site': 'My Site' });
+    expect(rows.find((r) => r.label === 'Tariff')?.value).toBe('— · — kW · Export —');
   });
 });
 

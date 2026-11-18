@@ -1,8 +1,14 @@
 import { Field } from '@/components/forms/field';
+import {
+  DEFAULT_REGIME,
+  DEFAULT_TARIFF_CATEGORY,
+  PROSUMER_REGIMES,
+  TARIFF_CATEGORIES,
+} from '@/lib/tariff';
 import { rules } from '@/lib/validators';
 
-const RATE_RULES = [rules.required(), rules.num(1, 500)];
-const EXPORT_RULES = [rules.required(), rules.num(0, 500)];
+/** The backend requires a sanctioned load above 0 kW (BillEstimateRequest). */
+const LOAD_RULES = [rules.required(), rules.num(0.1, 1000)];
 
 export function StepTariff({ hidden }: { hidden: boolean }) {
   return (
@@ -12,44 +18,44 @@ export function StepTariff({ hidden }: { hidden: boolean }) {
         Prefilled with sample values. Check them against your bill.
       </p>
       <div className="field">
-        <label htmlFor="ob-plan">Plan</label>
-        <select className="input" id="ob-plan" name="ob-plan">
-          <option>Time-of-use (peak / off-peak)</option>
-          <option>Flat rate</option>
+        <label htmlFor="ob-cat">Tariff category</label>
+        <select className="input" id="ob-cat" name="ob-cat" defaultValue={DEFAULT_TARIFF_CATEGORY}>
+          {TARIFF_CATEGORIES.map(({ id, label }) => (
+            <option key={id} value={id}>
+              {label}
+            </option>
+          ))}
         </select>
       </div>
-      <div className="two">
-        <Field
-          id="ob-peak"
-          group="2"
-          label="Peak rate (PKR/kWh)"
-          type="text"
-          autoComplete="off"
-          inputMode="decimal"
-          placeholder="46.85"
-          rules={RATE_RULES}
-        />
-        <Field
-          id="ob-off"
-          group="2"
-          label="Off-peak rate (PKR/kWh)"
-          type="text"
-          autoComplete="off"
-          inputMode="decimal"
-          placeholder="34.53"
-          rules={RATE_RULES}
-        />
+      <div className="field">
+        <label htmlFor="ob-reg">Solar export arrangement</label>
+        <select
+          className="input"
+          id="ob-reg"
+          name="ob-reg"
+          defaultValue={DEFAULT_REGIME}
+          aria-describedby="ob-reg-h"
+        >
+          {PROSUMER_REGIMES.map(({ id, label }) => (
+            <option key={id} value={id}>
+              {label}
+            </option>
+          ))}
+        </select>
+        <p className="hint" id="ob-reg-h">
+          Decides what power you send to the grid earns. Check your net-metering agreement date.
+        </p>
       </div>
       <Field
-        id="ob-exp"
+        id="ob-load"
         group="2"
-        label="Export credit (PKR/kWh)"
+        label="Sanctioned load (kW)"
         type="text"
         autoComplete="off"
         inputMode="decimal"
-        placeholder="27.00"
-        rules={EXPORT_RULES}
-        hint="What your utility pays for power you send to the grid."
+        placeholder="10"
+        rules={LOAD_RULES}
+        hint="Shown on your bill. Peak and off-peak rates and export credit are set by LESCO."
       />
     </div>
   );

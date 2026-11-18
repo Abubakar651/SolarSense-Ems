@@ -11,6 +11,8 @@ export const ALL_ROUTES = [
   '/dashboard',
   '/plan',
   '/savings',
+  '/bill',
+  '/inverter',
   '/outage',
   '/panels',
   '/alerts',

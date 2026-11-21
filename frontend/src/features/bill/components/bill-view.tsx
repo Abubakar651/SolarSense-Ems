@@ -6,9 +6,7 @@ import { EstimateCard } from './estimate-card';
 export function BillView({ defaults }: { defaults: BillToolsDefaults }) {
   return (
     <section data-route="bill">
-      <PageHeader title="Bill & tariff">
-        Work out a LESCO bill, and see which solar export arrangement costs you less.
-      </PageHeader>
+      <PageHeader title="Bill & tariff" />
       <div className="grid">
         <EstimateCard defaults={defaults} />
         <CompareCard defaults={defaults} />

@@ -1,4 +1,6 @@
+import { readyPlan } from '@/lib/history';
 import { describe, expect, it } from 'vitest';
+import { readyData } from '@/lib/history';
 import { alertsMock } from './alerts/alerts.mock';
 import { energyMock } from './energy/energy.mock';
 import { outageMock } from './outage/outage.mock';
@@ -8,7 +10,7 @@ import { settingsMock } from './settings/settings.mock';
 
 describe('site and tariff come from the backend data', () => {
   it('uses the 5.12 kWh battery with a 15% reserve, the LESCO A-1 rates and the net-metering export credit', async () => {
-    const plan = await energyMock.getDayPlan();
+    const plan = readyPlan(await energyMock.getDayPlan());
     expect(plan.batteryCapacityKwh).toBe(5.12);
     expect(plan.reserveFloorKwh / plan.batteryCapacityKwh).toBeCloseTo(0.15, 5);
     expect(plan.tariff).toEqual({ peakPkr: 46.85, offPeakPkr: 34.53, exportPkr: 25.32 });
@@ -36,14 +38,14 @@ describe('site and tariff come from the backend data', () => {
 
 describe('outages', () => {
   it('lists the newest outage first and counts only outages of 15 minutes or more', async () => {
-    const outage = await outageMock.getOutage();
+    const outage = readyData(await outageMock.getOutage());
     expect(outage.recent[0]).toMatchObject({ date: 'Oct 26', started: '18:04' });
     expect(outage.recent[1]).toMatchObject({ date: 'Oct 25', duration: '3 h 26 m' });
     expect(outage.totalCount).toBe(56);
   });
 
   it('gives a percentage for each hour, busiest around 22:00', async () => {
-    const { riskByHour } = await outageMock.getOutage();
+    const { riskByHour } = readyData(await outageMock.getOutage());
     expect(riskByHour).toHaveLength(24);
     expect(riskByHour.every((pct) => pct >= 0 && pct <= 100)).toBe(true);
     expect(riskByHour.indexOf(Math.max(...riskByHour))).toBe(22);
@@ -61,7 +63,7 @@ describe('alerts', () => {
 
 describe('reports', () => {
   it('builds the latest month from the metered station balance', async () => {
-    const { months } = await reportsMock.getReport();
+    const { months } = readyData(await reportsMock.getReport());
     expect(months.map((m) => m.name)).toEqual(['October 2026', 'September 2026', 'August 2026']);
     const october = months[0]!;
     expect(october.coverage).toBe('Metered Oct 1–26');
@@ -74,7 +76,7 @@ describe('reports', () => {
   });
 
   it('only has weekly rows for days with hourly data', async () => {
-    const { months } = await reportsMock.getReport();
+    const { months } = readyData(await reportsMock.getReport());
     expect(months[0]?.weeks.map((w) => w.week)).toEqual(['Oct 1–7']);
     expect(months[2]?.weeks.map((w) => w.week)).toEqual([
       'Aug 1–7',
@@ -87,7 +89,7 @@ describe('reports', () => {
 
 describe('savings', () => {
   it('values the year from the monthly meter and the daily views from hourly data', async () => {
-    const savings = await savingsMock.getSavings();
+    const savings = readyData(await savingsMock.getSavings());
     expect(savings.year.values).toHaveLength(12);
     expect(savings.week.values).toHaveLength(7);
     expect(savings.month.values).toHaveLength(30);
@@ -97,7 +99,7 @@ describe('savings', () => {
   });
 
   it('prices October with and without solar from the same meter figures', async () => {
-    const { currentMonth } = await savingsMock.getSavings();
+    const { currentMonth } = readyData(await savingsMock.getSavings());
     expect(currentMonth.label).toBe('Oct 1–26');
     expect(currentMonth.withoutSolarPkr - currentMonth.costPkr).toBe(15_818);
     expect(currentMonth.selfPoweredPct).toBe(31);

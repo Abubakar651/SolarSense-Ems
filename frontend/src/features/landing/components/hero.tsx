@@ -17,11 +17,7 @@ export function Hero({ plan }: { plan: DayPlan }) {
             <h1 tabIndex={-1}>
               Use <em className="hl">every unit</em> your panels generate.
             </h1>
-            <p className="lead">
-              SolarSense stores surplus solar for the hours you need it, so less is wasted or
-              exported cheaply and more of your own generation powers your site. It also tells you
-              when washing the panels pays off, and shows what you saved.
-            </p>
+            <p className="lead">Store your sun for the peak hours.</p>
             <div className="cta">
               <Link className="btn btn-primary btn-lg" href="/signup">
                 Create your account
@@ -31,10 +27,6 @@ export function Hero({ plan }: { plan: DayPlan }) {
                 Log in
               </Link>
             </div>
-            <p className="small">
-              For homes and commercial buildings with solar and a battery. Works with GoodWe
-              inverters today.
-            </p>
           </div>
           <div className="plate">
             <div className="preview-bar">

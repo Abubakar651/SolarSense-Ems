@@ -41,11 +41,18 @@ const FIXED_RULES = [
 
 interface BatteryPanelProps {
   capacityKwh: number;
+  /** The home's mean overnight usage from today's plan; null while there is no plan. */
+  overnightLoadKw: number | null;
   blackouts: readonly BlackoutWindow[];
   onBlackoutsChange: (blackouts: BlackoutWindow[]) => void;
 }
 
-export function BatteryPanel({ capacityKwh, blackouts, onBlackoutsChange }: BatteryPanelProps) {
+export function BatteryPanel({
+  capacityKwh,
+  overnightLoadKw,
+  blackouts,
+  onBlackoutsChange,
+}: BatteryPanelProps) {
   const [reserve, setReserve] = useTextSetting('reserve');
 
   return (
@@ -86,7 +93,7 @@ export function BatteryPanel({ capacityKwh, blackouts, onBlackoutsChange }: Batt
             <span>100% · max backup</span>
           </div>
           <p className="hint" id="reserve-h" aria-live="polite" style={{ marginTop: 6 }}>
-            {reserveHint(Number(reserve), capacityKwh)}
+            {reserveHint(Number(reserve), capacityKwh, overnightLoadKw)}
           </p>
         </div>
       </div>

@@ -26,7 +26,8 @@ export function SoilingChart({ soiling }: { soiling: SoilingData }) {
       ]}
       tipHead={(day) => `Day ${day}`}
       yMin={0}
-      yMax={Math.ceil(forecastEnd / 5) * 5}
+      // Clean panels forecast 0%; keep a 5% axis so the flat line still has a scale.
+      yMax={Math.max(5, Math.ceil(forecastEnd / 5) * 5)}
       yFormat={(v) => `${v}%`}
       xEvery={2}
       marker={today}

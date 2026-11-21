@@ -8,7 +8,8 @@ const CONFIRM_WORD = 'DELETE';
 interface DeleteAccountDialogProps {
   open: boolean;
   onClose: () => void;
-  onConfirm: () => void;
+  /** Receives the password the user typed to confirm. */
+  onConfirm: (password: string) => Promise<void>;
 }
 
 /** Destructive confirmation: the delete button stays disabled until the user types DELETE. */
@@ -21,8 +22,22 @@ export function DeleteAccountDialog({ open, onClose, onConfirm }: DeleteAccountD
   );
 }
 
-function ConfirmForm({ onCancel, onConfirm }: { onCancel: () => void; onConfirm: () => void }) {
+function ConfirmForm({
+  onCancel,
+  onConfirm,
+}: {
+  onCancel: () => void;
+  onConfirm: (password: string) => Promise<void>;
+}) {
   const [typed, setTyped] = useState('');
+  const [password, setPassword] = useState('');
+  const [pending, setPending] = useState(false);
+
+  const confirm = async () => {
+    setPending(true);
+    await onConfirm(password);
+    setPending(false);
+  };
 
   return (
     <>
@@ -43,6 +58,17 @@ function ConfirmForm({ onCancel, onConfirm }: { onCancel: () => void; onConfirm:
           onChange={(event) => setTyped(event.target.value)}
         />
       </div>
+      <div className="field">
+        <label htmlFor="delPw">Your password</label>
+        <input
+          className="input"
+          id="delPw"
+          type="password"
+          autoComplete="current-password"
+          value={password}
+          onChange={(event) => setPassword(event.target.value)}
+        />
+      </div>
       <div className="row" style={{ justifyContent: 'flex-end' }}>
         <button className="btn btn-secondary" type="button" id="delCancel" onClick={onCancel}>
           Cancel
@@ -51,8 +77,8 @@ function ConfirmForm({ onCancel, onConfirm }: { onCancel: () => void; onConfirm:
           className="btn btn-danger"
           type="button"
           id="delGo"
-          disabled={typed !== CONFIRM_WORD}
-          onClick={onConfirm}
+          disabled={typed !== CONFIRM_WORD || !password || pending}
+          onClick={() => void confirm()}
         >
           Delete account
         </button>

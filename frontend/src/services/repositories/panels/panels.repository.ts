@@ -1,5 +1,5 @@
-import type { SoilingData } from '@/types/domain/panels';
+import type { SoilingResult } from '@/types/domain/panels';
 
 export interface PanelsRepository {
-  getSoiling(): Promise<SoilingData>;
+  getSoiling(): Promise<SoilingResult>;
 }

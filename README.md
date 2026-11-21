@@ -333,19 +333,52 @@ python3 src/vision/train_classifier.py
 
 ### 4. Launch the FastAPI Compute Gateway
 
-Start the local development server:
+The API needs a database and a JWT secret. Copy `.env.example` to `.env` and fill it in (Supabase
+session-pooler URL, `JWT_SECRET` of 32+ bytes, `FRONTEND_URL`). For email, either set `RESEND_API_KEY` and
+`EMAIL_FROM`, or, for local development only, set `EMAIL_DELIVERY=console` to have the verify and reset links
+printed in the API's terminal. `REQUIRE_EMAIL_VERIFICATION=false` (development only) skips email confirmation
+so signup goes straight to onboarding; it defaults to `true`. The server refuses to start if a required value
+is missing. Then review and apply the migration, and start the server:
 
 ```bash
+alembic upgrade head        # creates the account and inverter_samples tables; roll back with: alembic downgrade base
 uvicorn src.api.main:app --reload --port 8000
+```
+
+**Live dashboard.** `POST /api/v2/plan/today` solves today's battery plan on live forecasts: the Open-Meteo
+weather forecast for the day plus the last 8 days of hourly history from the inverter log. While the API runs,
+it polls every site's own inverter every `INVERTER_POLL_SECONDS` (default 300; `0` turns it off) and stores each
+reading under that site in `inverter_samples`. Each user enters their inverter's IP address in Settings (a private
+LAN address such as `192.168.1.50`); the API must run on that same network, and a reading is kept only if the
+inverter's serial matches the one saved for the site. Hours the log doesn't cover yet come from the last week of
+the recorded dataset, so forecasts get more accurate over the first 8 days of logging, and the dashboard says so
+while that's the case. If the weather API is down, the app shows the last recorded day labelled as sample data.
+The Plan screen's daily brief comes from `POST /api/agent/advisory/today`: the same live plan, worded with the
+tariff engine's peak window and rates for the user's regime, the logged blackouts, the site's dust model and the
+rain forecast (a fixed template, every figure computed). Without the weather forecast it answers 503 and the
+screen says the brief isn't available.
+
+**Multi-tenancy.** Every account sees only its own site's telemetry, history, alerts and plan. The recorded
+LHR-RES-01 history in `data/processed` belongs only to the account named by `STATION_OWNER_EMAIL` (its email must be
+verified); set it in `.env` before `alembic upgrade head` and before onboarding. Unset, no account gets it.
+
+Every route needs `Authorization: Bearer <token>` except `/`, `/health`, `/api/dates` and the sign-in routes
+under `/api/auth` (signup, verify-email, login, forgot/reset-password). Get a token by signing up, opening the
+emailed verify link, then logging in:
+
+```bash
+TOKEN=$(curl -s -X POST http://localhost:8000/api/auth/login -H "Content-Type: application/json" \
+  -d '{"email": "you@example.com", "password": "your password"}' | python -c "import sys,json;print(json.load(sys.stdin)['access_token'])")
 ```
 
 - **Interactive OpenAPI Documentation:** `http://localhost:8000/docs`
 - **Health & Telemetry Check:** `http://localhost:8000/health`
-- **24-Hour Simulation Window:** `http://localhost:8000/api/window?date=2025-07-17`
+- **24-Hour Simulation Window:** `curl -H "Authorization: Bearer $TOKEN" "http://localhost:8000/api/window?date=2025-07-17"`
 - **Run HiGHS MILP Optimizer:**
 
   ```bash
   curl -X POST "http://localhost:8000/api/optimize" \
+       -H "Authorization: Bearer $TOKEN" \
        -H "Content-Type: application/json" \
        -d '{"date_str": "2025-07-17", "use_forecasts": false}'
   ```

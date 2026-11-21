@@ -23,10 +23,16 @@
   stroke: var(--line-strong);
   stroke-width: 1.5;
   rx: 14;
+  transition:
+    fill 0.4s ease,
+    stroke 0.4s ease;
 }
 .flow .node.on {
   fill: var(--tint);
   stroke: var(--primary);
+  animation: node-pulse 2.4s ease-in-out infinite;
+  transform-box: fill-box;
+  transform-origin: center;
 }
 .flow .ic {
   stroke: var(--muted);
@@ -34,6 +40,7 @@
   stroke-width: 1.75;
   stroke-linecap: round;
   stroke-linejoin: round;
+  transition: stroke 0.4s ease;
 }
 .flow .node.on + .ic {
   stroke: var(--primary);
@@ -58,8 +65,20 @@
     stroke-dashoffset: -14;
   }
 }
+@keyframes node-pulse {
+  0%,
+  100% {
+    filter: drop-shadow(0 0 0 transparent);
+    transform: scale(1);
+  }
+  50% {
+    filter: drop-shadow(0 0 6px var(--primary-line));
+    transform: scale(1.03);
+  }
+}
 @media (prefers-reduced-motion: reduce) {
-  .flow .ln.on {
+  .flow .ln.on,
+  .flow .node.on {
     animation: none;
   }
   * {

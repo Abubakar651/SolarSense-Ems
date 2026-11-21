@@ -38,23 +38,15 @@ export function ProfilePanel({ profile, onRequestDelete }: ProfilePanelProps) {
         </div>
         <div className="field">
           <label htmlFor="p-email">Email</label>
-          <div className="row" style={{ flexWrap: 'nowrap' }}>
-            <input
-              className="input"
-              id="p-email"
-              value={profile.email}
-              readOnly
-              aria-describedby="p-email-h"
-            />
-            <ToastButton
-              className="btn btn-secondary"
-              message="We'd send a confirmation link to both addresses."
-            >
-              Change
-            </ToastButton>
-          </div>
+          <input
+            className="input"
+            id="p-email"
+            value={profile.email}
+            readOnly
+            aria-describedby="p-email-h"
+          />
           <p className="hint" id="p-email-h">
-            Changing your email requires confirming a link we send to the new address.
+            The address you signed up with.
           </p>
         </div>
       </div>

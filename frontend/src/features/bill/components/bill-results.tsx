@@ -8,12 +8,7 @@ import type {
 import { advantageSentence, comparisonRows, estimateRows, formatPkr } from '../view-model';
 
 function NotConnected() {
-  return (
-    <p className="muted small">
-      Your figures are valid. The bill calculator runs on the SolarSense server, which is not
-      connected yet, so there is no result to show.
-    </p>
-  );
+  return <p className="muted small">Bill server not connected yet.</p>;
 }
 
 /** `estimate` is null until the backend is connected: the browser cannot work out a LESCO bill. */
@@ -26,15 +21,13 @@ export function EstimateResult({
 }) {
   return (
     <div aria-live="polite" style={{ marginTop: 'var(--sp-4)' }}>
-      {!request && (
-        <p className="muted small">Enter your units and choose Calculate to see the bill.</p>
-      )}
+      {!request && <p className="muted small">Enter units, then Calculate.</p>}
       {request && !estimate && <NotConnected />}
       {estimate && (
         <>
           <h3>{formatPkr(estimate.totalPayablePkr)}</h3>
           <p className="muted small" style={{ marginBottom: 'var(--sp-3)' }}>
-            {`About ${formatPkr(estimate.effectiveAllInRatePkrPerKwh)} per unit, all charges included, for ${estimate.currentTotalKwh} units. Rounded: ${formatPkr(estimate.totalPayableRoundedRupeePkr)}.`}
+            {`${formatPkr(estimate.effectiveAllInRatePkrPerKwh)}/unit all-in · ${estimate.currentTotalKwh} units · rounded ${formatPkr(estimate.totalPayableRoundedRupeePkr)}`}
           </p>
           <DataTable
             columns={[{ label: 'Charge' }, { label: 'Amount', right: true }]}
@@ -55,9 +48,7 @@ export function CompareResult({
 }) {
   return (
     <div aria-live="polite" style={{ marginTop: 'var(--sp-4)' }}>
-      {!request && (
-        <p className="muted small">Enter a month&apos;s units and choose Compare to see both.</p>
-      )}
+      {!request && <p className="muted small">Enter units, then Compare.</p>}
       {request && !comparison && <NotConnected />}
       {comparison && (
         <>

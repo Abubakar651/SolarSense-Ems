@@ -10,6 +10,7 @@ export const ALL_ROUTES = [
   '/onboarding',
   '/dashboard',
   '/plan',
+  '/energy',
   '/savings',
   '/bill',
   '/inverter',

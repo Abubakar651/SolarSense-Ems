@@ -1,17 +1,26 @@
 import { CardHeader } from '@/components/ui/card-header';
 import { DataTable } from '@/components/ui/data-table';
+import { KpiCard } from '@/components/ui/kpi-card';
 import { longDate } from '@/lib/dates';
-import type { Advisory } from '@/types/domain/advisory';
-import { generationModeLabel, metricRows } from '../view-model';
-
-const BRIEFS = [
-  { title: 'Peak-hour savings', key: 'dispatchArbitrageBrief' },
-  { title: 'Outage backup', key: 'blackoutResilienceBrief' },
-  { title: 'Panel cleaning', key: 'soilingMaintenanceBrief' },
-] as const;
+import type { AdvisoryResult } from '@/types/domain/advisory';
+import { briefStats, generationModeLabel, metricRows } from '../view-model';
 
 /** The written daily brief. The text comes from the backend (or the sample builder); this only lays it out. */
-export function AdvisoryCard({ advisory }: { advisory: Advisory }) {
+export function AdvisoryCard({ result }: { result: AdvisoryResult }) {
+  if (result.status === 'unavailable') {
+    return (
+      <div className="card" style={{ marginTop: 'var(--sp-4)' }}>
+        <CardHeader title="Daily brief" />
+        <p className="small muted" id="adv-unavailable">
+          Today’s brief isn’t available right now: the weather forecast it is written from couldn’t
+          be fetched. It comes back as soon as the forecast does.
+        </p>
+      </div>
+    );
+  }
+
+  const { advisory } = result;
+  const stats = briefStats(advisory);
   return (
     <div className="card" style={{ marginTop: 'var(--sp-4)' }}>
       <CardHeader
@@ -23,11 +32,19 @@ export function AdvisoryCard({ advisory }: { advisory: Advisory }) {
       />
       <h3 id="adv-headline">{advisory.headline}</h3>
       <div className="g-3 grid" style={{ marginTop: 'var(--sp-3)' }}>
-        {BRIEFS.map(({ title, key }) => (
-          <div key={key}>
-            <div className="t">{title}</div>
-            <p className="small muted">{advisory[key]}</p>
-          </div>
+        {stats.map(({ title, icon, value, unit, sub }) => (
+          <KpiCard
+            key={title}
+            icon={icon}
+            label={title}
+            value={
+              <>
+                {value}
+                {unit && <small>{unit}</small>}
+              </>
+            }
+            sub={sub}
+          />
         ))}
       </div>
       <h3 style={{ margin: 'var(--sp-4) 0 var(--sp-2)' }}>What to do</h3>

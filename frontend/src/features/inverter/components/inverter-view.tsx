@@ -1,12 +1,14 @@
 import Link from 'next/link';
 import type { ReactNode } from 'react';
 import { CardHeader } from '@/components/ui/card-header';
-import { DataTable } from '@/components/ui/data-table';
 import { ErrorState } from '@/components/ui/error-state';
 import { KpiCard, KpiStrip } from '@/components/ui/kpi-card';
 import { PageHeader } from '@/components/ui/page-header';
+import { FlowDiagram } from '@/components/charts/flow-diagram';
+import { TodayEnergyCard } from '@/features/energy/components/today-energy-card';
+import { todayFromReading } from '@/features/energy/today';
 import type { InverterReading } from '@/types/domain/inverter';
-import { batteryFlow, energyRows, gridFlow, reading, readingTime } from '../view-model';
+import { batteryFlow, flowValues, gridFlow, reading, readingTime } from '../view-model';
 
 function Detail({ label, children }: { label: string; children: ReactNode }) {
   return (
@@ -45,7 +47,7 @@ export function InverterView({ result }: { result: InverterReading }) {
           </span>
         }
       >
-        {`Readings straight from the inverter. Last reading ${readingTime(data.timestamp)}.`}
+        {`Updated ${readingTime(data.timestamp)}`}
       </PageHeader>
       <KpiStrip>
         <KpiCard
@@ -89,6 +91,12 @@ export function InverterView({ result }: { result: InverterReading }) {
           sub={gridFlow(data)}
         />
       </KpiStrip>
+      <div className="card" style={{ marginTop: 'var(--sp-4)' }}>
+        <CardHeader title="Energy flow" />
+        <div className="flow">
+          <FlowDiagram {...flowValues(data)} />
+        </div>
+      </div>
       <div className="g-3 grid" style={{ marginTop: 'var(--sp-4)' }}>
         <div className="card">
           <CardHeader title="Battery" />
@@ -117,15 +125,8 @@ export function InverterView({ result }: { result: InverterReading }) {
           <Detail label="Heatsink temperature">{reading(data.inverterTempRadiatorC, '°C')}</Detail>
         </div>
       </div>
-      <div className="card" style={{ marginTop: 'var(--sp-4)' }}>
-        <CardHeader
-          title={isSample ? 'Energy on the recorded day' : "Today's energy"}
-          subtitle="kWh"
-        />
-        <DataTable
-          columns={[{ label: 'Flow' }, { label: 'kWh', right: true }]}
-          rows={energyRows(data)}
-        />
+      <div style={{ marginTop: 'var(--sp-4)' }}>
+        <TodayEnergyCard today={todayFromReading(data, isSample)} />
       </div>
     </section>
   );

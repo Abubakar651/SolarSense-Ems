@@ -3,11 +3,16 @@
 import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
 import { Icon } from '@/components/ui/icon';
-
-const INITIALS = 'Z';
+import type { AccountUser } from '@/types/domain/account';
 
 /** Avatar button with the account dropdown; closes on outside click and Escape. */
-export function UserMenu() {
+interface UserMenuProps {
+  user: AccountUser;
+  /** Server action that ends the session and returns to /login. */
+  logout: () => Promise<void>;
+}
+
+export function UserMenu({ user, logout }: UserMenuProps) {
   const [open, setOpen] = useState(false);
   const wrapRef = useRef<HTMLDivElement>(null);
 
@@ -36,18 +41,18 @@ export function UserMenu() {
         id="userBtn"
         aria-haspopup="true"
         aria-expanded={open}
-        aria-label={`${INITIALS}, account menu`}
+        aria-label={`${user.name}, account menu`}
         style={{ width: 'auto', padding: '0 4px' }}
         onClick={() => setOpen((value) => !value)}
       >
         <span className="avatar" aria-hidden="true">
-          {INITIALS}
+          {user.initials}
         </span>
       </button>
       <div className="menu" id="userMenu" hidden={!open}>
         <div style={{ padding: '8px 12px' }}>
-          <b>Zaeem</b>
-          <p className="xs muted">zaeem@example.com</p>
+          <b>{user.name}</b>
+          <p className="xs muted">{user.email}</p>
         </div>
         <hr />
         <Link href="/settings" onClick={close}>
@@ -55,10 +60,12 @@ export function UserMenu() {
           Profile &amp; settings
         </Link>
         <hr />
-        <Link href="/login" onClick={close}>
-          <Icon name="logout" />
-          Log out
-        </Link>
+        <form action={logout}>
+          <button type="submit" onClick={close}>
+            <Icon name="logout" />
+            Log out
+          </button>
+        </form>
       </div>
     </div>
   );

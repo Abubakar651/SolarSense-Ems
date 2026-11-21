@@ -2,13 +2,15 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { CardHeader } from '@/components/ui/card-header';
 import { ChartTable, DataTable } from '@/components/ui/data-table';
+import { CollectingBadge } from '@/features/history/components/collecting-badge';
+import { FreshnessBadge } from '@/features/history/components/freshness-badge';
 import { Icon } from '@/components/ui/icon';
 import { KpiCard, KpiStrip } from '@/components/ui/kpi-card';
 import { PageHeader } from '@/components/ui/page-header';
 import { pad } from '@/lib/format';
 import { BackupKpi } from '@/features/outage/components/backup-kpi';
 import { RiskChart } from '@/features/outage/components/risk-chart';
-import { RISK_LABEL, riskLevel } from '@/features/outage/view-model';
+import { RISK_LABEL, riskLevel, zeroOutageData } from '@/features/outage/view-model';
 import { getServices } from '@/services';
 
 export const metadata: Metadata = { title: 'Outage & backup' };
@@ -19,16 +21,23 @@ const RISK_BADGE = { 0: 'b-ok', 1: 'b-warn', 2: 'b-bad' } as const;
 
 export default async function OutagePage() {
   const { energy, outage } = getServices();
-  const [plan, data] = await Promise.all([energy.getDayPlan(), outage.getOutage()]);
+  const [planResult, result] = await Promise.all([energy.getDayPlan(), outage.getOutage()]);
+  const plan = planResult.status === 'ready' ? planResult.plan : null;
+  const data = result.status === 'ready' ? result.data : zeroOutageData();
   const levels = data.riskByHour.map(riskLevel);
   const busiestHour = data.riskByHour.indexOf(Math.max(...data.riskByHour));
-  const reservePct = Math.round((plan.reserveFloorKwh / plan.batteryCapacityKwh) * 100);
+  const reservePct =
+    plan === null ? null : Math.round((plan.reserveFloorKwh / plan.batteryCapacityKwh) * 100);
   const { thisMonth } = data;
 
   return (
     <section data-route="outage">
       <PageHeader title="Outage & backup">
-        When the grid has failed before and how ready your battery is.
+        {result.status === 'ready' ? (
+          <FreshnessBadge freshness={result.freshness} />
+        ) : (
+          <CollectingBadge result={result} />
+        )}
       </PageHeader>
       <KpiStrip>
         <KpiCard
@@ -42,50 +51,60 @@ export default async function OutagePage() {
               {RISK_LABEL[levels[busiestHour] as 0 | 1 | 2]}
             </span>
           }
-          sub={`Busiest hour is ${pad(busiestHour)}:00, with an outage on ${data.riskByHour[busiestHour]}% of days`}
+          sub={
+            data.totalCount === 0
+              ? `No outages recorded since ${data.since}`
+              : `Worst ${pad(busiestHour)}:00 · ${data.riskByHour[busiestHour]}% of days`
+          }
         />
         <KpiCard
           label="Reserve held"
           value={
-            <>
-              {reservePct}
-              <small>%</small>
-            </>
+            reservePct === null ? (
+              '—'
+            ) : (
+              <>
+                {reservePct}
+                <small>%</small>
+              </>
+            )
           }
           sub={
             <>
-              Never used for savings. <Link href="/settings">Change in settings</Link>
+              Kept for outages · <Link href="/settings">Change</Link>
             </>
           }
         />
-        <BackupKpi plan={plan} />
+        {plan === null ? (
+          <KpiCard label="Backup time now" value="—" sub="Today’s plan isn’t ready yet" />
+        ) : (
+          <BackupKpi plan={plan} />
+        )}
         <KpiCard
           label="Outages this month"
           value={String(thisMonth.count)}
-          sub={`Total ${thisMonth.hours} hours, ${
-            thisMonth.hitReserve === 0
-              ? 'all covered by battery'
-              : `battery hit reserve ${thisMonth.hitReserve} time${thisMonth.hitReserve === 1 ? '' : 's'}`
+          sub={`${thisMonth.hours} h · ${
+            thisMonth.hitReserve === 0 ? 'all covered' : `hit reserve ${thisMonth.hitReserve}×`
           }`}
         />
       </KpiStrip>
       <div className="card" style={{ marginTop: 'var(--sp-4)' }}>
         <CardHeader
           title="Outages by hour of day"
-          subtitle={`Share of days since ${data.since} with an outage of 15 minutes or more in progress (${data.totalCount} outages)`}
+          subtitle={`% of days with an outage · ${data.totalCount} since ${data.since}`}
         />
-        <div className="legend">
-          <span>
+        <div className="legend" aria-hidden="true">
+          <span title="Low <15%">
             <i className="k-low" />
-            Low (under 15%)
+            Low
           </span>
-          <span>
+          <span title="Medium 15–30%">
             <i className="k-med" />
-            Medium (15–30%)
+            Medium
           </span>
-          <span>
+          <span title="High >30%">
             <i className="k-high" />
-            High (over 30%)
+            High
           </span>
         </div>
         <RiskChart riskByHour={data.riskByHour} />

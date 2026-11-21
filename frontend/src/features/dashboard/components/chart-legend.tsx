@@ -2,25 +2,25 @@
 export function ChartLegend() {
   return (
     <div className="legend" aria-hidden="true">
-      <span>
+      <span title="Solar (kW)">
         <i className="sw soft" />
-        Solar kW
+        Solar
       </span>
-      <span>
+      <span title="Used directly">
         <i className="sw" style={{ background: 'var(--c-solar)', opacity: 0.45 }} />
-        Used directly
+        Used
       </span>
-      <span>
+      <span title="Usage (kW)">
         <i className="sw line" />
-        Usage kW
+        Usage
       </span>
-      <span>
+      <span title="Battery %">
         <i className="sw" />
         Battery %
       </span>
-      <span>
+      <span title="Peak hours">
         <i className="sw hatch" />
-        Peak hours
+        Peak
       </span>
     </div>
   );

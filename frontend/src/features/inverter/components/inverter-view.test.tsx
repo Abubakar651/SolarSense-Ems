@@ -10,6 +10,8 @@ describe('InverterView', () => {
     expect(screen.getByText('Sample data')).toBeVisible();
     expect(screen.getByText('Importing 0.85 kW')).toBeVisible();
     expect(screen.getAllByText('—').length).toBeGreaterThan(0);
+    expect(screen.getByRole('heading', { name: 'Energy flow' })).toBeVisible();
+    expect(screen.getByRole('img', { name: /Energy flow\./ })).toBeInTheDocument();
   });
 
   it('explains when the inverter cannot be reached and offers a retry', () => {

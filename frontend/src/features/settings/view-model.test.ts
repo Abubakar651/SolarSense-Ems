@@ -7,6 +7,7 @@ import {
   isDirty,
   reserveHint,
   toFormValues,
+  toSettingsUpdate,
 } from './view-model';
 
 const data = await settingsMock.getSettings();
@@ -55,11 +56,18 @@ describe('isDirty', () => {
 });
 
 describe('reserveHint', () => {
-  it('converts the reserve into hours of backup', () => {
-    expect(reserveHint(30, 10)).toBe(
-      'About 3.3 hours of typical overnight backup, held back from daily savings.',
+  it("converts the reserve into hours of backup at the home's own overnight usage", () => {
+    // 3 kWh held, 95% of it delivered, at 0.6 kW.
+    expect(reserveHint(30, 10, 0.6)).toBe(
+      'About 4.8 hours of backup at your usual overnight usage, held back from daily savings.',
     );
-    expect(reserveHint(100, 10)).toContain('About 11.1 hours');
+    expect(reserveHint(30, 10, 1.2)).toContain('About 2.4 hours');
+  });
+
+  it('shows the reserve as energy when there is no usage to size it by', () => {
+    expect(reserveHint(30, 10, null)).toBe(
+      'Holds 3.0 kWh for outages, held back from daily savings.',
+    );
   });
 });
 
@@ -112,5 +120,51 @@ describe('blackoutsEqual', () => {
   it('is false when a window is added, removed or changed', () => {
     expect(blackoutsEqual(a, [])).toBe(false);
     expect(blackoutsEqual(a, [{ start: '14:00', end: '17:00' }])).toBe(false);
+  });
+});
+
+describe('toSettingsUpdate', () => {
+  const values = toFormValues(data);
+
+  it('sends numbers as numbers and trims text', () => {
+    const update = toSettingsUpdate(
+      { ...values, 's-pv': '8.50', 'p-name': '  Zaeem  ' },
+      [],
+      data.notifications,
+    );
+    expect(update.site.pv_kwp).toBe(8.5);
+    expect(update.reserve_pct).toBe(data.battery.reservePct);
+    expect(update.tariff.sanctioned_load_kw).toBe(10);
+    expect(update.profile.name).toBe('Zaeem');
+  });
+
+  it('keys notification choices by alert type, not position', () => {
+    const update = toSettingsUpdate({ ...values, 'notify-2-email': true }, [], data.notifications);
+    expect(update.notifications[2]).toEqual({ key: 'peak_soon', in_app: true, email: true });
+    expect(update.notifications.map((n) => n.key)).toEqual(data.notifications.map((n) => n.key));
+  });
+
+  it('includes the blackout windows being edited', () => {
+    const windows = [{ start: '22:00', end: '02:00' }];
+    expect(toSettingsUpdate(values, windows, data.notifications).blackouts).toEqual(windows);
+  });
+
+  it('reads unset switches as off', () => {
+    const update = toSettingsUpdate({ ...values, 't-atl': '' }, [], data.notifications);
+    expect(update.tariff.is_atl_filer).toBe(false);
+  });
+
+  it('sends the trimmed inverter address', () => {
+    const update = toSettingsUpdate(
+      { ...values, 's-host': ' 192.168.1.50 ' },
+      [],
+      data.notifications,
+    );
+    expect(update.site.inverter_host).toBe('192.168.1.50');
+  });
+
+  it('sends a blank inverter address as null, which disconnects the inverter', () => {
+    const update = toSettingsUpdate({ ...values, 's-host': '  ' }, [], data.notifications);
+    expect(update.site.inverter_host).toBeNull();
   });
 });

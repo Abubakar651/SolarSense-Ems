@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { LAST_STEP, ONBOARDING_STEPS, formValues, reviewRows } from './view-model';
+import {
+  LAST_STEP,
+  ONBOARDING_STEPS,
+  formValues,
+  reviewRows,
+  toOnboardingRequest,
+} from './view-model';
 
 const values = {
   'ob-site': 'My Site',
@@ -57,5 +63,28 @@ describe('formValues', () => {
     const form = document.createElement('form');
     form.innerHTML = '<input name="a" value="1"><select name="b"><option>x</option></select>';
     expect(formValues(form)).toEqual({ a: '1', b: 'x' });
+  });
+});
+
+describe('toOnboardingRequest', () => {
+  it('maps every wizard field to the API body with numbers as numbers', () => {
+    expect(toOnboardingRequest(values)).toEqual({
+      name: 'My Site',
+      address: 'Street 1',
+      city: 'Town',
+      pv_kwp: 8,
+      battery_kwh: 10,
+      inverter_make: 'GoodWe',
+      inverter_serial: 'SN123',
+      tariff_category: values['ob-cat'],
+      prosumer_regime: values['ob-reg'],
+      sanctioned_load_kw: Number(values['ob-load']),
+    });
+  });
+
+  it('stores "Other (tell us later)" as Other', () => {
+    expect(
+      toOnboardingRequest({ ...values, 'ob-inv': 'Other (tell us later)' }).inverter_make,
+    ).toBe('Other');
   });
 });

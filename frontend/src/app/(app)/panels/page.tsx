@@ -1,28 +1,55 @@
 import type { Metadata } from 'next';
 import { CardHeader } from '@/components/ui/card-header';
+import { CollectingBadge } from '@/features/history/components/collecting-badge';
+import { FreshnessBadge } from '@/features/history/components/freshness-badge';
 import { KpiCard, KpiStrip } from '@/components/ui/kpi-card';
 import { PageHeader } from '@/components/ui/page-header';
-import { dailyLossPkr, isDusty, lossPercent, paybackDays } from '@/features/panels/view-model';
+import {
+  collectingMessage,
+  dailyLossPkr,
+  isDusty,
+  lastCleanedLabel,
+  lossPercent,
+  paybackDays,
+  washedToday,
+  zeroSoilingData,
+} from '@/features/panels/view-model';
 import { fmt } from '@/lib/format';
+import { todayInKarachi } from '@/lib/freshness';
 import { PhotoCheck } from '@/features/panels/components/photo-check';
 import { SoilingChart } from '@/features/panels/components/soiling-chart';
+import { WashButton } from '@/features/panels/components/wash-button';
 import { WashCalculator } from '@/features/panels/components/wash-calculator';
 import { getServices } from '@/services';
 
 export const metadata: Metadata = { title: 'Panel health' };
 
 const STATUS_BADGE_STYLE = { fontSize: '1rem', padding: '4px 14px' } as const;
+const UNAVAILABLE_MESSAGE = 'Sunlight data is unavailable right now. Try again later.';
 
 export default async function PanelsPage() {
-  const soiling = await getServices().panels.getSoiling();
+  const result = await getServices().panels.getSoiling();
+  const ready = result.status === 'ready';
+  const soiling = ready ? result.data : zeroSoilingData();
   const lossPct = lossPercent(soiling);
   const dusty = isDusty(soiling);
+  const payback = paybackDays(soiling, soiling.defaultWashCostPkr);
+  const washedTodayAlready =
+    result.status === 'collecting' && washedToday(result, todayInKarachi(new Date()));
+  const notReadyBadge =
+    result.status === 'collecting' ? (
+      <CollectingBadge
+        result={{ status: 'collecting', loggedDays: result.loggedDays }}
+        unavailableMessage={collectingMessage(result)}
+      />
+    ) : result.status === 'unavailable' ? (
+      <CollectingBadge result={result} unavailableMessage={UNAVAILABLE_MESSAGE} />
+    ) : null;
 
   return (
     <section data-route="panels">
       <PageHeader title="Panel health">
-        Dust and faults cost you electricity. Here is what it costs and whether cleaning is worth
-        it.
+        {ready ? <FreshnessBadge freshness={result.freshness} /> : notReadyBadge}
       </PageHeader>
       <KpiStrip>
         <KpiCard
@@ -33,7 +60,7 @@ export default async function PanelsPage() {
               {dusty ? 'Dusty' : 'Clean'}
             </span>
           }
-          sub={`Last washed ${soiling.lastWashed}`}
+          sub={lastCleanedLabel(soiling)}
         />
         <KpiCard
           label="Output lost to dust"
@@ -43,7 +70,7 @@ export default async function PanelsPage() {
               <small>%</small>
             </>
           }
-          sub={`Model estimate as of ${soiling.asOf}`}
+          sub={`As of ${soiling.asOf}`}
         />
         <KpiCard
           label="Energy lost per day"
@@ -53,25 +80,38 @@ export default async function PanelsPage() {
               <small>kWh</small>
             </>
           }
-          sub={`About PKR ${fmt(dailyLossPkr(soiling))} per day`}
+          sub={`≈ PKR ${fmt(dailyLossPkr(soiling))}/day`}
         />
         <KpiCard
           label="Cleaning pays back in"
           value={
-            <>
-              {paybackDays(soiling, soiling.defaultWashCostPkr)}
-              <small>days</small>
-            </>
+            payback === null ? (
+              '–'
+            ) : (
+              <>
+                {payback}
+                <small>days</small>
+              </>
+            )
           }
-          sub={`At PKR ${fmt(soiling.defaultWashCostPkr)} per cleaning`}
+          sub={
+            payback === null
+              ? 'No dust cost yet'
+              : `PKR ${fmt(soiling.defaultWashCostPkr)} per wash`
+          }
         />
       </KpiStrip>
       <div className="g-2 grid" style={{ marginTop: 'var(--sp-4)' }}>
         <WashCalculator soiling={soiling} />
         <div className="card">
           <CardHeader
-            title="Dust loss since last wash"
-            subtitle="Model estimate. Dashed line is the forecast without cleaning"
+            title={
+              soiling.cleanEvent === 'rain'
+                ? 'Dust loss since the rain'
+                : 'Dust loss since last wash'
+            }
+            subtitle="Dashed = without cleaning"
+            action={<WashButton washedToday={washedTodayAlready} />}
           />
           <SoilingChart soiling={soiling} />
         </div>

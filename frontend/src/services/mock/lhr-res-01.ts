@@ -1,4 +1,5 @@
-import { DEFAULT_REGIME, TOU_RATES, peakWindowForMonth, regimeInfo } from '@/lib/tariff';
+import { DEFAULT_REGIME, TOU_RATES, regimeInfo } from '@/lib/tariff';
+import { peakWindowForMonth } from './tariff-windows';
 
 /**
  * Recorded data from Station LHR-RES-01 (GoodWe hybrid inverter, Johar Town, Lahore), copied from the
@@ -85,6 +86,9 @@ export interface MonthlyMeter {
   loadKwh: number;
   purchasedKwh: number;
   soldKwh: number;
+  /** First and last day of the month the totals cover, when not the whole month (e.g. a log that began mid-month). */
+  firstDay?: number;
+  lastDay?: number;
 }
 
 /**

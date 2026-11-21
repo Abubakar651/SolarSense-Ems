@@ -1,9 +1,11 @@
+import { readyPlan } from '@/lib/history';
 import { describe, expect, it } from 'vitest';
 import { energyMock } from '@/services/repositories/energy/energy.mock';
 import { advisoryMock } from '@/services/repositories/advisory/advisory.mock';
-import { generationModeLabel, metricRows, planSummary } from './view-model';
+import { zeroDayPlan } from '@/features/dashboard/view-model';
+import { briefStats, generationModeLabel, metricRows, planSummary } from './view-model';
 
-const plan = await energyMock.getDayPlan();
+const plan = readyPlan(await energyMock.getDayPlan());
 const summary = planSummary(plan);
 
 describe('planSummary', () => {
@@ -15,13 +17,13 @@ describe('planSummary', () => {
 
   it('splits peak usage between battery and grid so the parts add up', () => {
     const [, usage, battery, grid] = summary.bannerDetail.match(
-      /uses ([\d.]+) kWh\. The battery supplies ([\d.]+) kWh and the grid the remaining ([\d.]+) kWh/,
+      /([\d.]+) kWh used: battery ([\d.]+), grid ([\d.]+)/,
     ) as RegExpMatchArray;
     expect(Number(battery) + Number(grid)).toBeCloseTo(Number(usage), 1);
   });
 
   it('mentions the outage reserve as a share of the battery', () => {
-    expect(summary.bannerDetail).toContain('The last 15% of the battery is kept back for outages');
+    expect(summary.bannerDetail).toContain('15% kept for outages');
   });
 
   it('totals the day to one decimal', () => {
@@ -34,11 +36,24 @@ describe('planSummary', () => {
     expect(summary.tableRows[0]).toHaveLength(5);
     expect(summary.tableRows[23]?.[0]).toBe('23:00');
   });
+
+  it('never shows "NaN" for an all-zero plan', () => {
+    const zeroSummary = planSummary(zeroDayPlan());
+    expect(zeroSummary.bannerTitle).not.toContain('NaN');
+    expect(zeroSummary.bannerDetail).not.toContain('NaN');
+    expect(zeroSummary.gridSub).toBe('No grid power needed');
+  });
 });
 
-const advisory = await advisoryMock.getAdvisory();
+const sampleBrief = await advisoryMock.getAdvisory();
+if (sampleBrief.status !== 'ready') throw new Error('The sample brief is always ready');
+const { advisory } = sampleBrief;
 
 describe('advisory brief', () => {
+  it('is the labelled sample brief in mock mode', () => {
+    expect(advisory.isSample).toBe(true);
+  });
+
   it('carries the ten figures the backend sends, in a fixed order', () => {
     expect(Object.keys(advisory.keyMetrics)).toEqual([
       'solarGenerationKwh',
@@ -81,5 +96,31 @@ describe('advisory brief', () => {
     expect(generationModeLabel('deterministic_physics_synthesizer')).toBe(
       'Deterministic physics synthesizer',
     );
+  });
+});
+
+describe('briefStats', () => {
+  it('shows a dash for a figure the sample plan cannot work out', () => {
+    const stats = briefStats(advisory);
+    const savings = stats.find((s) => s.title === 'Peak-hour savings');
+    expect(savings?.value).toBe('—');
+    expect(savings?.unit).toBeUndefined();
+  });
+
+  it('reports zero outage hours as "No blackouts today"', () => {
+    const stats = briefStats({ ...advisory, keyMetrics: { ...advisory.keyMetrics, outageHours: 0 } });
+    const outage = stats.find((s) => s.title === 'Outage backup');
+    expect(outage?.value).toBe('0');
+    expect(outage?.sub).toBe('No blackouts today');
+  });
+
+  it('formats a populated savings figure with separators', () => {
+    const stats = briefStats({
+      ...advisory,
+      keyMetrics: { ...advisory.keyMetrics, netSavingsPkr: 12345.6 },
+    });
+    const savings = stats.find((s) => s.title === 'Peak-hour savings');
+    expect(savings?.value).toBe('12,346');
+    expect(savings?.unit).toBe('PKR');
   });
 });

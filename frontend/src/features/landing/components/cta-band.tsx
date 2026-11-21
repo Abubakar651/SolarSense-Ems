@@ -15,7 +15,6 @@ export function CtaBand() {
             ))}
           </svg>
           <h2>See your first plan today</h2>
-          <p>Create an account, connect your inverter and start saving at peak hours.</p>
           <div className="row" style={{ justifyContent: 'center' }}>
             <Link className="btn btn-primary btn-lg" href="/signup">
               Create your account

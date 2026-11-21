@@ -8,6 +8,9 @@ import { Field } from '@/components/forms/field';
 import { PasswordStrength } from '@/components/forms/password-strength';
 import { ValidatedForm } from '@/components/forms/validated-form';
 import { passwordStrength, rules } from '@/lib/validators';
+import { useToast } from '@/providers/toast-provider';
+import { signupAction } from '../actions';
+import { fieldValue } from '@/lib/form-values';
 
 const NAME_RULES = [rules.required()];
 const EMAIL_RULES = [rules.required(), rules.email()];
@@ -16,10 +19,28 @@ const TERMS_RULES = [rules.checked()];
 
 export function SignupForm() {
   const router = useRouter();
+  const toast = useToast();
   const [strength, setStrength] = useState<0 | 1 | 2 | 3 | 4>(0);
+  const [pending, setPending] = useState(false);
+
+  const submit = async (form: HTMLFormElement) => {
+    if (pending) return;
+    setPending(true);
+    const result = await signupAction({
+      name: fieldValue(form, 'su-name'),
+      email: fieldValue(form, 'su-email'),
+      password: fieldValue(form, 'su-password'),
+    });
+    if (!result.ok) {
+      setPending(false);
+      toast(result.error);
+      return;
+    }
+    router.push(result.data.redirectTo);
+  };
 
   return (
-    <ValidatedForm onValid={() => router.push('/verify')}>
+    <ValidatedForm onValid={(form) => void submit(form)}>
       <Field
         id="su-name"
         label="Full name"
@@ -50,8 +71,8 @@ export function SignupForm() {
         I agree to the <Link href="/signup">Terms of Service</Link> and{' '}
         <Link href="/signup">Privacy Policy</Link>
       </CheckField>
-      <button className="btn btn-primary btn-block" type="submit">
-        Create account
+      <button className="btn btn-primary btn-block" type="submit" disabled={pending}>
+        {pending ? 'Creating account…' : 'Create account'}
       </button>
     </ValidatedForm>
   );

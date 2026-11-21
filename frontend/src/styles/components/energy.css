@@ -1,0 +1,265 @@
+/* ---------- House flow (dashboard toggle; lines and labels come from flow.css) ---------- */
+.flow svg.house-flow {
+  max-width: 560px;
+}
+.house-flow .nl {
+  font-size: 14px;
+}
+.house-flow .nv {
+  font-size: 16px;
+}
+.house-flow .hf-ground {
+  stroke: var(--line-strong);
+  stroke-width: 1.5;
+}
+.house-flow .hf-sun circle {
+  fill: var(--subtle);
+  stroke: var(--line-strong);
+  stroke-width: 1.5;
+}
+.house-flow .hf-sun line {
+  stroke: var(--line-strong);
+  stroke-width: 2;
+  stroke-linecap: round;
+}
+.house-flow .hf-sun.on circle {
+  fill: var(--accent);
+  stroke: var(--accent);
+}
+.house-flow .hf-sun.on line {
+  stroke: var(--accent);
+}
+.house-flow .hf-pylon {
+  fill: none;
+  stroke: var(--muted);
+  stroke-width: 1.75;
+  stroke-linejoin: round;
+}
+.house-flow .hf-wall {
+  fill: #fff;
+  stroke: var(--line-strong);
+  stroke-width: 1.5;
+}
+.house-flow .hf-roof {
+  fill: var(--subtle);
+  stroke: var(--line-strong);
+  stroke-width: 1.5;
+  stroke-linejoin: round;
+}
+.house-flow .hf-panel {
+  fill: var(--primary);
+  stroke: var(--tint-3);
+  stroke-width: 0.75;
+}
+.house-flow .hf-glow {
+  fill: var(--accent);
+  transition: opacity 0.6s ease;
+}
+.house-flow .hf-door {
+  fill: var(--tint-2);
+  stroke: var(--line-strong);
+}
+.house-flow .hf-win {
+  fill: var(--well);
+  stroke: var(--line-strong);
+  transition: fill 0.6s ease;
+}
+.house-flow .hf-win.on {
+  fill: color-mix(in srgb, var(--accent) 35%, #fff);
+}
+.house-flow .hf-inv {
+  fill: #fff;
+  stroke: var(--primary);
+  stroke-width: 1.5;
+}
+.house-flow .hf-bat {
+  fill: #fff;
+  stroke: var(--primary);
+  stroke-width: 1.5;
+}
+.house-flow .hf-bat-fill {
+  fill: var(--ok);
+  transition:
+    y 0.6s ease,
+    height 0.6s ease;
+}
+.flow .ln.cut {
+  stroke: var(--bad);
+  stroke-width: 2;
+  stroke-dasharray: 2 6;
+}
+
+/* ---------- Today's energy ---------- */
+.e-tiles {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(120px, 100%), 1fr));
+  gap: var(--sp-3);
+  margin: 0 0 var(--sp-4);
+}
+.e-tiles > div {
+  background: var(--well);
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  padding: 10px 12px;
+}
+.e-tiles dt {
+  color: var(--muted);
+  font-size: 0.8125rem;
+}
+.e-tiles dd {
+  margin: 2px 0 0;
+  font-weight: 600;
+  font-size: 1.0625rem;
+}
+.e-donuts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(220px, 100%), 1fr));
+  gap: var(--sp-4);
+}
+
+/* ---------- Donut ---------- */
+.donut {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: var(--sp-4);
+  flex-wrap: wrap;
+}
+.donut-ring {
+  position: relative;
+  width: 144px;
+  aspect-ratio: 1;
+  flex: none;
+}
+.donut-ring svg {
+  width: 100%;
+  height: 100%;
+  transform: rotate(-90deg);
+}
+.donut-ring circle {
+  fill: none;
+  stroke-width: 12;
+}
+.donut-ring .donut-track {
+  stroke: var(--subtle);
+}
+.donut-center {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-content: center;
+  text-align: center;
+}
+.donut-center b {
+  font-size: 1.25rem;
+}
+.donut-center span {
+  color: var(--muted);
+  font-size: 0.6875rem;
+}
+.donut figcaption {
+  flex: 1;
+  min-width: 160px;
+  max-width: 280px;
+}
+.donut-legend {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 6px;
+  font-size: 0.875rem;
+}
+.donut-legend li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.donut-legend i {
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+  flex: none;
+}
+.donut-legend b {
+  margin-left: auto;
+}
+
+/* ---------- Solar calendar ---------- */
+.cal {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 6px;
+  table-layout: fixed;
+}
+.cal th {
+  color: var(--muted);
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+.cal td {
+  background: var(--well);
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  padding: 6px 8px 8px;
+  vertical-align: top;
+  height: 64px;
+}
+.cal td.empty {
+  background: none;
+  border: 0;
+}
+.cal td.nodata {
+  color: var(--faint);
+}
+.cal .d {
+  font-size: 0.75rem;
+  color: var(--muted);
+}
+.cal .v {
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 600;
+  margin-top: 2px;
+}
+.cal .heat {
+  display: block;
+  height: 8px;
+  border-radius: 4px;
+  margin-top: 6px;
+  background: color-mix(in srgb, var(--accent) var(--heat), var(--subtle));
+}
+.cal-legend {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.75rem;
+  color: var(--muted);
+}
+.cal-legend i {
+  width: 96px;
+  height: 8px;
+  border-radius: 4px;
+  background: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--accent) 20%, var(--subtle)),
+    var(--accent)
+  );
+}
+@media (max-width: 479px) {
+  .cal {
+    border-spacing: 3px;
+  }
+  .cal td {
+    padding: 4px;
+    height: 48px;
+  }
+  .cal .v {
+    font-size: 0.6875rem;
+  }
+}
+
+/* ---------- Grouped bars ---------- */
+.chart .gbar {
+  transition: opacity var(--ease);
+}

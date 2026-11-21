@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { useToast } from '@/providers/toast-provider';
+import { resendVerificationAction } from '../actions';
 
 const COOLDOWN_SECONDS = 30;
 
@@ -17,10 +18,11 @@ export function ResendEmail() {
     return () => window.clearTimeout(timer);
   }, [secondsLeft]);
 
-  const resend = () => {
+  const resend = async () => {
     if (secondsLeft) return;
-    toast('Verification email sent');
     setSecondsLeft(COOLDOWN_SECONDS);
+    const result = await resendVerificationAction();
+    toast(result.ok ? 'Verification email sent' : result.error);
   };
 
   return (
@@ -31,7 +33,7 @@ export function ResendEmail() {
           id="resendBtn"
           type="button"
           disabled={secondsLeft > 0}
-          onClick={resend}
+          onClick={() => void resend()}
         >
           Resend email
         </button>

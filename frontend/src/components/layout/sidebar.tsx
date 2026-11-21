@@ -7,7 +7,7 @@ import { cn } from '@/lib/cn';
 import { SidebarNav } from './sidebar-nav';
 
 interface SidebarProps {
-  /** Mobile drawer state; the sidebar is always visible from 1024px. */
+  /** Mobile drawer state; from 1024px the sidebar is an icon rail that expands on hover. */
   open: boolean;
   onClose: () => void;
 }

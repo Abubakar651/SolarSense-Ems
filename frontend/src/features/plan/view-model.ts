@@ -1,6 +1,7 @@
+import type { IconName } from '@/components/ui/icon-paths';
 import { longDate } from '@/lib/dates';
 import { pad } from '@/lib/format';
-import type { AdvisoryMetrics } from '@/types/domain/advisory';
+import type { Advisory, AdvisoryMetrics } from '@/types/domain/advisory';
 import type { DayPlan } from '@/types/domain/energy';
 
 const sum = (values: number[]) => values.reduce((a, b) => a + b, 0);
@@ -28,14 +29,17 @@ export function planSummary(plan: DayPlan): PlanSummary {
   const gridKwh = sum(plan.grid);
   const offPeakGridKwh = gridKwh - peakGrid;
 
+  const batteryCoverPct = peakLoad === 0 ? 0 : Math.round((1 - peakGrid / peakLoad) * 100);
+
   return {
-    bannerTitle: `Tonight, the battery covers ${Math.round((1 - peakGrid / peakLoad) * 100)}% of your peak-hour usage`,
+    bannerTitle: `Tonight, the battery covers ${batteryCoverPct}% of your peak-hour usage`,
     bannerDetail:
-      `From ${pad(plan.peakStartHour)}:00 to ${pad(plan.peakEndHour)}:00 your home uses ${peakLoad.toFixed(1)} kWh. ` +
-      `The battery supplies ${(peakLoad - peakGrid).toFixed(1)} kWh and the grid the remaining ${peakGrid.toFixed(1)} kWh. ` +
-      `The last ${reservePct}% of the battery is kept back for outages, and it is never charged from the grid at peak rates.`,
+      `${pad(plan.peakStartHour)}:00–${pad(plan.peakEndHour)}:00 · ${peakLoad.toFixed(1)} kWh used: ` +
+      `battery ${(peakLoad - peakGrid).toFixed(1)}, grid ${peakGrid.toFixed(1)} · ${reservePct}% kept for outages`,
     solarKwh: sum(plan.solar).toFixed(1),
-    solarSub: `Recorded output on ${longDate(plan.sampleDate)}`,
+    solarSub: plan.isSample
+      ? `Recorded output on ${longDate(plan.sampleDate)}`
+      : `Forecast for ${longDate(plan.sampleDate)}`,
     loadKwh: sum(plan.load).toFixed(1),
     loadSub: `Highest use around ${pad(plan.load.indexOf(Math.max(...plan.load)))}:00`,
     gridKwh: gridKwh.toFixed(1),
@@ -74,6 +78,50 @@ export function metricRows(metrics: AdvisoryMetrics): string[][] {
     const text = digits === 0 ? Math.round(value).toLocaleString('en-US') : value.toFixed(digits);
     return [label, `${text} ${unit}`];
   });
+}
+
+export interface BriefStat {
+  title: string;
+  icon: IconName;
+  value: string;
+  unit?: string;
+  sub: string;
+}
+
+/** The three daily-brief figures as stat cards: one headline number each, no prose. */
+export function briefStats(advisory: Advisory): BriefStat[] {
+  const m = advisory.keyMetrics;
+  const batteryShare =
+    m.householdLoadKwh === 0
+      ? 0
+      : Math.round((m.peakBatteryDischargeKwh / m.householdLoadKwh) * 100);
+
+  return [
+    {
+      title: 'Peak-hour savings',
+      icon: 'zap',
+      value: m.netSavingsPkr === null ? '—' : Math.round(m.netSavingsPkr).toLocaleString('en-US'),
+      unit: m.netSavingsPkr === null ? undefined : 'PKR',
+      sub: `Battery covers ${batteryShare}% of peak usage`,
+    },
+    {
+      title: 'Outage backup',
+      icon: 'shield',
+      value: m.outageHours.toFixed(m.outageHours === 0 ? 0 : 1),
+      unit: 'h logged today',
+      sub: m.outageHours === 0 ? 'No blackouts today' : 'Blackout time today',
+    },
+    {
+      title: 'Panel cleaning',
+      icon: 'camera',
+      value: m.soilingLossKwh === null ? '—' : m.soilingLossKwh.toFixed(1),
+      unit: m.soilingLossKwh === null ? undefined : 'kWh lost to dust',
+      sub:
+        m.netCleaningBenefitPkr === null
+          ? 'Dust estimate still collecting'
+          : `Washing would gain ${Math.round(m.netCleaningBenefitPkr).toLocaleString('en-US')} PKR`,
+    },
+  ];
 }
 
 /** "sample_from_recorded_day" -> "Sample from recorded day". */

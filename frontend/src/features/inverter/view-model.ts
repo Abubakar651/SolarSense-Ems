@@ -1,4 +1,5 @@
 import { shortDate } from '@/lib/dates';
+import type { FlowValues } from '@/components/charts/flow-diagram';
 import type { InverterLive, Reading } from '@/types/domain/inverter';
 
 const MISSING = '—';
@@ -30,15 +31,14 @@ export function readingTime(timestamp: string): string {
   return `${shortDate(timestamp.slice(0, 10))}, ${timestamp.slice(11, 16)}`;
 }
 
-/** Today's energy totals as table rows. */
-export function energyRows(data: InverterLive): string[][] {
-  const kwh = (value: number) => value.toFixed(2);
-  return [
-    ['Solar generated', kwh(data.todayPvKwh)],
-    ['Home usage', kwh(data.todayLoadKwh)],
-    ['Bought from the grid', kwh(data.todayImportKwh)],
-    ['Sent to the grid', kwh(data.todayExportKwh)],
-    ['Battery charged', kwh(data.todayBatteryChargeKwh)],
-    ['Battery discharged', kwh(data.todayBatteryDischargeKwh)],
-  ];
+/** Inverter sign conventions: battery power + is charging, grid power + is exporting. */
+export function flowValues(data: InverterLive): FlowValues {
+  return {
+    solarKw: data.totalPvPowerW / 1000,
+    loadKw: data.houseConsumptionW / 1000,
+    chargeKw: Math.max(0, data.batteryPowerW) / 1000,
+    gridKw: Math.max(0, -data.gridActivePowerW) / 1000,
+    exportKw: Math.max(0, data.gridActivePowerW) / 1000,
+    soc: Math.round(data.batterySocPct),
+  };
 }

@@ -15,28 +15,56 @@ from __future__ import annotations
 
 import asyncio
 import base64
-from contextlib import asynccontextmanager
+from contextlib import asynccontextmanager, suppress
+from datetime import date, datetime, timedelta
 from decimal import Decimal
+from functools import partial
 from io import BytesIO
 import json
 from pathlib import Path
 import time
-from typing import Any, AsyncGenerator, Dict
+from typing import Annotated, Any, AsyncGenerator, Dict
 
-from fastapi import FastAPI, HTTPException, Query, status
+from fastapi import Depends, FastAPI, HTTPException, Query, Request, Response, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
+import httpx
 import polars as pl
 from starlette.concurrency import run_in_threadpool
 
+from src.api.core.config import load_settings
+from src.api.core.rate_limit import RateLimiter
+from src.api.db.models import utc_now
+from src.api.db.session import create_db_engine, create_read_session_factory, create_session_factory
+from src.api.daily_brief import compose_brief, rain_outlook, site_dust, tariff_facts
+from src.api.deps import TokenVersionCache, authenticate_request, get_now, public
+from src.api.live_plan import LivePlanService
+from src.api.rain_forecast import RainForecastService, RainUnavailable
+from src.api.recent_weather import FORECAST_DAYS, PAST_DAYS, RecentWeatherService
+from src.api.site_samples import SiteSampleCache
+from src.api.site_soiling import SiteSoilingService, Valuation
+from src.api.site_sizing import OptimizerPool, SiteSizes, battery_for, scale_solar
+from src.api.site_soiling import EXPORT_SHARE_DAYS, export_share, lost_kwh_value_pkr
+from src.api.telemetry_history import daily_energy
+from src.api.mail.sender import ConsoleEmailSender, EmailSender, ResendEmailSender
+from src.api.telemetry_logger import ReaderPool, load_samples, run_inverter_logger, serial_matches
+from src.api.user_site import MySite, UserSite
+from src.api.routers import account as account_router
+from src.api.routers import alerts as alerts_router
+from src.api.routers import auth as auth_router
+from src.api.routers import insights as insights_router
+from src.api.routers import panels as panels_router
 from src.api.schemas import (
     AgentAdvisoryRequest,
     AgentAdvisoryResponse,
     BillEstimateRequest,
     BillEstimateResponse,
+    DailyBriefResponse,
     DateBoundsResponse,
     HealthResponse,
     InverterLiveResponse,
+    LivePlanRequest,
+    LivePlanResponse,
     Lesco2026OptimizeRequest,
     Lesco2026OptimizeResponse,
     OptimizationRequest,
@@ -54,6 +82,7 @@ from src.api.schemas import (
     VisionSamplesResponse,
 )
 from src.data_engineering.feature_store import (
+    PKT_TZ,
     EMSDataRepository,
     TariffPolicy,
 )
@@ -72,10 +101,22 @@ from src.optimizer.lesco_2026_tariff_and_dispatch import (
 from src.optimizer.station_profile import StationProfile, load_station_profile
 from src.data_engineering.month_to_date import compute_month_to_date_flows, trailing_export_share
 from src.soiling.loss_calculator import SolarPlantLossCalculator
+from src.forecast.live_forecast import HISTORY_HOURS, HistoryNotLogged, WeatherUnavailable
+from src.forecast.train_solar_pv import RESIDENTIAL_ARRAY_KWP
+from src.forecast.weather_client import (
+    fetch_lahore_daily_rain,
+    fetch_lahore_day_forecast,
+    fetch_lahore_recent_weather,
+)
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 SOILING_CSV_PATH = PROJECT_ROOT / "data" / "processed" / "soiling" / "soiling_analysis_lahore.csv"
 PANEL_TEST_DIR = PROJECT_ROOT / "data" / "processed" / "panel_images" / "solarsense_master_v1" / "test"
+
+# Read once at import: a missing JWT secret, database URL or email key stops the server from starting.
+SETTINGS = load_settings()
+
+Now = Annotated[datetime, Depends(get_now)]
 
 
 def _load_soiling_lookup(csv_path: Path) -> Dict[str, Dict[str, Any]]:
@@ -107,19 +148,78 @@ async def lifespan(app: FastAPI):
     station_profile = load_station_profile()
     app.state.station_profile = station_profile
     lesco_engine = LescoCY2026TariffEngine()
-    lesco_opt = Lesco2026BatteryDispatchOptimizer(
-        tariff_engine=lesco_engine,
-        bess=bess_config,
-        pv_capacity_kw=station_profile.pv_capacity_kw,
-    )
-    lesco_opt._get_dpp_bundle(24)
     app.state.lesco_engine = lesco_engine
-    app.state.lesco_optimizer = lesco_opt
     app.state.loss_calculator = SolarPlantLossCalculator()
     app.state.soiling_map = _load_soiling_lookup(SOILING_CSV_PATH)
     app.state.vision_monitor = None
-    app.state.goodwe_reader = GoodWeLiveReader()
-    yield
+    # One reader per inverter address: each site's own inverter, never another's.
+    app.state.inverter_readers = ReaderPool()
+
+    init_account_state(app)
+
+    app.state.site_samples = SiteSampleCache(partial(load_samples, app.state.read_session_factory), utc_now)
+    weather_client = httpx.AsyncClient()
+    app.state.live_plan = LivePlanService(
+        repo=repo,
+        load_samples=app.state.site_samples.samples,
+        fetch_weather=partial(fetch_lahore_day_forecast, weather_client),
+        clock=utc_now,
+        tariff_engine=lesco_engine,
+    )
+    app.state.rain_forecast = RainForecastService(partial(fetch_lahore_daily_rain, weather_client), utc_now)
+    app.state.site_soiling = SiteSoilingService(
+        weather=RecentWeatherService(
+            partial(fetch_lahore_recent_weather, weather_client, PAST_DAYS, FORECAST_DAYS), utc_now
+        ),
+        session_factory=app.state.read_session_factory,
+        load_samples=app.state.site_samples.samples,
+        valuation=Valuation(
+            engine=lesco_engine,
+            wash_cost_pkr=app.state.loss_calculator.wash_cost_pkr,
+            station_export_override_pkr_per_kwh=station_profile.export_rate_override_pkr_per_kwh,
+        ),
+    )
+    app.state.optimizer_pool = OptimizerPool(lesco_engine)
+    # Pre-warm the dispatch problem for the station's hardware (every site is sized on first use).
+    app.state.optimizer_pool.get(
+        SiteSizes(
+            pv_kwp=station_profile.pv_capacity_kw,
+            battery_kwh=bess_config.capacity_kwh,
+            reserve_pct=round(bess_config.min_soc_pct * 100),
+        )
+    )._get_dpp_bundle(24)
+    logger_task = None
+    if SETTINGS.inverter_poll_seconds > 0:
+        logger_task = asyncio.create_task(
+            run_inverter_logger(app.state.inverter_readers, app.state.session_factory, SETTINGS.inverter_poll_seconds)
+        )
+    try:
+        yield
+    finally:
+        if logger_task is not None:
+            logger_task.cancel()
+            with suppress(asyncio.CancelledError):
+                await logger_task
+        await weather_client.aclose()
+        app.state.engine.dispose()
+
+
+def _email_sender() -> EmailSender:
+    if SETTINGS.email_delivery == "console":
+        return ConsoleEmailSender()
+    return ResendEmailSender(SETTINGS.resend_api_key, SETTINGS.email_from)
+
+
+def init_account_state(target: FastAPI) -> None:
+    """Database, email, rate-limit and token-version state used by auth and the account routes."""
+    engine = create_db_engine(SETTINGS.database_url)
+    target.state.settings = SETTINGS
+    target.state.engine = engine
+    target.state.session_factory = create_session_factory(engine)
+    target.state.read_session_factory = create_read_session_factory(engine)
+    target.state.email_sender = _email_sender()
+    target.state.rate_limiter = RateLimiter()
+    target.state.token_versions = TokenVersionCache()
 
 
 app = FastAPI(
@@ -127,19 +227,38 @@ app = FastAPI(
     description="REST & SSE Compute Gateway for Residential Hybrid Solar & Battery EMS (Station LHR-RES-01 / LESCO A-1 ToU)",
     version="1.0.0",
     lifespan=lifespan,
+    # Default-deny: every route needs a valid bearer token unless its endpoint is marked @public.
+    dependencies=[Depends(authenticate_request)],
 )
 
-# Enable CORS for Next.js frontend local and preview origins
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=list(SETTINGS.cors_origins),
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE"],
+    allow_headers=["Authorization", "Content-Type"],
 )
+
+
+@app.middleware("http")
+async def security_headers(request: Request, call_next) -> Response:
+    response: Response = await call_next(request)
+    response.headers.setdefault("X-Content-Type-Options", "nosniff")
+    response.headers.setdefault("X-Frame-Options", "DENY")
+    response.headers.setdefault("Referrer-Policy", "no-referrer")
+    response.headers.setdefault("Cache-Control", "no-store")
+    return response
+
+
+app.include_router(auth_router.router)
+app.include_router(account_router.router)
+app.include_router(alerts_router.router)
+app.include_router(insights_router.router)
+app.include_router(panels_router.router)
 
 
 @app.get("/", tags=["Meta"])
+@public
 async def root():
     return {
         "service": "SolarSense EMS Compute API",
@@ -150,6 +269,7 @@ async def root():
 
 
 @app.get("/health", response_model=HealthResponse, tags=["Health"])
+@public
 async def health_check():
     repo: EMSDataRepository = app.state.repo
     df = repo._df
@@ -480,6 +600,7 @@ def _get_vision_monitor(app_state: Any):
 
 
 @app.get("/api/dates", response_model=DateBoundsResponse, tags=["Meta"])
+@public
 async def get_available_dates():
     """
     Returns dataset calendar bounds and curated benchmark preset dates for the Next.js UI.
@@ -579,11 +700,32 @@ async def get_vision_samples():
     )
 
 
+# Clear-sky daily yield of the station's 7.02 kWp array in Lahore; a site's array yields in proportion.
+STATION_CLEAR_SKY_KWH = 30.0
+
+
+async def _dry_days(fallback: int) -> tuple[int, bool]:
+    """Days until washing rain from the Lahore forecast (none in the horizon: the whole horizon), or `fallback`."""
+    try:
+        rain = await app.state.rain_forecast.forecast(utc_now().astimezone(PKT_TZ).date())
+    except RainUnavailable:
+        return fallback, False
+    return (rain.horizon_days if rain.days_until_rain is None else rain.days_until_rain), True
+
+
+def _lost_kwh_value(site: UserSite) -> float:
+    """A lost kWh at the site's own tariff, blended by its recent logged export share (as the dust model does)."""
+    now = utc_now()
+    samples = app.state.site_samples.samples(site.site_id, now - timedelta(days=EXPORT_SHARE_DAYS + 1), now)
+    recent = daily_energy(samples, before=now.astimezone(PKT_TZ).date())
+    return lost_kwh_value_pkr(site, export_share(recent), app.state.site_soiling.valuation)
+
+
 @app.post("/api/vision/inspect", response_model=VisionInspectResponse, tags=["Computer Vision"])
-async def inspect_panel_image(request: VisionInspectRequest):
+async def inspect_panel_image(request: VisionInspectRequest, site: MySite):
     """
-    Executes EfficientNet-B2 5-class optical defect inspection (with 4-pass TTA) and couples
-    the predicted optical derate with Station LHR-RES-01 (7.02 kWp) financial loss metrics.
+    Executes EfficientNet-B2 5-class optical defect inspection (with 4-pass TTA) and couples the predicted
+    optical derate with the signed-in user's array, tariff and the Lahore rain forecast.
     """
     from PIL import Image
 
@@ -632,21 +774,24 @@ async def inspect_panel_image(request: VisionInspectRequest):
     diag = await run_in_threadpool(_run_inference)
 
     calc: SolarPlantLossCalculator = app.state.loss_calculator
-    # Nominal clear-sky daily yield for 7.02 kWp array in Lahore (~30.0 kWh/day)
-    nominal_clear_sky_kwh = 30.0
+    nominal_clear_sky_kwh = STATION_CLEAR_SKY_KWH * site.sizes.pv_kwp / RESIDENTIAL_ARRAY_KWP
     est_derate = float(diag["estimated_derate_pr"])
     est_daily_kwh_lost = round(nominal_clear_sky_kwh * est_derate, 2)
+    dry_days, forecast_rain = await _dry_days(request.days_until_rain)
     roi = calc.evaluate_daily_cleaning_decision(
         daily_kwh_lost=est_daily_kwh_lost,
-        days_until_rain=request.days_until_rain,
+        days_until_rain=dry_days,
+        tariff_rate_override_pkr_per_kwh=await run_in_threadpool(_lost_kwh_value, site),
     )
+    dry_spell = f"{dry_days} dry days forecast" if forecast_rain else f"an assumed {dry_days} dry days (no rain forecast)"
 
     cond = str(diag["condition"])
     action_map = {
         "clean": "No action required — array optical transmittance is nominal (0% derate).",
         "dusty": (
             f"{roi['decision']} — uniform dust layer causing ~{est_derate * 100:.0f}% optical derate "
-            f"(PKR {roi['projected_loss_before_rain_pkr']:,.0f} projected loss over {request.days_until_rain} dry days vs. PKR 1,500 wash)."
+            f"(PKR {roi['projected_loss_before_rain_pkr']:,.0f} projected loss over {dry_spell} "
+            f"vs. a typical PKR {roi['wash_cost_pkr']:,.0f} wash)."
         ),
         "bird_drop": (
             "IMMEDIATE SPOT WASH REQUIRED — localized biological shading (~12% derate) risks bypass diode "
@@ -851,11 +996,64 @@ def _parse_regime(name: str) -> ProsumerRegime2026:
         )
 
 
+def _rate_str(value: float) -> str:
+    return str(Decimal(repr(round(float(value), 2))).quantize(Decimal("0.01")))
+
+
+def _dispatch_fields(timestamps, solar_kw, load_kw, outage_mask, res) -> Dict[str, Any]:
+    """The Lesco2026OptimizeResponse fields for one solved 24h dispatch over the given inputs."""
+    rates = res.import_rate_pkr_per_kwh
+    peak = res.is_peak_mask > 0.5
+    # Every month has a peak window; a flat (slab) tariff has the same rate in and out of it.
+    peak_rate = float(rates[peak].max()) if peak.any() else float(rates.max())
+    off_peak_rate = float(rates[~peak].min()) if (~peak).any() else float(rates.min())
+    return dict(
+        regime=res.regime.value,
+        season=res.season,
+        status=res.status,
+        solve_time_ms=res.solve_time_ms,
+        timestamps=list(timestamps),
+        solar_kw=[float(x) for x in solar_kw],
+        load_kw=[float(x) for x in load_kw],
+        outage_flags=[int(x) for x in outage_mask],
+        is_peak=[int(x) for x in res.is_peak_mask],
+        p_grid_import_kw=res.p_grid_import_kw.tolist(),
+        p_grid_export_kw=res.p_grid_export_kw.tolist(),
+        p_ch_kw=res.p_ch_kw.tolist(),
+        p_dis_kw=res.p_dis_kw.tolist(),
+        p_curtail_kw=res.p_curtail_kw.tolist(),
+        p_backup_kw=res.p_backup_kw.tolist(),
+        soc_kwh=res.soc_kwh.tolist(),
+        initial_soc_kwh=res.initial_soc_kwh,
+        terminal_soc_kwh=res.terminal_soc_kwh,
+        projected_month_to_date_import_kwh=res.projected_month_to_date_import_kwh,
+        slab_ceiling_target_kwh=res.slab_ceiling_target_kwh,
+        protected_200_guardrail_intact=res.protected_200_guardrail_intact,
+        import_energy_cost_pkr=str(res.import_energy_cost_pkr),
+        export_revenue_credit_pkr=str(res.export_revenue_credit_pkr),
+        slab_cliff_penalty_pkr=str(res.slab_cliff_penalty_pkr),
+        battery_wear_cost_pkr=str(res.battery_wear_cost_pkr),
+        net_horizon_cost_pkr=str(res.net_horizon_cost_pkr),
+        export_rate_used_pkr_per_kwh=str(res.export_rate_used_pkr_per_kwh),
+        baseline_no_battery_cost_pkr=str(res.baseline_no_battery_cost_pkr),
+        net_savings_pkr=str(res.net_savings_pkr),
+        import_rate_pkr_per_kwh=rates.tolist(),
+        peak_import_rate_pkr_per_kwh=_rate_str(peak_rate),
+        off_peak_import_rate_pkr_per_kwh=_rate_str(off_peak_rate),
+    )
+
+
 @app.post("/api/v2/optimize", response_model=Lesco2026OptimizeResponse, tags=["LESCO 2026"])
-async def optimize_dispatch_v2(request: Lesco2026OptimizeRequest):
-    """24h battery dispatch under CY 2026 LESCO rules (seasonal peaks, regime-aware export value)."""
+async def optimize_dispatch_v2(request: Lesco2026OptimizeRequest, site: MySite):
+    """
+    24h battery dispatch under CY 2026 LESCO rules (seasonal peaks, regime-aware export value) for a day of the
+    recorded station dataset, solved for the owner's saved battery, reserve and array. That data is the station
+    owner's alone: 403 station_only for every other site (their plan is POST /api/v2/plan/today).
+    """
+    if not site.is_station:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="station_only")
     repo: EMSDataRepository = app.state.repo
-    opt: Lesco2026BatteryDispatchOptimizer = app.state.lesco_optimizer
+    opt: Lesco2026BatteryDispatchOptimizer = app.state.optimizer_pool.get(site.sizes)
     regime = _parse_regime(request.regime)
     try:
         sl = repo.get_optimization_slice(
@@ -896,36 +1094,97 @@ async def optimize_dispatch_v2(request: Lesco2026OptimizeRequest):
         )
     )
     return Lesco2026OptimizeResponse(
-        regime=res.regime.value,
-        season=res.season,
-        status=res.status,
-        solve_time_ms=res.solve_time_ms,
-        timestamps=list(sl.timestamps_iso),
-        solar_kw=[float(x) for x in sl.solar_kw],
-        load_kw=[float(x) for x in sl.factory_load_kw],
-        outage_flags=[int(x) for x in sl.actual_outage_mask],
-        is_peak=[int(x) for x in res.is_peak_mask],
-        p_grid_import_kw=res.p_grid_import_kw.tolist(),
-        p_grid_export_kw=res.p_grid_export_kw.tolist(),
-        p_ch_kw=res.p_ch_kw.tolist(),
-        p_dis_kw=res.p_dis_kw.tolist(),
-        p_curtail_kw=res.p_curtail_kw.tolist(),
-        p_backup_kw=res.p_backup_kw.tolist(),
-        soc_kwh=res.soc_kwh.tolist(),
-        initial_soc_kwh=res.initial_soc_kwh,
-        terminal_soc_kwh=res.terminal_soc_kwh,
-        projected_month_to_date_import_kwh=res.projected_month_to_date_import_kwh,
-        slab_ceiling_target_kwh=res.slab_ceiling_target_kwh,
-        protected_200_guardrail_intact=res.protected_200_guardrail_intact,
-        import_energy_cost_pkr=str(res.import_energy_cost_pkr),
-        export_revenue_credit_pkr=str(res.export_revenue_credit_pkr),
-        slab_cliff_penalty_pkr=str(res.slab_cliff_penalty_pkr),
-        battery_wear_cost_pkr=str(res.battery_wear_cost_pkr),
-        net_horizon_cost_pkr=str(res.net_horizon_cost_pkr),
-        export_rate_used_pkr_per_kwh=str(res.export_rate_used_pkr_per_kwh),
-        baseline_no_battery_cost_pkr=str(res.baseline_no_battery_cost_pkr),
-        net_savings_pkr=str(res.net_savings_pkr),
+        **_dispatch_fields(sl.timestamps_iso, sl.solar_kw, sl.factory_load_kw, sl.actual_outage_mask, res)
     )
+
+
+async def _solve_plan_today(request: LivePlanRequest, site: UserSite) -> LivePlanResponse:
+    """
+    Today's live dispatch for `site`; shared by the plan and the daily brief. 503 weather_unavailable;
+    409 collecting_data while a site other than the station has logged none of the recent history.
+    """
+    service: LivePlanService = app.state.live_plan
+    regime = _parse_regime(request.regime)
+    sizes = site.sizes
+    try:
+        inputs = await service.inputs(site)
+    except WeatherUnavailable:
+        raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="weather_unavailable") from None
+    except HistoryNotLogged:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="collecting_data") from None
+
+    forecast = inputs.forecast
+    battery = battery_for(sizes)
+    opt: Lesco2026BatteryDispatchOptimizer = app.state.optimizer_pool.get(sizes)
+    solar_kw = scale_solar(forecast.solar_kw, sizes.pv_kwp)
+    start = inputs.initial_soc
+    initial_soc_kwh = None if start is None else start.pct / 100.0 * battery.capacity_kwh
+    # This month's metered imports and unused 1:1 netting, from the site's own log (a lower bound when it has
+    # gaps). Without any logged hour this month the solver is told nothing rather than "zero so far".
+    flows = inputs.month_flows
+    profile: Optional[StationProfile] = getattr(app.state, "station_profile", None)
+    # The station owner's contract export rate is theirs alone; every other site is valued by its regime.
+    export_override = profile.export_rate_override_pkr_per_kwh if profile is not None and site.is_station else None
+    res = await run_in_threadpool(
+        lambda: opt.optimize_24h(
+            load_kw=forecast.load_kw,
+            solar_kw=solar_kw,
+            month=forecast.day_start.month,
+            regime=regime,
+            outage_mask=inputs.outage_mask,
+            initial_soc_kwh=initial_soc_kwh,
+            prior_month_to_date_import_kwh=flows.import_kwh if flows else 0.0,
+            is_protected_consumer=request.is_protected_consumer,
+            include_electricity_duty=request.include_electricity_duty,
+            export_rate_override_pkr_per_kwh=export_override,
+            netting_headroom_kwh=flows.netting_headroom_kwh if flows else None,
+        )
+    )
+    return LivePlanResponse(
+        **_dispatch_fields(forecast.timestamps_iso, solar_kw, forecast.load_kw, inputs.outage_mask, res),
+        date=forecast.day_start.date().isoformat(),
+        outage_prob=[float(x) for x in forecast.outage_prob],
+        history_logged_hours=forecast.history_logged_hours,
+        history_hours=HISTORY_HOURS,
+        pv_kwp=sizes.pv_kwp,
+        battery_capacity_kwh=battery.capacity_kwh,
+        reserve_floor_kwh=battery.min_soc_kwh,
+        initial_soc_assumed=start is None,
+        month_to_date_logged_days=flows.days_elapsed if flows else 0,
+    )
+
+
+@app.post("/api/v2/plan/today", response_model=LivePlanResponse, tags=["LESCO 2026"])
+async def plan_today(request: LivePlanRequest, site: MySite):
+    """
+    Today's 24h dispatch (PKT) for the signed-in user's battery, reserve and array, solved on live
+    forecasts: Open-Meteo weather for the day, and lag history from the logged inverter telemetry
+    (recorded dataset where the log has gaps). Hours of today that already had a logged blackout are
+    islanded; future hours are not assumed down. 404 before the user has set up a site.
+    """
+    return await _solve_plan_today(request, site)
+
+
+@app.post("/api/agent/advisory/today", response_model=DailyBriefResponse, tags=["AI Agent Copilot"])
+async def daily_brief_today(request: LivePlanRequest, site: MySite, now: Now) -> DailyBriefResponse:
+    """
+    Today's written brief for the signed-in user's site (src/api/daily_brief.py): today's live plan, the
+    tariff engine's peak window and rates for the user's regime, the forecast outage risk and logged
+    blackouts, the site's dust model and the rain forecast. A fixed template filled with computed figures.
+    503 weather_unavailable when today's plan can't be made; 404 site_not_found before onboarding.
+    """
+    plan, dust, rain = await asyncio.gather(
+        _solve_plan_today(request, site),
+        site_dust(app.state.site_soiling, site, now),
+        rain_outlook(app.state.rain_forecast, now.astimezone(PKT_TZ).date()),
+    )
+    tariff = tariff_facts(
+        app.state.lesco_engine,
+        _parse_regime(request.regime),
+        date.fromisoformat(plan.date).month,
+        request.include_electricity_duty,
+    )
+    return compose_brief(site, plan, tariff, dust, rain)
 
 
 @app.post("/api/v2/bill/estimate", response_model=BillEstimateResponse, tags=["LESCO 2026"])
@@ -1017,11 +1276,18 @@ async def compare_prosumer_v2(request: ProsumerCompareRequest):
 
 
 @app.get("/api/v2/inverter/live", response_model=InverterLiveResponse, tags=["Hardware Integration"])
-async def get_inverter_live():
-    """Polls live real-time telemetry directly from the physical GoodWe inverter at 192.168.100.102."""
-    reader: GoodWeLiveReader = app.state.goodwe_reader
+async def get_inverter_live(site: MySite):
+    """
+    Live telemetry from the signed-in user's own inverter, at the address saved in their settings.
+    404 inverter_not_configured until an address is saved; 503 when the inverter doesn't answer.
+    """
+    if site.inverter_host is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="inverter_not_configured")
+    reader: GoodWeLiveReader = app.state.inverter_readers.get(site.inverter_host)
     try:
         t = await reader.fetch_telemetry()
+        if not serial_matches(t, site.inverter_serial):
+            raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="inverter_serial_mismatch")
         return InverterLiveResponse(
             timestamp_iso=t.timestamp_iso,
             model_name=t.model_name,
@@ -1055,6 +1321,8 @@ async def get_inverter_live():
             inverter_temp_air_c=t.inverter_temp_air_c,
             inverter_temp_radiator_c=t.inverter_temp_radiator_c,
         )
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=503, detail=f"Inverter offline or unreachable: {e}")
 

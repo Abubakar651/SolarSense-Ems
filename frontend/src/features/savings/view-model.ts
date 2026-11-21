@@ -1,5 +1,59 @@
 import { fmt } from '@/lib/format';
-import type { SavingsSeries } from '@/types/domain/savings';
+import { todayInKarachi } from '@/lib/freshness';
+import type { SavingsData, SavingsSeries } from '@/types/domain/savings';
+
+const MONTH_NAMES = [
+  'Jan',
+  'Feb',
+  'Mar',
+  'Apr',
+  'May',
+  'Jun',
+  'Jul',
+  'Aug',
+  'Sep',
+  'Oct',
+  'Nov',
+  'Dec',
+];
+const WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
+function zeroSeries(labels: string[], title: string, word: string): SavingsSeries {
+  return { labels, values: labels.map(() => 0), exportPkr: labels.map(() => 0), title, word };
+}
+
+/** A same-shaped savings history of all zeros, for the Savings screen while the site has none yet. */
+export function zeroSavingsData(): SavingsData {
+  const today = new Date(`${todayInKarachi(new Date())}T00:00:00Z`);
+  const DAY_MS = 86_400_000;
+  const weekLabels = Array.from(
+    { length: 7 },
+    (_, i) => WEEKDAYS[new Date(today.getTime() - (6 - i) * DAY_MS).getUTCDay()] as string,
+  );
+  const monthLabels = Array.from({ length: 30 }, (_, i) =>
+    String(new Date(today.getTime() - (29 - i) * DAY_MS).getUTCDate()),
+  );
+  const yearLabels = Array.from(
+    { length: 12 },
+    (_, i) =>
+      MONTH_NAMES[
+        (((today.getUTCMonth() - (11 - i)) % 12) + 12) % 12
+      ] as string,
+  );
+
+  return {
+    week: zeroSeries(weekLabels, 'Daily savings', 'day'),
+    month: zeroSeries(monthLabels, 'Daily savings', 'day'),
+    year: zeroSeries(yearLabels, 'Monthly savings', 'month'),
+    currentMonth: {
+      label: `${MONTH_NAMES[today.getUTCMonth()]} 1–${today.getUTCDate()}`,
+      costPkr: 0,
+      withoutSolarPkr: 0,
+      selfPoweredPct: 0,
+    },
+    exportRatePkr: 0,
+  };
+}
 
 export interface SavingsSummary {
   total: string;

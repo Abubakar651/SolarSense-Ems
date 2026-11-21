@@ -1,39 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import {
-  MIN_RESERVE_PCT,
-  PROSUMER_REGIMES,
-  SEASONAL_PEAK_WINDOWS,
-  TARIFF_CATEGORIES,
-  peakWindowForMonth,
-  regimeInfo,
-} from './tariff';
+import { MIN_RESERVE_PCT, PROSUMER_REGIMES, TARIFF_CATEGORIES, regimeInfo } from './tariff';
 
-describe('peakWindowForMonth', () => {
-  it.each([
-    [1, 17, 21],
-    [2, 17, 21],
-    [3, 18, 22],
-    [5, 18, 22],
-    [6, 19, 23],
-    [8, 19, 23],
-    [9, 18, 22],
-    [11, 18, 22],
-    [12, 17, 21],
-  ])('month %i peaks from %i:00 to %i:00', (month, start, end) => {
-    const window = peakWindowForMonth(month);
-    expect([window.startHour, window.endHour]).toEqual([start, end]);
-  });
-
-  it('covers every month exactly once, each with a four-hour window', () => {
-    const months = SEASONAL_PEAK_WINDOWS.flatMap((w) => [...w.months]).sort((a, b) => a - b);
-    expect(months).toEqual([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]);
-    expect(SEASONAL_PEAK_WINDOWS.every((w) => w.endHour - w.startHour === 4)).toBe(true);
-  });
-
-  it.each([0, 13, 1.5])('rejects month %s', (month) => {
-    expect(() => peakWindowForMonth(month)).toThrow(RangeError);
-  });
-});
+// The seasonal peak windows now come from the tariff repository: see services/mock/tariff-windows.test.ts
+// (sample table) and services/repositories/tariff/tariff.http.test.ts (the API mapping).
 
 describe('prosumer regimes', () => {
   it('credits exports at the backend rate for each regime', () => {

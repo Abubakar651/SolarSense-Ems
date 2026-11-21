@@ -10,10 +10,15 @@ export interface FlowValues {
   soc: number;
 }
 
-const MAX_KW_FOR_SPEED = 6;
+export const MAX_KW_FOR_SPEED = 6;
 
 /** Dashes travel faster the more power flows (1.8s at idle down to 0.6s at 6 kW). */
-const dashDuration = (kw: number) => (1.8 - Math.min(kw, MAX_KW_FOR_SPEED) * 0.2).toFixed(2);
+export const dashDuration = (kw: number) => (1.8 - Math.min(kw, MAX_KW_FOR_SPEED) * 0.2).toFixed(2);
+
+/** What the flow picture shows, for screen readers. */
+export function flowDescription({ solarKw, loadKw, chargeKw, gridKw }: FlowValues): string {
+  return `Energy flow. Solar produces ${solarKw.toFixed(1)} kilowatts. Home uses ${loadKw.toFixed(1)}. Battery charging ${chargeKw.toFixed(1)}. Grid ${gridKw > 0 ? 'importing ' + gridKw.toFixed(1) : 'idle'}.`;
+}
 
 function Node({ x, y, icon, on }: { x: number; y: number; icon: IconName; on: boolean }) {
   return (
@@ -58,7 +63,7 @@ export function FlowDiagram({ solarKw, loadKw, chargeKw, gridKw, exportKw, soc }
     <svg
       viewBox="0 0 360 232"
       role="img"
-      aria-label={`Energy flow. Solar produces ${solarKw.toFixed(1)} kilowatts. Home uses ${loadKw.toFixed(1)}. Battery charging ${chargeKw.toFixed(1)}. Grid ${gridKw > 0 ? 'importing ' + gridKw.toFixed(1) : 'idle'}.`}
+      aria-label={flowDescription({ solarKw, loadKw, chargeKw, gridKw, exportKw, soc })}
     >
       <Flow d="M180 68 V118" on={solarKw > 0} kw={solarKw} />
       <Flow

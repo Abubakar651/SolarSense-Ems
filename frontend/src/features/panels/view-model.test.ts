@@ -1,8 +1,18 @@
 import { describe, expect, it } from 'vitest';
+import { readyData } from '@/lib/history';
 import { panelsMock } from '@/services/repositories/panels/panels.mock';
-import { forecastSeries, paybackDays, parseCost, washAdvice } from './view-model';
+import type { DustCollecting } from '@/types/domain/panels';
+import {
+  collectingMessage,
+  forecastSeries,
+  lastCleanedLabel,
+  paybackDays,
+  parseCost,
+  washAdvice,
+  washedToday,
+} from './view-model';
 
-const soiling = await panelsMock.getSoiling();
+const soiling = readyData(await panelsMock.getSoiling());
 
 describe('parseCost', () => {
   it.each([
@@ -41,6 +51,20 @@ describe('washAdvice', () => {
     expect(advice.rainSoon).toBe(false);
   });
 
+  it('knows the rain forecast when it was fetched', () => {
+    expect(washAdvice(dryWeek, 1500).rainUnknown).toBe(false);
+  });
+
+  it('prices the whole window, and flags the rain as unknown, when the forecast is unavailable', () => {
+    const advice = washAdvice(
+      { ...soiling, daysUntilRain: null, rainForecastAvailable: false },
+      1500,
+    );
+    expect(advice.days).toBe(soiling.horizonDays);
+    expect(advice.rainSoon).toBe(false);
+    expect(advice.rainUnknown).toBe(true);
+  });
+
   it('holds off washing when rain is two days away', () => {
     const advice = washAdvice({ ...soiling, daysUntilRain: 2 }, 1500);
     expect(advice.lossPkr).toBeCloseTo(2.207 * 34.53 * 2, 5);
@@ -72,6 +96,60 @@ describe('washAdvice', () => {
 describe('paybackDays', () => {
   it('rounds up to whole days of dust loss', () => {
     expect(paybackDays(soiling, 1500)).toBe(20);
+  });
+
+  it('is null while dust costs nothing', () => {
+    expect(paybackDays({ ...soiling, dailyLossKwh: 0 }, 1500)).toBeNull();
+  });
+});
+
+describe('lastCleanedLabel', () => {
+  it('names the last wash', () => {
+    expect(lastCleanedLabel(soiling)).toBe('Last washed Sep 23, 2026');
+  });
+
+  it('names washing rain when rain cleaned the panels last', () => {
+    expect(lastCleanedLabel({ ...soiling, cleanEvent: 'rain' })).toBe(
+      'Rain cleaned them Sep 23, 2026',
+    );
+  });
+});
+
+describe('dust model collecting days', () => {
+  const afterWash: DustCollecting = {
+    status: 'collecting',
+    loggedDays: 1,
+    daysNeeded: 3,
+    clean: { event: 'wash', date: '2026-11-19' },
+  };
+
+  it('says when the panels were cleaned and how many days are logged', () => {
+    expect(collectingMessage(afterWash)).toBe(
+      'Your panels were washed on Nov 19, 2026. The dust estimate needs 3 full days of inverter readings after that; 1 so far.',
+    );
+  });
+
+  it('names rain as the clean event', () => {
+    expect(
+      collectingMessage({ ...afterWash, clean: { event: 'rain', date: '2026-11-19' } }),
+    ).toMatch(/^Rain cleaned your panels on Nov 19, 2026./);
+  });
+
+  it('asks for the next wash when no clean event is known', () => {
+    expect(collectingMessage({ ...afterWash, clean: null, loggedDays: 0 })).toMatch(
+      /^No wash is on record/,
+    );
+  });
+
+  it('knows a wash recorded today', () => {
+    expect(washedToday(afterWash, '2026-11-19')).toBe(true);
+    expect(washedToday(afterWash, '2026-11-20')).toBe(false);
+  });
+
+  it('does not count rain today as a recorded wash', () => {
+    expect(
+      washedToday({ ...afterWash, clean: { event: 'rain', date: '2026-11-19' } }, '2026-11-19'),
+    ).toBe(false);
   });
 });
 

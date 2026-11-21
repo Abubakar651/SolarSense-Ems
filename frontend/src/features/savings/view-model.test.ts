@@ -1,8 +1,9 @@
 import { describe, expect, it } from 'vitest';
+import { readyData } from '@/lib/history';
 import { savingsMock } from '@/services/repositories/savings/savings.mock';
 import { savingsSummary } from './view-model';
 
-const data = await savingsMock.getSavings();
+const data = readyData(await savingsMock.getSavings());
 
 describe('savingsSummary', () => {
   it('totals the period and formats it in rupees', () => {

@@ -66,3 +66,10 @@ graphify-out/
 
 # Office temporary lock files
 .~lock.*#
+
+# Test files
+*.test.ts
+*.test.tsx
+test_*.py
+
+

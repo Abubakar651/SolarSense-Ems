@@ -34,6 +34,15 @@ export function SitePanel({ site }: { site: SettingsData['site'] }) {
           <input className="input" id="s-sn" value={site.serial} readOnly />
         </div>
       </div>
+      <SettingsText
+        id="s-host"
+        label="Inverter IP address"
+        inputMode="decimal"
+        numeric
+        autoComplete="off"
+        placeholder="192.168.1.50"
+        hint="Local network address. Leave blank to disconnect."
+      />
       <ToastButton className="btn btn-secondary" message="Reconnecting to inverter…">
         Reconnect inverter
       </ToastButton>

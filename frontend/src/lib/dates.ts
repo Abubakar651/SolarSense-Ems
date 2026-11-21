@@ -1,3 +1,5 @@
+import type { ClockTime } from '@/types/domain/energy';
+
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
 /** "2026-10-26" -> "Oct 26". */
@@ -13,7 +15,25 @@ export function durationLabel(minutes: number): string {
   return `${hours} h ${String(rest).padStart(2, '0')} m`;
 }
 
+/** The time of day in the station's timezone, whatever the server's clock is set to. */
+export function clockInKarachi(now: Date): ClockTime {
+  // h23 (not hour12:false) keeps midnight as "0", not "24".
+  const parts = new Intl.DateTimeFormat('en-GB', {
+    timeZone: 'Asia/Karachi',
+    hour: 'numeric',
+    minute: 'numeric',
+    hourCycle: 'h23',
+  }).formatToParts(now);
+  const part = (type: 'hour' | 'minute') => Number(parts.find((p) => p.type === type)?.value);
+  return { hour: part('hour'), minute: part('minute') };
+}
+
 /** "2026-10-07" -> "Oct 7, 2026". */
 export function longDate(iso: string): string {
   return `${shortDate(iso)}, ${iso.slice(0, 4)}`;
+}
+
+/** "2026-08" -> "Aug 2026". */
+export function monthLabel(month: string): string {
+  return `${MONTHS[Number(month.slice(5, 7)) - 1]} ${month.slice(0, 4)}`;
 }

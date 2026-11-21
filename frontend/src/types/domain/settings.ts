@@ -6,6 +6,15 @@ export interface BlackoutWindow {
   end: string;
 }
 
+/** Stable id of an alert type; the backend stores notification choices under these keys. */
+export type NotificationKey =
+  | 'grid_outage'
+  | 'outage_risk'
+  | 'peak_soon'
+  | 'panels_dirty'
+  | 'inverter_offline'
+  | 'weekly_digest';
+
 export interface SettingsData {
   profile: { name: string; initials: string; phone: string; email: string };
   site: {
@@ -16,7 +25,11 @@ export interface SettingsData {
     batteryKwh: string;
     inverter: string;
     serial: string;
+    /** The inverter's IP address on the home network; "" when not connected. */
+    inverterHost: string;
     syncStatus: string;
+    /** The recorded station dataset this site owns (only the station owner's site); null for every other. */
+    stationCode: string | null;
   };
   battery: {
     capacityKwh: number;
@@ -33,5 +46,5 @@ export interface SettingsData {
     includeElectricityDuty: boolean;
     isProtectedConsumer: boolean;
   };
-  notifications: { label: string; inApp: boolean; email: boolean }[];
+  notifications: { key: NotificationKey; label: string; inApp: boolean; email: boolean }[];
 }

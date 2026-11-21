@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { inverterMock } from '@/services/repositories/inverter/inverter.mock';
-import { batteryFlow, energyRows, gridFlow, reading, readingTime } from './view-model';
+import { batteryFlow, flowValues, gridFlow, reading, readingTime } from './view-model';
 
 describe('batteryFlow', () => {
   it('reads positive power as charging and negative as discharging', () => {
@@ -36,6 +36,46 @@ describe('readingTime', () => {
   });
 });
 
+describe('flowValues', () => {
+  it('converts inverter sign conventions into flow-diagram values', () => {
+    expect(
+      flowValues({
+        totalPvPowerW: 2400,
+        houseConsumptionW: 850,
+        batteryPowerW: 1200,
+        gridActivePowerW: -600,
+        batterySocPct: 73.6,
+      } as Parameters<typeof flowValues>[0]),
+    ).toEqual({
+      solarKw: 2.4,
+      loadKw: 0.85,
+      chargeKw: 1.2,
+      gridKw: 0.6,
+      exportKw: 0,
+      soc: 74,
+    });
+  });
+
+  it('reads a discharging battery and exporting grid as zero charge/grid', () => {
+    expect(
+      flowValues({
+        totalPvPowerW: 0,
+        houseConsumptionW: 500,
+        batteryPowerW: -500,
+        gridActivePowerW: 300,
+        batterySocPct: 40,
+      } as Parameters<typeof flowValues>[0]),
+    ).toEqual({
+      solarKw: 0,
+      loadKw: 0.5,
+      chargeKw: 0,
+      gridKw: 0,
+      exportKw: 0.3,
+      soc: 40,
+    });
+  });
+});
+
 const result = await inverterMock.getLive();
 if (result.status !== 'online') throw new Error('the sample reading is online');
 const { data } = result;
@@ -57,12 +97,5 @@ describe('sample reading', () => {
   it('leaves out readings the recording does not hold', () => {
     expect(data.batterySohPct).toBeNull();
     expect(data.inverterTempRadiatorC).toBeNull();
-  });
-
-  it('lists the day totals with the solar and usage figures first', () => {
-    expect(energyRows(data).slice(0, 2)).toEqual([
-      ['Solar generated', '25.61'],
-      ['Home usage', '21.87'],
-    ]);
   });
 });

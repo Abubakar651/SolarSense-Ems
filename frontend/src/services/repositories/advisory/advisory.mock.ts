@@ -1,5 +1,7 @@
-import type { Advisory } from '@/types/domain/advisory';
+import { readyPlan } from '@/lib/history';
+import type { Advisory, AdvisoryResult } from '@/types/domain/advisory';
 import { pad } from '@/lib/format';
+import { readyData } from '@/lib/history';
 import { OUTAGES } from '../../mock/lhr-res-01-history';
 import { SOILING, TARIFF, TELEMETRY_DAY } from '../../mock/lhr-res-01';
 import { energyMock } from '../energy/energy.mock';
@@ -14,8 +16,8 @@ const round = (value: number, digits = 2) => Number(value.toFixed(digits));
  * soiling model), worded like the backend's. It is not the backend's text and no solver ran.
  */
 async function buildAdvisory(): Promise<Advisory> {
-  const plan = await energyMock.getDayPlan();
-  const soiling = await panelsMock.getSoiling();
+  const plan = readyPlan(await energyMock.getDayPlan());
+  const soiling = readyData(await panelsMock.getSoiling());
   // The same sum the panels screen shows (features/panels/view-model.ts), repeated here because
   // services must not import from features.
   const washDays = Math.min(soiling.daysUntilRain ?? soiling.horizonDays, soiling.horizonDays);
@@ -78,7 +80,7 @@ async function buildAdvisory(): Promise<Advisory> {
 }
 
 export const advisoryMock: AdvisoryRepository = {
-  async getAdvisory() {
-    return buildAdvisory();
+  async getAdvisory(): Promise<AdvisoryResult> {
+    return { status: 'ready', advisory: await buildAdvisory() };
   },
 };

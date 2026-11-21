@@ -7,7 +7,9 @@ import { ValidatedForm } from '@/components/forms/validated-form';
 import { CardHeader } from '@/components/ui/card-header';
 import { TARIFF_CATEGORIES, type TariffCategory } from '@/lib/tariff';
 import { rules } from '@/lib/validators';
-import type { BillEstimateRequest, BillToolsDefaults } from '@/types/domain/tariff';
+import { useToast } from '@/providers/toast-provider';
+import type { BillEstimate, BillEstimateRequest, BillToolsDefaults } from '@/types/domain/tariff';
+import { estimateBillAction } from '../actions';
 import { readEstimateForm, usesPeakSplit } from '../view-model';
 import { EstimateResult } from './bill-results';
 
@@ -18,6 +20,19 @@ const UNITS_RULES = [rules.num(0, 100_000)];
 export function EstimateCard({ defaults }: { defaults: BillToolsDefaults }) {
   const [category, setCategory] = useState<TariffCategory>(defaults.category);
   const [request, setRequest] = useState<BillEstimateRequest | null>(null);
+  const [estimate, setEstimate] = useState<BillEstimate | null>(null);
+  const [pending, setPending] = useState(false);
+  const toast = useToast();
+
+  const calculate = async (next: BillEstimateRequest) => {
+    setRequest(next);
+    setEstimate(null);
+    setPending(true);
+    const result = await estimateBillAction(next);
+    setPending(false);
+    if (result.ok) setEstimate(result.data);
+    else toast(result.error);
+  };
 
   return (
     <div className="card">
@@ -25,7 +40,7 @@ export function EstimateCard({ defaults }: { defaults: BillToolsDefaults }) {
         title="Bill estimate"
         subtitle="Work out a monthly LESCO bill from the units on your meter."
       />
-      <ValidatedForm onValid={(form) => setRequest(readEstimateForm(form))}>
+      <ValidatedForm onValid={(form) => void calculate(readEstimateForm(form))}>
         <div className="field">
           <label htmlFor="bill-cat">Tariff category</label>
           <select
@@ -103,12 +118,17 @@ export function EstimateCard({ defaults }: { defaults: BillToolsDefaults }) {
           label="Include electricity duty"
           defaultChecked={defaults.includeElectricityDuty}
         />
-        <button className="btn btn-primary" type="submit" style={{ marginTop: 'var(--sp-3)' }}>
+        <button
+          className="btn btn-primary"
+          type="submit"
+          style={{ marginTop: 'var(--sp-3)' }}
+          disabled={pending}
+        >
           Calculate
         </button>
       </ValidatedForm>
-      {/* No estimate yet: the calculation lives on the backend (POST /api/v2/bill/estimate). */}
-      <EstimateResult request={request} estimate={null} />
+      {/* Worked out by POST /api/v2/bill/estimate; stays empty in the mock demo. */}
+      <EstimateResult request={request} estimate={estimate} />
     </div>
   );
 }

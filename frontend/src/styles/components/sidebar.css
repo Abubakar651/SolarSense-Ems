@@ -9,7 +9,10 @@
   scrollbar-color: rgba(255, 255, 255, 0.35) transparent;
 }
 .sidebar .nav {
-  scrollbar-color: rgba(255, 255, 255, 0.25) transparent;
+  scrollbar-width: none;
+}
+.sidebar .nav::-webkit-scrollbar {
+  display: none;
 }
 .sidebar .brand {
   color: #fff;

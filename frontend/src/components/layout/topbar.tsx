@@ -7,11 +7,16 @@ import { titleForPath } from '@/config/nav';
 import { useScrolled } from '@/hooks/use-scrolled';
 import { cn } from '@/lib/cn';
 import { useAlerts } from '@/providers/alerts-provider';
+import type { AccountUser } from '@/types/domain/account';
 import { UserMenu } from './user-menu';
 
 interface TopbarProps {
   drawerOpen: boolean;
   onMenu: () => void;
+  user: AccountUser;
+  /** True while the screens replay recorded sample data rather than the account's own. */
+  sample: boolean;
+  logout: () => Promise<void>;
 }
 
 const BELL_BADGE_STYLE = {
@@ -29,7 +34,7 @@ const BELL_BADGE_STYLE = {
   fontWeight: 700,
 } as const;
 
-export function Topbar({ drawerOpen, onMenu }: TopbarProps) {
+export function Topbar({ drawerOpen, onMenu, user, sample, logout }: TopbarProps) {
   const pathname = usePathname();
   const scrolled = useScrolled();
   const { unreadCount } = useAlerts();
@@ -47,13 +52,15 @@ export function Topbar({ drawerOpen, onMenu }: TopbarProps) {
         <Icon name="menu" />
       </button>
       <h2 id="topTitle">{titleForPath(pathname)}</h2>
-      <span
-        className="badge b-warn hide-xs"
-        title="Figures are replayed from recorded data of station LHR-RES-01, not live"
-      >
-        <Icon name="info" style={{ width: 14, height: 14 }} />
-        Sample data
-      </span>
+      {sample && (
+        <span
+          className="badge b-warn hide-xs"
+          title="Figures are replayed from recorded data of station LHR-RES-01, not live"
+        >
+          <Icon name="info" style={{ width: 14, height: 14 }} />
+          Sample data
+        </span>
+      )}
       <Link
         className="icon-btn"
         href="/alerts"
@@ -63,7 +70,7 @@ export function Topbar({ drawerOpen, onMenu }: TopbarProps) {
         <Icon name="bell" />
         {unreadCount > 0 && <span style={BELL_BADGE_STYLE}>{unreadCount}</span>}
       </Link>
-      <UserMenu />
+      <UserMenu user={user} logout={logout} />
     </header>
   );
 }

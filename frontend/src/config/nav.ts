@@ -17,6 +17,7 @@ export const APP_NAV: NavGroup[] = [
     items: [
       { href: '/dashboard', label: 'Dashboard', icon: 'home' },
       { href: '/plan', label: "Today's plan", icon: 'clock' },
+      { href: '/energy', label: 'Energy', icon: 'grid' },
       { href: '/savings', label: 'Savings', icon: 'trend' },
       { href: '/bill', label: 'Bill & tariff', icon: 'wallet' },
     ],

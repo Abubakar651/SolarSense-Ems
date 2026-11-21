@@ -7,7 +7,12 @@ No API key required (Free open-access endpoints).
 import requests
 import pandas as pd
 from pathlib import Path
-from datetime import datetime
+from datetime import date, datetime
+from typing import Any, Dict
+
+import httpx
+
+from src.forecast.live_forecast import WEATHER_VARIABLES
 
 LAHORE_LAT = 31.5204
 LAHORE_LON = 74.3587
@@ -47,6 +52,60 @@ def fetch_lahore_forecast(forecast_days: int = 3) -> pd.DataFrame:
     df = pd.DataFrame(data)
     df["time"] = pd.to_datetime(df["time"])
     return df
+
+
+async def fetch_lahore_day_forecast(client: httpx.AsyncClient, day: date) -> Dict[str, Any]:
+    """
+    Open-Meteo hourly forecast for one local day, with the variables and units the forecasters were
+    trained on (src/forecast/fetch_lahore_weather.py: same variables from the archive API, wind in m/s).
+    """
+    params = {
+        "latitude": LAHORE_LAT,
+        "longitude": LAHORE_LON,
+        "hourly": ",".join(WEATHER_VARIABLES),
+        "timezone": TIMEZONE,
+        "wind_speed_unit": "ms",
+        "start_date": day.isoformat(),
+        "end_date": day.isoformat(),
+    }
+    resp = await client.get(FORECAST_URL, params=params, timeout=10.0)
+    resp.raise_for_status()
+    return resp.json()
+
+
+async def fetch_lahore_daily_rain(client: httpx.AsyncClient, forecast_days: int = 16) -> Dict[str, Any]:
+    """Open-Meteo daily precipitation totals (mm) for Lahore, starting today."""
+    params = {
+        "latitude": LAHORE_LAT,
+        "longitude": LAHORE_LON,
+        "daily": "precipitation_sum",
+        "timezone": TIMEZONE,
+        "forecast_days": forecast_days,
+    }
+    resp = await client.get(FORECAST_URL, params=params, timeout=10.0)
+    resp.raise_for_status()
+    return resp.json()
+
+
+async def fetch_lahore_recent_weather(
+    client: httpx.AsyncClient, past_days: int, forecast_days: int
+) -> Dict[str, Any]:
+    """
+    Open-Meteo hourly GHI (W/m2) and daily precipitation (mm) for Lahore, from `past_days` before today
+    (modelled from observations) through `forecast_days` from today (forecast). Local days, Asia/Karachi.
+    """
+    params = {
+        "latitude": LAHORE_LAT,
+        "longitude": LAHORE_LON,
+        "hourly": "shortwave_radiation",
+        "daily": "precipitation_sum",
+        "timezone": TIMEZONE,
+        "past_days": past_days,
+        "forecast_days": forecast_days,
+    }
+    resp = await client.get(FORECAST_URL, params=params, timeout=10.0)
+    resp.raise_for_status()
+    return resp.json()
 
 
 def fetch_lahore_air_quality(forecast_days: int = 3) -> pd.DataFrame:

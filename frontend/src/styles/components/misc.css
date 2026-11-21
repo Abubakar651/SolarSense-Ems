@@ -18,6 +18,12 @@
   border-bottom: 0;
   padding-bottom: 0;
 }
+/* Unread alerts are clickable rows, so they need a visible keyboard focus ring. */
+.list li[role='button']:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 4px;
+  border-radius: 6px;
+}
 .ico-chip {
   width: 32px;
   height: 32px;

@@ -29,6 +29,7 @@
   --sp-7: 48px;
   --sp-8: 80px;
   --sidebar: 248px;
+  --sidebar-rail: 64px;
 }
 [data-theme='navy'] {
   --primary: #0d1836;

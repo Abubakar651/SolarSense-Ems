@@ -18,8 +18,10 @@ export function WashCalculator({ soiling }: { soiling: SoilingData }) {
         title="Should you wash them?"
         subtitle={
           advice.rainSoon
-            ? `Rain is forecast in ${advice.days} days and will wash the panels for free. We compare what dust costs you until then with the cost of cleaning.`
-            : `We compare what dust costs you over the next ${advice.days} days with the cost of cleaning.`
+            ? `Rain is forecast in ${advice.days} days`
+            : advice.rainUnknown
+              ? `No rain forecast · assumes ${advice.days} dry days`
+              : undefined
         }
       />
       <div className="field">
@@ -33,7 +35,7 @@ export function WashCalculator({ soiling }: { soiling: SoilingData }) {
           aria-describedby="wash-h"
         />
         <p className="hint" id="wash-h">
-          Labour and water. Change it to match your quote.
+          Labour and water
         </p>
       </div>
       <div id="wash-result" aria-live="polite">
@@ -50,14 +52,14 @@ export function WashCalculator({ soiling }: { soiling: SoilingData }) {
         {advice.wash ? (
           <div className="note wash" style={{ margin: 'var(--sp-3) 0 0' }}>
             <b>Wash them.</b>
-            {` Cleaning costs PKR ${fmt(cost)} and saves about `}
+            {' Saves '}
             <b>{`PKR ${fmt(advice.netPkr)}`}</b>
-            {' more than it costs.'}
+            {' net.'}
           </div>
         ) : (
           <div className="note wait" style={{ margin: 'var(--sp-3) 0 0' }}>
             <b>Wait.</b>
-            {` At PKR ${fmt(cost)}, washing costs PKR ${fmt(-advice.netPkr)} more than the dust would${advice.rainSoon ? ' before the rain' : ''}. We'll tell you when that changes.`}
+            {` Washing costs PKR ${fmt(-advice.netPkr)} more than the dust${advice.rainSoon ? ' before the rain' : ''}.`}
           </div>
         )}
       </div>

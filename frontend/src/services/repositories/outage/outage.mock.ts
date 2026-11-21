@@ -6,7 +6,8 @@ import type { OutageRepository } from './outage.repository';
 
 const RECENT_COUNT = 5;
 const MS_PER_DAY = 86_400_000;
-const RESERVE_PCT = (STATION.reserveFloorKwh / STATION.batteryKwh) * 100;
+/** The sample site's reserve floor as a percentage (15%), used by the sample data and as the default. */
+const SAMPLE_RESERVE_PCT = (STATION.reserveFloorKwh / STATION.batteryKwh) * 100;
 
 const clock = (time: string) => Number(time.slice(0, 2)) * 60 + Number(time.slice(3, 5));
 const round1 = (value: number) => Math.round(value * 10) / 10;
@@ -20,47 +21,70 @@ function hoursTouched([, start, end]: OutageRecord): number[] {
 }
 
 /** Percent of recorded days on which an outage was in progress during each hour. */
-function outageShareByHour(): number[] {
-  const days = (Date.parse(OUTAGE_PERIOD.end) - Date.parse(OUTAGE_PERIOD.start)) / MS_PER_DAY + 1;
+function outageShareByHour(outages: readonly OutageRecord[], period: OutagePeriod): number[] {
+  const days = (Date.parse(period.end) - Date.parse(period.start)) / MS_PER_DAY + 1;
   const daysByHour = Array.from({ length: 24 }, () => new Set<string>());
-  for (const outage of OUTAGES) {
+  for (const outage of outages) {
     for (const hour of hoursTouched(outage)) (daysByHour[hour] as Set<string>).add(outage[0]);
   }
   return daysByHour.map((set) => round1((set.size / days) * 100));
 }
 
-const hitReserve = ([, , , , , , socEnd]: OutageRecord) => socEnd !== null && socEnd <= RESERVE_PCT;
+const hitReserve = ([, , , , , , socEnd]: OutageRecord, reservePct: number) =>
+  socEnd !== null && socEnd <= reservePct;
 
-function toEvent(outage: OutageRecord): OutageEvent {
+function toEvent(outage: OutageRecord, reservePct: number): OutageEvent {
   const [date, start, , minutes, kwh] = outage;
   return {
     date: shortDate(date),
     started: start,
     duration: durationLabel(minutes),
     batteryUsed: `${kwh.toFixed(1)} kWh`,
-    hitReserve: hitReserve(outage),
+    hitReserve: hitReserve(outage, reservePct),
   };
 }
 
-function buildOutage(): OutageData {
-  const month = TELEMETRY_DAY.slice(0, 7);
-  const thisMonth = OUTAGES.filter(([date]) => date.startsWith(month));
+/** First and last day of the recorded outage history (YYYY-MM-DD). */
+export interface OutagePeriod {
+  start: string;
+  end: string;
+}
+
+/**
+ * The Outage screen from recorded outages (oldest first). Shared by the sample data and the API
+ * repository, so both show the same figures. `month` is the "this month" being summarised (YYYY-MM)
+ * and `reservePct` the account's reserve floor, the level an outage is measured against.
+ */
+export function buildOutage(
+  outages: readonly OutageRecord[],
+  period: OutagePeriod,
+  month: string,
+  reservePct: number = SAMPLE_RESERVE_PCT,
+): OutageData {
+  const thisMonth = outages.filter(([date]) => date.startsWith(month));
 
   return {
-    riskByHour: outageShareByHour(),
-    recent: OUTAGES.slice(-RECENT_COUNT).reverse().map(toEvent),
-    since: longDate(OUTAGE_PERIOD.start),
-    totalCount: OUTAGES.length,
+    riskByHour: outageShareByHour(outages, period),
+    recent: outages
+      .slice(-RECENT_COUNT)
+      .reverse()
+      .map((outage) => toEvent(outage, reservePct)),
+    since: longDate(period.start),
+    totalCount: outages.length,
     thisMonth: {
       count: thisMonth.length,
       hours: round1(thisMonth.reduce((sum, [, , , minutes]) => sum + minutes, 0) / 60),
-      hitReserve: thisMonth.filter(hitReserve).length,
+      hitReserve: thisMonth.filter((outage) => hitReserve(outage, reservePct)).length,
     },
   };
 }
 
 export const outageMock: OutageRepository = {
   async getOutage() {
-    return buildOutage();
+    return {
+      status: 'ready',
+      data: buildOutage(OUTAGES, OUTAGE_PERIOD, TELEMETRY_DAY.slice(0, 7)),
+      freshness: { through: TELEMETRY_DAY, kind: 'sample' },
+    };
   },
 };

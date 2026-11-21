@@ -741,78 +741,8 @@ class EMSDataRepository:
     # -----------------------------------------------------------------
 
     def _build_task_frame(self, task: str) -> Tuple[pl.DataFrame, List[str], str]:
-        """
-        Builds the full-dataset (11,136 rows) augmented feature frame for an ML task.
-        Shared by get_ml_feature_matrix() (splits) and the forecast cache (resident arrays)
-        so training-time and inference-time features are identical by construction.
-        """
-        valid_tasks = {"solar", "load", "outage"}
-        if task not in valid_tasks:
-            raise ValueError(f"Invalid ML task '{task}'. Expected one of {valid_tasks}")
-
-        # Augment dataframe with tree-friendly Fourier and calendar features
-        augmented = self._df.with_columns([
-            pl.col("timestamp").dt.hour().alias("hour"),
-            pl.col("timestamp").dt.weekday().alias("weekday"),
-            pl.col("timestamp").dt.month().alias("month"),
-            pl.col("timestamp").dt.day().alias("day_of_month"),
-            # Fourier cyclical pairs for hours and months
-            (2.0 * np.pi * pl.col("timestamp").dt.hour() / 24.0).sin().alias("hour_sin"),
-            (2.0 * np.pi * pl.col("timestamp").dt.hour() / 24.0).cos().alias("hour_cos"),
-            (2.0 * np.pi * pl.col("timestamp").dt.month() / 12.0).sin().alias("month_sin"),
-            (2.0 * np.pi * pl.col("timestamp").dt.month() / 12.0).cos().alias("month_cos"),
-            # Shift phases
-            pl.when(pl.col("timestamp").dt.hour().is_between(8, 16))
-            .then(pl.lit(1))
-            .when(pl.col("timestamp").dt.hour().is_between(16, 23))
-            .then(pl.lit(2))
-            .otherwise(pl.lit(0))
-            .alias("factory_shift_id"),
-        ])
-
-        # Task-specific feature and target selection
-        if task == "solar":
-            target_col = "effective_solar_kw"
-            base_features = [
-                "ghi_wm2", "dni_wm2", "dhi_wm2", "temp_c", "humidity_pct",
-                "wind_ms", "rain_mm", "hour", "month", "weekday",
-                "hour_sin", "hour_cos", "month_sin", "month_cos",
-            ]
-        elif task == "load":
-            target_col = "factory_load_kw"
-            base_features = [
-                "hour", "weekday", "month", "hour_sin", "hour_cos",
-                "temp_c", "factory_shift_id", "humidity_pct",
-            ]
-        else:  # "outage"
-            target_col = "outage_flag"
-            base_features = [
-                "hour", "weekday", "month", "hour_sin", "hour_cos",
-                "temp_c", "rain_mm", "wind_ms", "humidity_pct",
-            ]
-
-        # Causal historical lag features for the target variable (strictly >= 24h lag for 24h lookahead)
-        lag_24 = f"{target_col}_lag_24h"
-        lag_48 = f"{target_col}_lag_48h"
-        lag_168 = f"{target_col}_lag_168h"
-        roll_7d = f"{target_col}_rolling_mean_7d_lag24"
-
-        augmented = augmented.with_columns([
-            pl.col(target_col).shift(24).fill_null(strategy="backward").fill_null(0.0).alias(lag_24),
-            pl.col(target_col).shift(48).fill_null(strategy="backward").fill_null(0.0).alias(lag_48),
-            pl.col(target_col).shift(168).fill_null(strategy="backward").fill_null(0.0).alias(lag_168),
-            pl.col(target_col).shift(24).rolling_mean(window_size=168, min_samples=1).fill_null(strategy="backward").fill_null(0.0).alias(roll_7d),
-            pl.col(target_col).shift(24).fill_null(strategy="backward").fill_null(0.0).alias("lag_24h"),
-            pl.col(target_col).shift(48).fill_null(strategy="backward").fill_null(0.0).alias("lag_48h"),
-            pl.col(target_col).shift(168).fill_null(strategy="backward").fill_null(0.0).alias("lag_168h"),
-            pl.col(target_col).shift(24).rolling_mean(window_size=168, min_samples=1).fill_null(strategy="backward").fill_null(0.0).alias("rolling_mean_7d_lag24"),
-        ])
-
-        feature_cols = base_features + [
-            lag_24, lag_48, lag_168, roll_7d,
-            "lag_24h", "lag_48h", "lag_168h", "rolling_mean_7d_lag24",
-        ]
-        return augmented, feature_cols, target_col
+        """The full-dataset (11,136 rows) feature frame for an ML task (see build_task_frame)."""
+        return build_task_frame(self._df, task)
 
     def _ensure_forecast_cache(self) -> Dict[str, Any]:
         """
@@ -853,6 +783,25 @@ class EMSDataRepository:
         """Eagerly builds the forecast cache (call once from the FastAPI lifespan startup hook)."""
         self._ensure_forecast_cache()
 
+    def forecasters(self) -> Tuple[Any, Any, Any]:
+        """The loaded (solar, load, outage) forecasters, for inference on frames outside the dataset."""
+        cache = self._ensure_forecast_cache()
+        return cache["solar_model"], cache["load_model"], cache["outage_model"]
+
+    def recent_history(self, hours: int) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+        """
+        The dataset's final `hours` of (solar kW, load kW, outage flag), oldest first. The dataset
+        ends at 23:00, so position i of the result falls on the same hour of day as position i of
+        any other `hours`-long window ending at 23:00.
+        """
+        if not 0 < hours <= self._df.height:
+            raise ValueError(f"hours must be between 1 and {self._df.height}, got {hours}")
+        return (
+            self._solar_arr[-hours:].copy(),
+            self._load_arr[-hours:].copy(),
+            self._outage_arr[-hours:].astype(np.float64),
+        )
+
     # -----------------------------------------------------------------
     # Internal Helpers
     # -----------------------------------------------------------------
@@ -875,3 +824,78 @@ class EMSDataRepository:
         if dt.tzinfo is None:
             return dt.replace(tzinfo=PKT_TZ)
         return dt.astimezone(PKT_TZ)
+
+
+def build_task_frame(df: pl.DataFrame, task: str) -> Tuple[pl.DataFrame, List[str], str]:
+    """
+    Builds the augmented feature frame for an ML task from an hourly frame (timestamp, weather and
+    target columns). Shared by training (get_ml_feature_matrix), the dataset forecast cache and live
+    forecasting (src/forecast/live_forecast.py), so features are identical by construction.
+    """
+    valid_tasks = {"solar", "load", "outage"}
+    if task not in valid_tasks:
+        raise ValueError(f"Invalid ML task '{task}'. Expected one of {valid_tasks}")
+
+    # Augment dataframe with tree-friendly Fourier and calendar features
+    augmented = df.with_columns([
+        pl.col("timestamp").dt.hour().alias("hour"),
+        pl.col("timestamp").dt.weekday().alias("weekday"),
+        pl.col("timestamp").dt.month().alias("month"),
+        pl.col("timestamp").dt.day().alias("day_of_month"),
+        # Fourier cyclical pairs for hours and months
+        (2.0 * np.pi * pl.col("timestamp").dt.hour() / 24.0).sin().alias("hour_sin"),
+        (2.0 * np.pi * pl.col("timestamp").dt.hour() / 24.0).cos().alias("hour_cos"),
+        (2.0 * np.pi * pl.col("timestamp").dt.month() / 12.0).sin().alias("month_sin"),
+        (2.0 * np.pi * pl.col("timestamp").dt.month() / 12.0).cos().alias("month_cos"),
+        # Shift phases
+        pl.when(pl.col("timestamp").dt.hour().is_between(8, 16))
+        .then(pl.lit(1))
+        .when(pl.col("timestamp").dt.hour().is_between(16, 23))
+        .then(pl.lit(2))
+        .otherwise(pl.lit(0))
+        .alias("factory_shift_id"),
+    ])
+
+    # Task-specific feature and target selection
+    if task == "solar":
+        target_col = "effective_solar_kw"
+        base_features = [
+            "ghi_wm2", "dni_wm2", "dhi_wm2", "temp_c", "humidity_pct",
+            "wind_ms", "rain_mm", "hour", "month", "weekday",
+            "hour_sin", "hour_cos", "month_sin", "month_cos",
+        ]
+    elif task == "load":
+        target_col = "factory_load_kw"
+        base_features = [
+            "hour", "weekday", "month", "hour_sin", "hour_cos",
+            "temp_c", "factory_shift_id", "humidity_pct",
+        ]
+    else:  # "outage"
+        target_col = "outage_flag"
+        base_features = [
+            "hour", "weekday", "month", "hour_sin", "hour_cos",
+            "temp_c", "rain_mm", "wind_ms", "humidity_pct",
+        ]
+
+    # Causal historical lag features for the target variable (strictly >= 24h lag for 24h lookahead)
+    lag_24 = f"{target_col}_lag_24h"
+    lag_48 = f"{target_col}_lag_48h"
+    lag_168 = f"{target_col}_lag_168h"
+    roll_7d = f"{target_col}_rolling_mean_7d_lag24"
+
+    augmented = augmented.with_columns([
+        pl.col(target_col).shift(24).fill_null(strategy="backward").fill_null(0.0).alias(lag_24),
+        pl.col(target_col).shift(48).fill_null(strategy="backward").fill_null(0.0).alias(lag_48),
+        pl.col(target_col).shift(168).fill_null(strategy="backward").fill_null(0.0).alias(lag_168),
+        pl.col(target_col).shift(24).rolling_mean(window_size=168, min_samples=1).fill_null(strategy="backward").fill_null(0.0).alias(roll_7d),
+        pl.col(target_col).shift(24).fill_null(strategy="backward").fill_null(0.0).alias("lag_24h"),
+        pl.col(target_col).shift(48).fill_null(strategy="backward").fill_null(0.0).alias("lag_48h"),
+        pl.col(target_col).shift(168).fill_null(strategy="backward").fill_null(0.0).alias("lag_168h"),
+        pl.col(target_col).shift(24).rolling_mean(window_size=168, min_samples=1).fill_null(strategy="backward").fill_null(0.0).alias("rolling_mean_7d_lag24"),
+    ])
+
+    feature_cols = base_features + [
+        lag_24, lag_48, lag_168, roll_7d,
+        "lag_24h", "lag_48h", "lag_168h", "rolling_mean_7d_lag24",
+    ]
+    return augmented, feature_cols, target_col

@@ -3,11 +3,14 @@
 import { useState } from 'react';
 import { BarChart } from '@/components/charts/bar-chart';
 import { CardHeader } from '@/components/ui/card-header';
+import { CollectingBadge } from '@/features/history/components/collecting-badge';
+import { FreshnessBadge } from '@/features/history/components/freshness-badge';
 import { ChartTable } from '@/components/ui/data-table';
 import { KpiCard, KpiStrip } from '@/components/ui/kpi-card';
 import { PageHeader } from '@/components/ui/page-header';
 import { Seg } from '@/components/ui/seg';
 import { fmt } from '@/lib/format';
+import type { Freshness, HistoryNotReady } from '@/types/domain/history';
 import type { SavingsData, SavingsRange } from '@/types/domain/savings';
 import { savingsSummary } from '../view-model';
 
@@ -17,7 +20,14 @@ const RANGES = [
   { value: 'year', label: '12 months' },
 ] as const;
 
-export function SavingsView({ data }: { data: SavingsData }) {
+interface SavingsViewProps {
+  data: SavingsData;
+  freshness?: Freshness;
+  /** Set while the data above is a zeroed placeholder, so the header shows a collecting badge instead. */
+  notReady?: HistoryNotReady;
+}
+
+export function SavingsView({ data, freshness, notReady }: SavingsViewProps) {
   const [range, setRange] = useState<SavingsRange>('month');
   const series = data[range];
   const summary = savingsSummary(series);
@@ -36,7 +46,7 @@ export function SavingsView({ data }: { data: SavingsData }) {
           />
         }
       >
-        What SolarSense has saved you compared with having no solar or battery.
+        {notReady ? <CollectingBadge result={notReady} /> : <FreshnessBadge freshness={freshness as Freshness} />}
       </PageHeader>
       <KpiStrip>
         <KpiCard
@@ -46,14 +56,14 @@ export function SavingsView({ data }: { data: SavingsData }) {
           subId="sv-total-sub"
         />
         <KpiCard
-          label={`Energy cost, ${data.currentMonth.label}`}
+          label={`Grid bill, ${data.currentMonth.label}`}
           value={`PKR ${fmt(data.currentMonth.costPkr)}`}
-          sub={`vs PKR ${fmt(data.currentMonth.withoutSolarPkr)} without solar (energy charges only)`}
+          sub={`vs PKR ${fmt(data.currentMonth.withoutSolarPkr)} without solar`}
         />
         <KpiCard
           label="Export credit earned"
           value={summary.exportCredit}
-          sub={`Power sent to the grid at PKR ${data.exportRatePkr}/kWh`}
+          sub={`At PKR ${data.exportRatePkr}/kWh`}
         />
         <KpiCard
           label="Self-powered"
@@ -63,7 +73,7 @@ export function SavingsView({ data }: { data: SavingsData }) {
               <small>%</small>
             </>
           }
-          sub={`Share of your usage not bought from the grid, ${data.currentMonth.label}`}
+          sub={data.currentMonth.label}
         />
       </KpiStrip>
       <div className="g-21 grid" style={{ marginTop: 'var(--sp-4)' }}>
@@ -71,7 +81,6 @@ export function SavingsView({ data }: { data: SavingsData }) {
           <div className="card-h">
             <div>
               <h2 id="sv-title">{series.title}</h2>
-              <p>PKR saved per period</p>
             </div>
           </div>
           <BarChart

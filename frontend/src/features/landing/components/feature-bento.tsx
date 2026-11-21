@@ -70,7 +70,7 @@ export function FeatureBento({ plan, soiling, outage, report, latestAlert }: Fea
         className="w2"
         icon="clock"
         title="Lower bills at peak hours"
-        body="The battery is held for the expensive evening hours, and is never charged from the grid at peak rates."
+        body="Battery saved for the evening peak."
       >
         <div className="mini">
           <div className="mini-h">
@@ -90,7 +90,7 @@ export function FeatureBento({ plan, soiling, outage, report, latestAlert }: Fea
         className="tall"
         icon="zap"
         title="Ready for load-shedding"
-        body="See when the grid has failed, hour by hour, and keep a backup reserve you choose."
+        body="Outage history and a backup reserve."
       >
         <div className="mini">
           <div className="mini-h">
@@ -126,7 +126,7 @@ export function FeatureBento({ plan, soiling, outage, report, latestAlert }: Fea
         index={2}
         icon="sun"
         title="Know when to wash the panels"
-        body="We weigh the cost of dust against the cost of cleaning over the next two weeks, then say wash or wait."
+        body="Wash or wait, worked out in rupees."
       >
         <div className="mini">
           <div className="verdict">
@@ -142,12 +142,7 @@ export function FeatureBento({ plan, soiling, outage, report, latestAlert }: Fea
           </div>
         </div>
       </Cell>
-      <Cell
-        index={3}
-        icon="bell"
-        title="Alerts you can act on"
-        body="Get told when the inverter reports a grid loss, and for how long."
-      >
+      <Cell index={3} icon="bell" title="Alerts you can act on" body="Grid loss, as it happens.">
         <div className="mini">
           {latestAlert && (
             <div className="verdict">
@@ -162,12 +157,7 @@ export function FeatureBento({ plan, soiling, outage, report, latestAlert }: Fea
           )}
         </div>
       </Cell>
-      <Cell
-        index={4}
-        icon="file"
-        title="Monthly reports"
-        body="Generation, grid use and savings, ready to download or email."
-      >
+      <Cell index={4} icon="file" title="Monthly reports" body="Download or email each month.">
         <div className="mini">
           <dl className="kv">
             <dt>Saved</dt>
@@ -187,7 +177,7 @@ export function FeatureBento({ plan, soiling, outage, report, latestAlert }: Fea
         className="w2"
         icon="sliders"
         title="Your tariff, your rules"
-        body="Enter your own rates and peak hours, and choose how cautious the battery should be."
+        body="Your rates, your peak hours."
       >
         <div className="mini">
           <div className="mini-h">

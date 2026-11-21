@@ -10,10 +10,15 @@ import { useToast } from '@/providers/toast-provider';
 import { FILTERS, SEVERITY, countFor, filterAlerts, type AlertFilter } from '../view-model';
 
 export function AlertsView() {
-  const { alerts, markAllRead } = useAlerts();
+  const { alerts, markAllRead, markOneRead } = useAlerts();
   const toast = useToast();
   const [filter, setFilter] = useState<AlertFilter>('all');
   const rows = filterAlerts(alerts, filter);
+
+  const markOne = (id: string) =>
+    void markOneRead(id).then((saved) => {
+      if (!saved) toast('Couldn’t update that alert. Try again.');
+    });
 
   return (
     <section data-route="alerts">
@@ -24,10 +29,13 @@ export function AlertsView() {
             className="btn btn-secondary btn-sm"
             id="markRead"
             type="button"
-            onClick={() => {
-              markAllRead();
-              toast('All alerts marked as read');
-            }}
+            onClick={() =>
+              void markAllRead().then((saved) =>
+                toast(
+                  saved ? 'All alerts marked as read' : 'Couldn’t update your alerts. Try again.',
+                ),
+              )
+            }
           >
             <Icon name="check" />
             Mark all as read
@@ -57,7 +65,24 @@ export function AlertsView() {
         </div>
         <ul className="list" id="alertList">
           {rows.map(({ id, severity, title, detail, when, unread }) => (
-            <li key={id}>
+            <li
+              key={id}
+              role={unread ? 'button' : undefined}
+              tabIndex={unread ? 0 : undefined}
+              aria-label={unread ? `${title}. Mark as read` : undefined}
+              style={{ cursor: unread ? 'pointer' : undefined }}
+              onClick={unread ? () => markOne(id) : undefined}
+              onKeyDown={
+                unread
+                  ? (event) => {
+                      if (event.key === 'Enter' || event.key === ' ') {
+                        event.preventDefault();
+                        markOne(id);
+                      }
+                    }
+                  : undefined
+              }
+            >
               <IconChip icon={SEVERITY[severity].icon} tone={severity} />
               <div style={{ flex: 1 }}>
                 <div className="row" style={{ gap: 8 }}>

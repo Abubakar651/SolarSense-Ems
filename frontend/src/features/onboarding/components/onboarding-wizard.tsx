@@ -4,7 +4,15 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 import { ValidatedForm } from '@/components/forms/validated-form';
 import { useToast } from '@/providers/toast-provider';
-import { LAST_STEP, ONBOARDING_STEPS, formValues, reviewRows, type ReviewRow } from '../view-model';
+import { completeOnboardingAction } from '../actions';
+import {
+  LAST_STEP,
+  ONBOARDING_STEPS,
+  formValues,
+  reviewRows,
+  toOnboardingRequest,
+  type ReviewRow,
+} from '../view-model';
 import { StepReview } from './step-review';
 import { StepSite } from './step-site';
 import { StepSystem } from './step-system';
@@ -16,6 +24,7 @@ export function OnboardingWizard() {
   const toast = useToast();
   const [step, setStep] = useState(0);
   const [review, setReview] = useState<ReviewRow[]>([]);
+  const [finishing, setFinishing] = useState(false);
   const moved = useRef(false);
 
   // After a step change, scroll to the top and move focus to the new step's heading.
@@ -27,10 +36,22 @@ export function OnboardingWizard() {
     heading?.focus();
   }, [step]);
 
+  const finish = async (form: HTMLFormElement) => {
+    if (finishing) return;
+    setFinishing(true);
+    const result = await completeOnboardingAction(toOnboardingRequest(formValues(form)));
+    if (!result.ok) {
+      setFinishing(false);
+      toast(result.error);
+      return;
+    }
+    toast('Setup complete. Building your first plan…');
+    router.push('/dashboard');
+  };
+
   const onValid = (form: HTMLFormElement) => {
     if (step === LAST_STEP) {
-      toast('Setup complete. Building your first plan…');
-      router.push('/dashboard');
+      void finish(form);
       return;
     }
     if (step === LAST_STEP - 1) setReview(reviewRows(formValues(form)));
@@ -74,7 +95,7 @@ export function OnboardingWizard() {
             >
               Back
             </button>
-            <button className="btn btn-primary" type="submit" id="onbNext">
+            <button className="btn btn-primary" type="submit" id="onbNext" disabled={finishing}>
               {step === LAST_STEP ? 'Finish setup' : 'Continue'}
             </button>
           </div>

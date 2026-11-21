@@ -79,6 +79,8 @@ class VisionInspectRequest(BaseModel):
     )
     base64_image: Optional[str] = Field(
         default=None,
+        # ~8 MB of image data; larger payloads are rejected before decoding.
+        max_length=11_000_000,
         description="Optional base64-encoded RGB image payload (overrides sample_path if provided)",
     )
     use_tta: bool = Field(
@@ -147,6 +149,23 @@ class AgentAdvisoryResponse(BaseModel):
     key_metrics: Dict[str, float]
     generation_mode: str
     latency_ms: float
+
+
+class DailyBriefResponse(BaseModel):
+    """Today's written brief for the signed-in user's site (src/api/daily_brief.py)."""
+
+    model_config = ConfigDict(frozen=True)
+
+    date: str = Field(..., description="Local (PKT) day the brief covers, YYYY-MM-DD")
+    site_name: str
+    headline: str
+    dispatch_arbitrage_brief: str
+    blackout_resilience_brief: str
+    soiling_maintenance_brief: str
+    recommended_actions: List[str]
+    # None: the figure could not be worked out today (e.g. the dust estimate is still collecting days).
+    key_metrics: Dict[str, Optional[float]]
+    generation_mode: str
 
 
 class SimulationWindowResponse(BaseModel):
@@ -282,6 +301,42 @@ class Lesco2026OptimizeResponse(BaseModel):
     export_rate_used_pkr_per_kwh: str = "0.00"
     baseline_no_battery_cost_pkr: str = "0.00"
     net_savings_pkr: str = "0.00"
+    # The all-in tariff rate each hour's import was priced at (PKR/kWh), and its peak and Off-Peak values
+    # (equal on a flat slab tariff).
+    import_rate_pkr_per_kwh: List[float] = Field(default_factory=list)
+    peak_import_rate_pkr_per_kwh: str = "0.00"
+    off_peak_import_rate_pkr_per_kwh: str = "0.00"
+
+
+class LivePlanRequest(BaseModel):
+    """Today's plan from live forecasts; the day and the inputs come from the clock, the weather and the logged telemetry."""
+
+    model_config = ConfigDict(frozen=True)
+
+    regime: str = Field(
+        default="GRANDFATHERED_NET_METERING",
+        description="NET_BILLING_2026 | GRANDFATHERED_NET_METERING | SINGLE_PHASE_SLAB_ZERO_EXPORT",
+    )
+    is_protected_consumer: bool = True
+    include_electricity_duty: bool = False
+
+
+class LivePlanResponse(Lesco2026OptimizeResponse):
+    """The v2 dispatch for today, solved on forecast solar/load, plus how the forecast was made."""
+
+    date: str = Field(..., description="Local (PKT) day the plan covers, YYYY-MM-DD")
+    outage_prob: List[float] = Field(..., description="Forecast probability of a grid outage in each hour")
+    history_logged_hours: int = Field(..., ge=0, description="Hours of the 192-hour lag history taken from logged inverter telemetry")
+    history_hours: int = Field(..., gt=0, description="Hours of history the forecasters use (the rest comes from the recorded dataset)")
+    pv_kwp: float = Field(..., gt=0.0, description="The user's array size the solar forecast was scaled to")
+    battery_capacity_kwh: float = Field(..., gt=0.0, description="The user's battery the dispatch was solved for")
+    reserve_floor_kwh: float = Field(..., ge=0.0, description="The user's backup reserve, never discharged below")
+    initial_soc_assumed: bool = Field(
+        ..., description="True when no logged battery level was found near midnight and the solver assumed one"
+    )
+    month_to_date_logged_days: int = Field(
+        ..., ge=0, description="Days of this month's grid flows the plan took from the site's log (a lower bound)"
+    )
 
 
 class BillEstimateRequest(BaseModel):

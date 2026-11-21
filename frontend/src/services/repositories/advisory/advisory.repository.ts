@@ -1,6 +1,6 @@
-import type { Advisory } from '@/types/domain/advisory';
+import type { AdvisoryResult } from '@/types/domain/advisory';
 
 export interface AdvisoryRepository {
-  /** The written daily brief for the planned day. */
-  getAdvisory(): Promise<Advisory>;
+  /** The written brief for today's plan, or "unavailable" when it can't be written right now. */
+  getAdvisory(): Promise<AdvisoryResult>;
 }

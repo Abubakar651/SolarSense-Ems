@@ -44,7 +44,10 @@ export function SidebarNav({ onNavigate }: { onNavigate: () => void }) {
               key={href}
               href={href}
               aria-current={pathname === href ? 'page' : undefined}
-              onClick={onNavigate}
+              onClick={(event) => {
+                event.currentTarget.blur();
+                onNavigate();
+              }}
             >
               <Icon name={icon} />
               <span>{label}</span>

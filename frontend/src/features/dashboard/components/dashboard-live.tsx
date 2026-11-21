@@ -1,24 +1,50 @@
 'use client';
 
 import Link from 'next/link';
-import { FlowDiagram } from '@/components/charts/flow-diagram';
 import { PlanChart } from '@/components/charts/plan-chart';
 import { CardHeader } from '@/components/ui/card-header';
 import { CountUp } from '@/components/ui/count-up';
 import { KpiCard, KpiStrip } from '@/components/ui/kpi-card';
+import { TodayEnergyCard } from '@/features/energy/components/today-energy-card';
+import { todayFromPlan, todayFromReading } from '@/features/energy/today';
 import { useSampleClock } from '@/providers/sample-clock-provider';
 import type { DayPlan } from '@/types/domain/energy';
+import type { InverterReading } from '@/types/domain/inverter';
 import { fmt, pad } from '@/lib/format';
 import type { AttentionItem } from '../attention';
-import { dashboardSnapshot, dayFacts } from '../view-model';
+import { useInverterReading } from '../use-inverter-reading';
+import { dashboardSnapshot, dayFacts, forecastNote } from '../view-model';
 import { AttentionList } from './attention-list';
 import { ChartLegend } from './chart-legend';
+import { EnergyFlowCard } from './energy-flow-card';
 
-/** Everything on the dashboard that follows the sample clock. */
-export function DashboardLive({ plan, attention }: { plan: DayPlan; attention: AttentionItem[] }) {
+const OFFLINE_VALUE = <span aria-label="Not available">—</span>;
+
+interface DashboardLiveProps {
+  plan: DayPlan;
+  attention: AttentionItem[];
+  /** The inverter at page load; null while the plan replays sample data. */
+  initialReading: InverterReading | null;
+  readInverter: () => Promise<InverterReading>;
+}
+
+/** Everything on the dashboard that follows the clock and the inverter. */
+export function DashboardLive({
+  plan,
+  attention,
+  initialReading,
+  readInverter,
+}: DashboardLiveProps) {
   const now = useSampleClock();
-  const snap = dashboardSnapshot(plan, now);
+  const reading = useInverterReading(initialReading, readInverter);
+  const snap = dashboardSnapshot(plan, now, reading);
   const facts = dayFacts(plan);
+  const offline = snap.source === 'offline';
+  const note = forecastNote(plan);
+  const today =
+    reading?.status === 'online'
+      ? todayFromReading(reading.data, reading.isSample)
+      : todayFromPlan(plan);
 
   return (
     <>
@@ -33,41 +59,57 @@ export function DashboardLive({ plan, attention }: { plan: DayPlan; attention: A
               <CountUp value={fmt(facts.savedTodayPkr)} />
             </>
           }
-          sub="Today's plan vs no solar or battery"
+          sub="vs no solar or battery"
         />
         <KpiCard
           label="Solar now"
           icon="sun"
           value={
-            <>
-              <CountUp value={snap.solarKw.toFixed(1)} />
-              <small>kW</small>
-            </>
+            offline ? (
+              OFFLINE_VALUE
+            ) : (
+              <>
+                <CountUp value={snap.solarKw.toFixed(1)} />
+                <small>kW</small>
+              </>
+            )
           }
-          sub={`Hourly peak: ${facts.peakSolar.kw.toFixed(1)} kW at ${pad(facts.peakSolar.hour)}:00`}
+          sub={
+            offline
+              ? 'Inverter offline'
+              : `Peak ${facts.peakSolar.kw.toFixed(1)} kW at ${pad(facts.peakSolar.hour)}:00`
+          }
         />
         <KpiCard
           label="Battery"
           icon="battery"
           value={
-            <>
-              <CountUp value={String(snap.soc)} />
-              <small>%</small>
-            </>
+            offline ? (
+              OFFLINE_VALUE
+            ) : (
+              <>
+                <CountUp value={String(snap.soc)} />
+                <small>%</small>
+              </>
+            )
           }
-          sub={snap.batterySub}
+          sub={offline ? 'Inverter offline' : snap.batterySub}
           subId="k-soc-sub"
         />
         <KpiCard
           label="Backup time"
           icon="clock"
           value={
-            <>
-              <CountUp value={snap.backupHours} />
-              <small>hours</small>
-            </>
+            offline ? (
+              OFFLINE_VALUE
+            ) : (
+              <>
+                <CountUp value={snap.backupHours} />
+                <small>hours</small>
+              </>
+            )
           }
-          sub="If the grid goes down now"
+          sub={offline ? 'Inverter offline' : undefined}
         />
       </KpiStrip>
 
@@ -75,6 +117,12 @@ export function DashboardLive({ plan, attention }: { plan: DayPlan; attention: A
         <div className="plate-h">
           <div>
             <h2>Today</h2>
+            {note && (
+              <span className="badge b-warn" title={note}>
+                Partial history
+                <span className="sr-only">{`. ${note}`}</span>
+              </span>
+            )}
           </div>
           <ChartLegend />
         </div>
@@ -88,24 +136,7 @@ export function DashboardLive({ plan, attention }: { plan: DayPlan; attention: A
       </div>
 
       <div className="g-21 grid" style={{ marginTop: 'var(--sp-4)' }}>
-        <div className="card">
-          <CardHeader
-            title="Energy flow"
-            subtitle="Where your power is going right now"
-            action={
-              <span className="badge b-ok">
-                <span className="dot live" />
-                Grid connected
-              </span>
-            }
-          />
-          <div className="flow" id="flow">
-            <FlowDiagram {...snap} />
-          </div>
-          <p className="small muted" id="flow-sum" style={{ textAlign: 'center', marginTop: 8 }}>
-            {snap.flowSummary}
-          </p>
-        </div>
+        <EnergyFlowCard snap={snap} />
         <div className="grid" style={{ alignContent: 'start' }}>
           <div className="card">
             <CardHeader
@@ -116,11 +147,9 @@ export function DashboardLive({ plan, attention }: { plan: DayPlan; attention: A
             <div className="big num" id="peak-cd">
               {snap.peakCountdown}
             </div>
-            <p className="small muted" style={{ margin: '6px 0 14px' }}>
-              {`until the evening rate (${facts.rateNote})`}
-            </p>
             <div
               className="bar"
+              style={{ marginTop: 14 }}
               role="img"
               id="peak-bar"
               aria-label={`Battery is ${snap.soc} percent full ahead of peak hours`}
@@ -144,6 +173,10 @@ export function DashboardLive({ plan, attention }: { plan: DayPlan; attention: A
             <AttentionList items={attention} />
           </div>
         </div>
+      </div>
+
+      <div style={{ marginTop: 'var(--sp-4)' }}>
+        <TodayEnergyCard today={today} exportRatePkr={plan.tariff.exportPkr} />
       </div>
     </>
   );

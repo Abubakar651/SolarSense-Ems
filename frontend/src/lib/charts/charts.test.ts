@@ -12,6 +12,12 @@ describe('niceMax', () => {
   ])('rounds %s up to a friendly axis (%s steps)', (value, steps, expected) => {
     expect(niceMax(value, steps)).toEqual(expected);
   });
+
+  it('never returns a step of 0 for an all-zero series, which would spin a tick loop forever', () => {
+    const { step, max } = niceMax(0);
+    expect(step).toBeGreaterThan(0);
+    expect(Number.isFinite(max)).toBe(true);
+  });
 });
 
 describe('smooth', () => {

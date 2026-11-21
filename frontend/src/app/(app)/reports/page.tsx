@@ -1,11 +1,16 @@
 import type { Metadata } from 'next';
 import { ReportsView } from '@/features/reports/components/reports-view';
+import { zeroReportData } from '@/features/reports/view-model';
 import { getServices } from '@/services';
 
 export const metadata: Metadata = { title: 'Reports' };
 
 export default async function ReportsPage() {
-  const report = await getServices().reports.getReport();
+  const { reports } = getServices();
+  const [result, emailPrefs] = await Promise.all([reports.getReport(), reports.getEmailPrefs()]);
 
-  return <ReportsView report={report} />;
+  if (result.status !== 'ready') {
+    return <ReportsView report={zeroReportData()} emailPrefs={emailPrefs} notReady={result} />;
+  }
+  return <ReportsView report={result.data} freshness={result.freshness} emailPrefs={emailPrefs} />;
 }

@@ -35,3 +35,34 @@ export function reviewRows(values: Record<string, string>): ReviewRow[] {
 export function formValues(form: HTMLFormElement): Record<string, string> {
   return Object.fromEntries([...new FormData(form)].map(([key, value]) => [key, String(value)]));
 }
+
+/** Body of POST /api/site; mirrors OnboardingRequest in src/api/account_schemas.py. */
+export interface OnboardingRequest {
+  name: string;
+  address: string;
+  city: string;
+  pv_kwp: number;
+  battery_kwh: number;
+  inverter_make: 'GoodWe' | 'Other';
+  inverter_serial: string;
+  tariff_category: string;
+  prosumer_regime: string;
+  sanctioned_load_kw: number;
+}
+
+/** The wizard's values as the API expects them ("Other (tell us later)" is stored as "Other"). */
+export function toOnboardingRequest(values: Record<string, string>): OnboardingRequest {
+  const v = (id: string) => (values[id] ?? '').trim();
+  return {
+    name: v('ob-site'),
+    address: v('ob-addr'),
+    city: v('ob-city'),
+    pv_kwp: Number(v('ob-pv')),
+    battery_kwh: Number(v('ob-bat')),
+    inverter_make: v('ob-inv') === 'GoodWe' ? 'GoodWe' : 'Other',
+    inverter_serial: v('ob-sn'),
+    tariff_category: v('ob-cat'),
+    prosumer_regime: v('ob-reg'),
+    sanctioned_load_kw: Number(v('ob-load')),
+  };
+}

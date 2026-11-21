@@ -6,7 +6,13 @@ import { Field } from '@/components/forms/field';
 import { ValidatedForm } from '@/components/forms/validated-form';
 import { CardHeader } from '@/components/ui/card-header';
 import { rules } from '@/lib/validators';
-import type { BillToolsDefaults, ProsumerCompareRequest } from '@/types/domain/tariff';
+import { useToast } from '@/providers/toast-provider';
+import type {
+  BillToolsDefaults,
+  ProsumerCompareRequest,
+  ProsumerComparison,
+} from '@/types/domain/tariff';
+import { compareProsumerAction } from '../actions';
 import { readCompareForm } from '../view-model';
 import { CompareResult } from './bill-results';
 
@@ -16,6 +22,19 @@ const FPA_RULES = [rules.num(0, 100_000)];
 
 export function CompareCard({ defaults }: { defaults: BillToolsDefaults }) {
   const [request, setRequest] = useState<ProsumerCompareRequest | null>(null);
+  const [comparison, setComparison] = useState<ProsumerComparison | null>(null);
+  const [pending, setPending] = useState(false);
+  const toast = useToast();
+
+  const compare = async (next: ProsumerCompareRequest) => {
+    setRequest(next);
+    setComparison(null);
+    setPending(true);
+    const result = await compareProsumerAction(next);
+    setPending(false);
+    if (result.ok) setComparison(result.data);
+    else toast(result.error);
+  };
 
   return (
     <div className="card">
@@ -23,7 +42,7 @@ export function CompareCard({ defaults }: { defaults: BillToolsDefaults }) {
         title="Net metering or net billing?"
         subtitle="Settle the same month both ways: units you bought and sent to the grid."
       />
-      <ValidatedForm onValid={(form) => setRequest(readCompareForm(form))}>
+      <ValidatedForm onValid={(form) => void compare(readCompareForm(form))}>
         <Field
           id="cmp-load"
           label="Sanctioned load (kW)"
@@ -81,12 +100,17 @@ export function CompareCard({ defaults }: { defaults: BillToolsDefaults }) {
           label="Include electricity duty"
           defaultChecked={defaults.includeElectricityDuty}
         />
-        <button className="btn btn-primary" type="submit" style={{ marginTop: 'var(--sp-3)' }}>
+        <button
+          className="btn btn-primary"
+          type="submit"
+          style={{ marginTop: 'var(--sp-3)' }}
+          disabled={pending}
+        >
           Compare
         </button>
       </ValidatedForm>
-      {/* No comparison yet: it is worked out by POST /api/v2/prosumer/compare. */}
-      <CompareResult request={request} comparison={null} />
+      {/* Worked out by POST /api/v2/prosumer/compare; stays empty in the mock demo. */}
+      <CompareResult request={request} comparison={comparison} />
     </div>
   );
 }

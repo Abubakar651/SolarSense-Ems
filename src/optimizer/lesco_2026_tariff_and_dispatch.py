@@ -21,7 +21,7 @@ from __future__ import annotations
 
 import json
 import time
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime
 from decimal import Decimal, ROUND_HALF_EVEN
 from enum import Enum
@@ -254,6 +254,9 @@ class Lesco2026DispatchResultDTO:
     export_rate_used_pkr_per_kwh: Decimal = Decimal("0.00")
     baseline_no_battery_cost_pkr: Decimal = Decimal("0.00")
     net_savings_pkr: Decimal = Decimal("0.00")
+    # The all-in tariff rate of each hour's import (PKR/kWh): the real price, without the solver's
+    # evening-preference nudge that the slab regime adds to its objective.
+    import_rate_pkr_per_kwh: FloatVec = field(default_factory=lambda: _ro_vec(()))
 
 
 # =====================================================================
@@ -879,6 +882,20 @@ class LescoCY2026TariffEngine:
             return off_all_in
         return self.config.nappp_grandfathered_rate_pkr_per_kwh
 
+    def all_in_slab_rate_pkr(self, category: ConsumerCategory2026, consumption_kwh: float | Decimal) -> Decimal:
+        """
+        All-in marginal PKR per kWh on a Non-ToU slab: the landing slab's variable rate plus its FC surcharge,
+        QTA and FPA, with 18% GST (unrounded; the dispatch optimizer prices hours with it).
+        """
+        bracket = self.get_slab_bracket(category, consumption_kwh)
+        cfg = self.config
+        return (
+            bracket.variable_rate_pkr_per_kwh
+            + bracket.fc_surcharge_pkr_per_kwh
+            + cfg.qta_rate_pkr_per_kwh
+            + cfg.fca_rate_pkr_per_kwh
+        ) * (Decimal("1") + cfg.gst_rate)
+
     def get_all_in_tou_marginal_rates_pkr(
         self,
         include_electricity_duty: bool = False,
@@ -1124,6 +1141,8 @@ class Lesco2026BatteryDispatchOptimizer:
             include_electricity_duty=include_electricity_duty,
         )
 
+        # The tariff's own rate per hour; the slab branch replaces it with its flat slab rate.
+        tariff_rate_vec = np.where(peak_mask > 0.5, float(peak_all_in), float(off_all_in))
         if regime == ProsumerRegime2026.NET_BILLING_2026:
             import_price_vec = np.where(peak_mask > 0.5, float(peak_all_in), float(off_all_in))
             export_price_vec = np.full(H, float(export_value))
@@ -1155,18 +1174,10 @@ class Lesco2026BatteryDispatchOptimizer:
                 if (is_protected_consumer and prior_month_to_date_import_kwh <= 200.0)
                 else ConsumerCategory2026.UNPROTECTED
             )
-            bracket = self.tariff_engine.get_slab_bracket(est_cat, max(prior_month_to_date_import_kwh, 1.0))
-            base_var = float(bracket.variable_rate_pkr_per_kwh)
-            cfg_ = self.tariff_engine.config
             all_in_slab = float(
-                (
-                    bracket.variable_rate_pkr_per_kwh
-                    + bracket.fc_surcharge_pkr_per_kwh
-                    + cfg_.qta_rate_pkr_per_kwh
-                    + cfg_.fca_rate_pkr_per_kwh
-                )
-                * (Decimal("1") + cfg_.gst_rate)
+                self.tariff_engine.all_in_slab_rate_pkr(est_cat, max(prior_month_to_date_import_kwh, 1.0))
             )
+            tariff_rate_vec = np.full(H, all_in_slab, dtype=np.float64)
             # Slight evening preference so battery naturally covers evening household peaks
             import_price_vec = np.where(peak_mask > 0.5, all_in_slab + 1.50, all_in_slab)
             export_price_vec = np.zeros(H, dtype=np.float64)
@@ -1301,5 +1312,6 @@ class Lesco2026BatteryDispatchOptimizer:
             export_rate_used_pkr_per_kwh=_round_pkr(_d(float(export_value))),
             baseline_no_battery_cost_pkr=baseline_pkr,
             net_savings_pkr=savings_pkr,
+            import_rate_pkr_per_kwh=_ro_vec(tariff_rate_vec, H),
         )
 

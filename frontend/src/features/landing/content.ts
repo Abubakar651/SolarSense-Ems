@@ -16,37 +16,33 @@ export const COMPATIBILITY = [
 export const STEPS = [
   {
     title: 'Set up your site',
-    body: 'Tell us your solar and battery size and your tariff. About three minutes.',
+    body: 'Solar, battery and tariff. Three minutes.',
   },
   {
     title: 'Connect your inverter',
-    body: "We read your system's data and build a 24-hour plan for the battery.",
+    body: 'We build a 24-hour battery plan.',
   },
   {
     title: 'See what you saved',
-    body: 'Track savings, outages and panel health from one dashboard.',
+    body: 'Savings, outages and panel health.',
   },
 ] as const;
 
 export const FAQS = [
   {
     question: 'Which inverters work with SolarSense?',
-    answer:
-      'GoodWe hybrid inverters connect today. If you use another brand, tell us during setup and we will add it to the list.',
+    answer: 'GoodWe hybrid inverters today. Tell us your brand during setup.',
   },
   {
     question: 'Does SolarSense control my inverter?',
-    answer:
-      'For now it advises: it shows you the plan and you apply it on your inverter app. Automatic control is coming and you will always be able to override it.',
+    answer: 'Not yet. It shows the plan; you apply it in your inverter app.',
   },
   {
     question: 'Do I need to know my tariff?',
-    answer:
-      'It helps. You enter your peak and off-peak rates and export credit from your bill, and you can change them any time in Settings.',
+    answer: 'Copy the rates from your bill. You can change them any time.',
   },
   {
     question: 'Is it for homes only?',
-    answer:
-      'No. The same dashboard works for homes and commercial buildings that have solar and a battery.',
+    answer: 'No. It works for any building with solar and a battery.',
   },
 ] as const;

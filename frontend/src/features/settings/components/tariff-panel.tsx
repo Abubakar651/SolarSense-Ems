@@ -2,10 +2,10 @@ import { SettingRow } from '@/components/ui/setting-row';
 import { pad } from '@/lib/format';
 import {
   PROSUMER_REGIMES,
-  SEASONAL_PEAK_WINDOWS,
   TARIFF_CATEGORIES,
   TOU_RATES,
   regimeInfo,
+  type PeakWindow,
   type ProsumerRegime,
 } from '@/lib/tariff';
 import { SettingsSelect, SettingsSwitch, SettingsText } from './settings-fields';
@@ -16,7 +16,8 @@ const REGIME_OPTIONS = PROSUMER_REGIMES.map(({ id, label }) => ({ value: id, lab
 
 const hours = (start: number, end: number) => `${pad(start)}:00 – ${pad(end)}:00`;
 
-export function TariffPanel() {
+/** `peakWindows`: the four seasonal windows, in table order (TariffRepository.getPeakWindows). */
+export function TariffPanel({ peakWindows }: { peakWindows: readonly PeakWindow[] }) {
   const [regimeId] = useTextSetting('t-reg');
   const regime = regimeInfo(regimeId as ProsumerRegime);
 
@@ -101,7 +102,7 @@ export function TariffPanel() {
           <p className="hint">Follows your export arrangement above.</p>
         </div>
         <h3 style={{ margin: 'var(--sp-4) 0 var(--sp-2)' }}>Peak hours by season</h3>
-        {SEASONAL_PEAK_WINDOWS.map((window) => (
+        {peakWindows.map((window) => (
           <div className="row between small" key={window.season} style={{ padding: '6px 0' }}>
             <span>
               {window.season} <span className="faint">({monthRange(window.months)})</span>

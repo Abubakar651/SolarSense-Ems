@@ -6,7 +6,7 @@ import { BatteryPanel } from './battery-panel';
 function setup() {
   render(
     <SettingsFormProvider value={{ values: { reserve: '15' }, set: () => undefined }}>
-      <BatteryPanel capacityKwh={5.12} blackouts={[]} onBlackoutsChange={() => undefined} />
+      <BatteryPanel capacityKwh={5.12} overnightLoadKw={0.8} blackouts={[]} onBlackoutsChange={() => undefined} />
     </SettingsFormProvider>,
   );
 }

@@ -1,19 +1,45 @@
 /* ---------- App shell ---------- */
 #app {
   min-height: 100dvh;
-  display: grid;
-  grid-template-columns: var(--sidebar) 1fr;
 }
 .sidebar {
-  position: sticky;
+  position: fixed;
   top: 0;
+  left: 0;
   height: 100dvh;
+  width: var(--sidebar-rail);
   border-right: 1px solid var(--line);
   background: var(--canvas);
   display: flex;
   flex-direction: column;
   padding: 20px 12px;
   z-index: 60;
+  overflow: hidden;
+  transition: width var(--ease);
+}
+.sidebar:hover,
+.sidebar:focus-within {
+  width: var(--sidebar);
+  box-shadow: 4px 0 24px rgba(15, 23, 42, 0.12);
+}
+@media (min-width: 1024px) {
+  .sidebar .wm,
+  .sidebar .nav-sep,
+  .sidebar .nav a span,
+  .sidebar .nav .count {
+    opacity: 0;
+    transition: opacity var(--ease);
+  }
+  .sidebar:hover .wm,
+  .sidebar:hover .nav-sep,
+  .sidebar:hover .nav a span,
+  .sidebar:hover .nav .count,
+  .sidebar:focus-within .wm,
+  .sidebar:focus-within .nav-sep,
+  .sidebar:focus-within .nav a span,
+  .sidebar:focus-within .nav .count {
+    opacity: 1;
+  }
 }
 .brand {
   display: flex;
@@ -99,6 +125,7 @@
   min-width: 0;
   display: flex;
   flex-direction: column;
+  margin-left: var(--sidebar-rail);
 }
 .topbar {
   position: sticky;
@@ -148,11 +175,10 @@ h1[tabindex='-1']:focus {
   outline: none;
 }
 @media (max-width: 1023px) {
-  #app {
-    grid-template-columns: 1fr;
+  .main-col {
+    margin-left: 0;
   }
   .sidebar {
-    position: fixed;
     left: 0;
     top: 0;
     width: min(300px, 86vw);

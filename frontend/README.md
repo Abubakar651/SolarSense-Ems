@@ -78,22 +78,70 @@ are unit-tested. Figures are replays of recorded data, not live, and carry a "Sa
 use the metered monthly balance, outage log, inverter alarms and the backend's soiling model; where the data
 ends (hourly data on 7 Oct 2026, telemetry on 27 Oct 2026) the screen says so.
 
-### Wiring a real endpoint
+### Accounts and sign-in (real API)
 
-The backend (`src/api` in the repo root) has these routes. Nothing is wired yet: every screen reads a mock.
-The options and types already follow the backend, so wiring means writing the mapper.
+With `NEXT_PUBLIC_USE_MOCKS=false` (set at build time; `NEXT_PUBLIC_*` values are inlined), sign-in and the
+account data use the API. The JWT lives only in the httpOnly `ss_session` cookie. Browser code never sees it;
+the Next.js server reads the cookie and sends `Authorization: Bearer` to the API.
 
-| Screen                            | Endpoint                                                                         | Frontend type                               |
-| --------------------------------- | -------------------------------------------------------------------------------- | ------------------------------------------- |
-| Today's plan, Dashboard           | `POST /api/v2/optimize` (`/api/optimize` is the older factory-scale one)         | `DayPlan`                                   |
-| Today's plan (daily brief)        | `POST /api/agent/advisory`                                                       | `Advisory`                                  |
-| Live inverter                     | `GET /api/v2/inverter/live` (503 when the inverter is unreachable)               | `InverterReading`                           |
-| Bill & tariff                     | `POST /api/v2/bill/estimate`, `POST /api/v2/prosumer/compare`                    | `BillEstimate`, `ProsumerComparison`        |
-| Settings, Onboarding (peak hours) | `GET /api/v2/tariff/peak-window?month=`                                          | `peakWindowForMonth` in `src/lib/tariff.ts` |
-| Panel health                      | `GET /api/soiling/status`, `POST /api/vision/inspect`, `GET /api/vision/samples` | `SoilingData`                               |
+| Piece                                            | Where                                                |
+| ------------------------------------------------ | ---------------------------------------------------- |
+| Fetch wrapper (timeout, bearer, error codes)     | `src/services/http/client.ts` (`apiFetch`, `apiGet`) |
+| Session cookie helpers                           | `src/services/http/session.ts`                       |
+| Server actions (login, signup, verify, reset, …) | `src/features/<feature>/actions.ts`                  |
+| Route gate (no cookie → `/login?next=…`)         | `src/proxy.ts` (Next 16's name for middleware)       |
+| Error code → message                             | `src/lib/api-errors.ts`                              |
 
-Also available: `/health`, `/api/dates`, `/api/window`, `/api/backtest/stream`. Outage risk, alerts, accounts, notifications and
-report emails have no route.
+| Flow                                 | API                                                              |
+| ------------------------------------ | ---------------------------------------------------------------- |
+| Sign up → `/verify` → emailed link   | `POST /api/auth/signup`, `/verify-email`, `/verify-email/resend` |
+| Log in (remember me = 30-day cookie) | `POST /api/auth/login`                                           |
+| Forgot → emailed `/reset?token=`     | `POST /api/auth/forgot-password`, `/reset-password`              |
+| User menu, onboarding redirect       | `GET /api/me`                                                    |
+| Onboarding finish                    | `POST /api/site`                                                 |
+| Settings (one Save for every tab)    | `GET /api/settings`, `PUT /api/settings`                         |
+| Settings › Security, Delete account  | `POST /api/auth/change-password`, `DELETE /api/me`               |
+| Alerts, Mark all as read             | `GET /api/alerts`, `POST /api/alerts/read-all`                   |
+| Reports › Email reports              | `GET /api/report-preferences`, `PUT /api/report-preferences`     |
+
+The landing page always shows the sample site (`getSampleServices()`), so it never needs a login. In mock mode
+every action succeeds locally and nothing is gated, which keeps unit, e2e and parity runs backend-free.
+
+### Data screens (real API)
+
+With `NEXT_PUBLIC_USE_MOCKS=false` every screen reads the API. Today's plan and the dashboard are live: the plan
+is forecast for today and sized to the signed-in user's battery, reserve and array, and the dashboard's "now" tiles
+poll the inverter every 30 s ("Inverter offline" when it can't be reached).
+
+Savings, Outage, Reports and Panels show only the signed-in user's site. Their repositories return a
+`HistoryResult` (`src/types/domain/history.ts`): `ready` with a `Freshness` (the last day covered, and whether it
+comes from the station's recorded dataset or the site's own inverter log), `collecting` while a new home's log has
+no full day yet ("N days logged so far"), or `unavailable`. Panels returns a `SoilingResult`
+(`src/types/domain/panels.ts`): the dust model is fitted to the site's own logged output since its last clean
+event (a wash recorded with "I washed the panels today", or washing rain), valued at the site's tariff; it is
+`collecting` until 3 full days are logged after that clean event (the station keeps its recorded model meanwhile),
+and `unavailable` only while the sunlight data can't be fetched (the photo check still works). Each page header carries a badge from `freshnessLabel`
+(`src/lib/freshness.ts`): "Up to date" when the figures run to yesterday or today in Asia/Karachi, otherwise
+"Data through <date>"; mock mode shows "Sample data".
+
+| Screen                     | Endpoint                                                                                       | Repository / action                                    |
+| -------------------------- | ---------------------------------------------------------------------------------------------- | ------------------------------------------------------ |
+| Today's plan, Dashboard    | `POST /api/v2/plan/today`; on 503 replays `POST /api/v2/optimize`                              | `energy.http.ts`, `features/dashboard/actions.ts`      |
+| Today's plan (daily brief) | `POST /api/agent/advisory/today` (same live plan, user's tariff); 503 shows "not available"    | `advisory.http.ts`                                     |
+| Live inverter              | `GET /api/v2/inverter/live`; 503 shows "offline"                                               | `inverter.http.ts`                                     |
+| Bill estimate / comparison | `POST /api/v2/bill/estimate`, `POST /api/v2/prosumer/compare`                                  | `features/bill/actions.ts`                             |
+| Panel health               | `GET /api/insights/soiling`, `POST /api/panels/washes`; photo check `POST /api/vision/inspect` | `panels.http.ts`, `features/panels/actions.ts`         |
+| Outage                     | `GET /api/insights/outages`                                                                    | `outage.http.ts`                                       |
+| Energy, Savings, Reports   | `GET /api/insights/energy`                                                                     | `energy.http.ts`, `savings.http.ts`, `reports.http.ts` |
+
+Outage, Energy, Savings, Reports and Panels use the same builders as the sample data (`build*` in each
+`*.mock.ts`), fed with the API's recorded rows, so both modes show identical figures for the same data
+(`insights.http.test.ts` checks this; `history-results.test.ts` covers the freshness and collecting mapping). Every route except `/`, `/health`, `/api/dates` and the sign-in routes
+needs a bearer token, so call them with `apiFetch`/`apiGet`/`apiPostRead` from the server.
+
+Known server-side gaps: the daily brief needs `data/processed/soiling/soiling_analysis_lahore.csv` (404 until it
+is generated); the photo check needs the classifier weights `models/efficientnet_b2_defects.pth`; the live
+inverter is only reachable when the API runs on the home network.
 
 Choices the UI already makes to match the backend (see `src/lib/tariff.ts` for the sources):
 
@@ -110,12 +158,12 @@ Mapper warnings:
    recorded history under `data/processed/solar_timeseries`. Grid power is positive when exporting in both.
 2. The live reader fills a sensor it cannot read with `0.0` (or `100.0` for battery health), so a missing
    value cannot be told from a real zero. `InverterLive` allows `null` for those fields.
-3. `/api/v2/inverter/live` has no authentication and the API allows any origin. Call it from the Next.js
-   server, not from the browser.
+3. API routes need the session token, which only the Next.js server has. Call them from server components
+   or server actions, not from the browser.
 
 To switch one screen to real data:
 
-1. Add `<name>.http.ts` next to the repository interface, implementing the same interface.
+1. Add `<name>.http.ts` next to the repository interface, implementing the same interface with `apiGet`.
 2. Validate the response at the edge (add a schema for the Pydantic model) and map it to the domain type in
    `types/domain`. `/api/optimize` is factory-scale (`factory_load_kw`, MDI, diesel); the UI speaks
    home-scale, so the mapper is where those fields are renamed or dropped.

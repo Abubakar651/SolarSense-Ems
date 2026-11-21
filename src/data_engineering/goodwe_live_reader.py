@@ -93,6 +93,8 @@ class GoodWeLiveReader:
         self.timeout = timeout
         self.retries = retries
         self._inverter: Optional[goodwe.Inverter] = None
+        # The telemetry logger and the live endpoint share this reader; one UDP request at a time.
+        self._lock = asyncio.Lock()
 
     async def _get_connected_inverter(self) -> goodwe.Inverter:
         if self._inverter is None:
@@ -108,8 +110,9 @@ class GoodWeLiveReader:
 
     async def fetch_telemetry(self) -> GoodWeLiveTelemetryDTO:
         """Reads live sensors and normalizes them into GoodWeLiveTelemetryDTO."""
-        inv = await self._get_connected_inverter()
-        data: Dict[str, Any] = await inv.read_runtime_data()
+        async with self._lock:
+            inv = await self._get_connected_inverter()
+            data: Dict[str, Any] = await inv.read_runtime_data()
 
         now = datetime.now(_TZ).isoformat()
         

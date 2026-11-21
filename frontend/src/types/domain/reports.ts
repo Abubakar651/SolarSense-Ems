@@ -23,4 +23,13 @@ export interface ReportData {
   site: string;
   /** Months the report can be generated for, newest first. */
   months: MonthReport[];
+  /** Last day of the recorded hourly data the daily and weekly figures are rebuilt from (station data only). */
+  hourlyThrough?: string | null;
+}
+
+/** Which report emails the user gets, and where they go. */
+export interface ReportEmailPrefs {
+  monthly: boolean;
+  weekly: boolean;
+  sendTo: string;
 }

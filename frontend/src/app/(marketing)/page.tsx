@@ -6,18 +6,24 @@ import { LandingFooter } from '@/features/landing/components/landing-footer';
 import { LandingNav } from '@/features/landing/components/landing-nav';
 import { Steps } from '@/features/landing/components/steps';
 import { Strip } from '@/features/landing/components/strip';
-import { getServices } from '@/services';
+import { readyData, readyPlan } from '@/lib/history';
+import { getSampleServices } from '@/services';
 import type { MonthReport } from '@/types/domain/reports';
 
 export default async function LandingPage() {
-  const { energy, panels, outage, reports, alerts } = getServices();
-  const [plan, soiling, outageData, report, alertList] = await Promise.all([
+  const { energy, panels, outage, reports, alerts } = getSampleServices();
+  const [planResult, soilingResult, outageResult, reportResult, alertList] = await Promise.all([
     energy.getDayPlan(),
     panels.getSoiling(),
     outage.getOutage(),
     reports.getReport(),
     alerts.listAlerts(),
   ]);
+  // The landing page always shows the bundled sample data, which is always ready.
+  const plan = readyPlan(planResult);
+  const soiling = readyData(soilingResult);
+  const outageData = readyData(outageResult);
+  const report = readyData(reportResult);
 
   return (
     <section data-route="landing">
@@ -28,10 +34,6 @@ export default async function LandingPage() {
         <div className="wrap">
           <div className="sect-h">
             <h2 id="features-h">Built for how power works in Pakistan</h2>
-            <p>
-              Peak tariffs, outages and dust all change what your system should do. SolarSense plans
-              for them.
-            </p>
           </div>
           <FeatureBento
             plan={plan}

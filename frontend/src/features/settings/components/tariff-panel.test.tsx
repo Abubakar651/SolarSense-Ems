@@ -1,5 +1,6 @@
 import { render, screen, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
+import { SAMPLE_PEAK_WINDOWS } from '@/services/mock/tariff-windows';
 import { SettingsFormProvider } from './settings-form';
 import { TariffPanel } from './tariff-panel';
 
@@ -18,7 +19,7 @@ function setup(regime: string) {
         set: () => undefined,
       }}
     >
-      <TariffPanel />
+      <TariffPanel peakWindows={SAMPLE_PEAK_WINDOWS} />
     </SettingsFormProvider>,
   );
 }

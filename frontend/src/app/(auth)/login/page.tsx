@@ -5,7 +5,12 @@ import { LoginForm } from '@/features/auth/components/login-form';
 
 export const metadata: Metadata = { title: 'Log in' };
 
-export default function LoginPage() {
+interface LoginPageProps {
+  searchParams: Promise<{ next?: string | string[] }>;
+}
+
+export default async function LoginPage({ searchParams }: LoginPageProps) {
+  const { next } = await searchParams;
   return (
     <AuthLayout
       route="login"
@@ -19,7 +24,7 @@ export default function LoginPage() {
     >
       <h1>Welcome back</h1>
       <p className="lead">Log in to see how your system is performing.</p>
-      <LoginForm />
+      <LoginForm next={typeof next === 'string' ? next : undefined} />
       <p className="auth-foot">
         New to SolarSense? <Link href="/signup">Create an account</Link>
       </p>
